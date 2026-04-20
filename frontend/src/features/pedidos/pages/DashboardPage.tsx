@@ -1,6 +1,7 @@
 import Header from '../../../components/Header'
 import Footer from '../../../components/Footer'
 import notificationIcon from '../../../assets/icon-notification.svg'
+import { Link } from 'react-router-dom'
 
 function DashboardPage() {
     const user = {
@@ -73,10 +74,10 @@ function DashboardPage() {
                     </header>
 
                     <div className="mb-8">
-                        <a className="w-full bg-primary text-white text-lg lg:text-xl p-4 rounded-[5px] flex justify-center items-center gap-1 shadow-sm" href="/pedidos/criar">
+                        <Link className="w-full bg-primary text-white text-lg lg:text-xl p-4 rounded-[5px] flex justify-center items-center gap-1 shadow-sm" to="/cadastrar-encomendas" aria-label="Cadastrar nova encomenda">
                             <span className="text-2xl">+</span>
                             <span>Cadastrar nova encomenda</span>
-                        </a>
+                        </Link>
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
