@@ -4,7 +4,7 @@ import notificationIcon from '../../../assets/icon-notification.svg'
 
 function DashboardPage() {
     const user = {
-        name: 'Higor',
+        name: 'Higor Paulo',
         notifications: 10
     }
 
@@ -22,20 +22,6 @@ function DashboardPage() {
             produto: 'Camiseta',
             atualizacao: '08:20',
             cidade: 'São Paulo',
-        },
-        {
-            codigo: 'DEF123BR',
-            status: 'Em Trânsito',
-            produto: 'Notebook',
-            atualizacao: '10:15',
-            cidade: 'Belo Horizonte',
-        },
-        {
-            codigo: 'GHI123BR',
-            status: 'Aeroporto Destino',
-            produto: 'Celular',
-            atualizacao: '12:00',
-            cidade: 'Rio de Janeiro',
         }
     ]
 
