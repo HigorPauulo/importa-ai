@@ -1,9 +1,9 @@
-import Header from '../../../components/Header'
-import Footer from '../../../components/Footer'
-import notificationIcon from '../../../assets/icon-notification.svg'
+import Header from '@/components/Header'
+import Footer from '@/components/Footer'
+import notificationIcon from '@/assets/icon-notification.svg'
 import { Link } from 'react-router-dom'
-import { getStatusColor } from '../utils/statusUtils'
-import { user, pedidos } from '../../../mocks/pedidos'
+import { getEtapaColor, getEtapaLabel } from '@/features/pedidos/utils/statusUtils'
+import { user, pedidos } from '@/mocks/pedidos'
 
 function DashboardPage() {
     return (
@@ -56,7 +56,7 @@ function DashboardPage() {
                                     <div className="flex items-end justify-between mb-6">
                                         <span className="text-xs lg:text-sm bg-gray-200 text-gray-500 px-2 py-1 rounded-[5px] font-bold">{pedido.codigo}</span>
 
-                                        <p className={`text-xs px-2 py-1 rounded-[5px] font-bold ${getStatusColor(pedido.status)}`}>{pedido.status}</p>
+                                        <p className={`text-xs px-2 py-1 rounded-[5px] font-bold ${getEtapaColor(pedido.etapa)}`}>{getEtapaLabel(pedido.etapa)}</p>
                                     </div>
 
                                     <p className="text-lg lg:text-xl">{pedido.produto}</p>
@@ -68,7 +68,7 @@ function DashboardPage() {
                             ))}
                         </ul>
 
-                        <a className="text-primary text-base lg:text-lg text-center block pt-4" href="/pedidos">Ver mais encomendas</a>
+                        <Link className="text-primary text-base lg:text-lg text-center block pt-4" to="/pedidos">Ver mais encomendas</Link>
                     </div>
                 </div>
             </main>

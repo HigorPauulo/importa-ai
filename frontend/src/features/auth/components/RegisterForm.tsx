@@ -1,17 +1,11 @@
 import { useForm } from 'react-hook-form'
-import { Button } from '../../../components/ui/Button'
-import { Input } from '../../../components/ui/Input'
-
-type RegisterFormData = {
-    name: string
-    email: string
-    password: string
-    confirmPassword: string
-    acceptTerms: boolean
-}
+import { Link } from 'react-router-dom'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import type { RegisterFormData } from '@/types/auth'
 
 function RegisterForm() {
-    const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>()
+    const { register, handleSubmit, getValues, formState: { errors } } = useForm<RegisterFormData>()
     const onSubmit = (data: RegisterFormData) => {
         console.log(data)
     }
@@ -21,13 +15,13 @@ function RegisterForm() {
             <h2 className="text-2xl font-bold mb-6 text-center">Criar Conta</h2>
 
             <form onSubmit={handleSubmit(onSubmit)}>
-                <Input label="Nome" name="name" type="text" error={errors.name?.message as string} {...register('name', { required: 'Nome é obrigatório' })} />
+                <Input label="Nome" name="name" type="text" error={errors.name?.message} {...register('name', { required: 'Nome é obrigatório' })} />
 
-                <Input label="Email" name="email" type="email" error={errors.email?.message as string} {...register('email', { required: 'Email é obrigatório' })} />
+                <Input label="Email" name="email" type="email" error={errors.email?.message} {...register('email', { required: 'Email é obrigatório' })} />
 
-                <Input label="Senha" name="password" type="password" error={errors.password?.message as string} {...register('password', { required: 'Senha é obrigatório' })} />
+                <Input label="Senha" name="password" type="password" error={errors.password?.message} {...register('password', { required: 'Senha é obrigatório' })} />
 
-                <Input label="Confirmar Senha" name="confirmPassword" type="password" error={errors.confirmPassword?.message as string} {...register('confirmPassword', { required: 'Confirmar Senha é obrigatório' })} />
+                <Input label="Confirmar Senha" name="confirmPassword" type="password" error={errors.confirmPassword?.message} {...register('confirmPassword', { required: 'Confirmar Senha é obrigatório', validate: (value) => value === getValues('password') || 'As senhas não correspondem' })} />
 
                 <div className="flex items-center gap-2 mb-4">
                     <input
@@ -42,24 +36,25 @@ function RegisterForm() {
                         htmlFor="acceptTerms"
                     >
                         Aceito os
-                        <a href="/termos-de-uso" className="text-primary ml-1" target="_blank" rel="noopener noreferrer">
+                        <Link to="/termos-de-uso" className="text-primary ml-1" target="_blank" rel="noopener noreferrer">
                             Termos de Uso
-                        </a>
-                        e a
-                        <a href="/politica-de-privacidade" className="text-primary ml-1" target="_blank" rel="noopener noreferrer">
-                            Política de privacidade
-                        </a>
+                        </Link>
+                        {' e a '}
+                        <Link to="/politica-de-privacidade" className="text-primary ml-1" target="_blank" rel="noopener noreferrer">
+                            Política de Privacidade
+                        </Link>
+                   
                     </label>
                
                 </div>
                 {errors.acceptTerms && (
-                    <p className="text-xs text-red-700 mb-4">{errors.acceptTerms.message as string}</p>
+                    <p className="text-xs text-red-700 mb-4">{errors.acceptTerms.message}</p>
                 )}
 
                 <Button type="submit" fullWidth>Cadastrar</Button>
             </form>
 
-            <p className="text-center text-sm mt-8">Já tem uma conta? <a href="/login" className="text-primary">Acessar Conta</a></p>
+            <p className="text-center text-sm mt-8">Já tem uma conta? <Link to="/login" className="text-primary">Acessar Conta</Link></p>
         </div>
     )
 }

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
-import Footer from '../../../components/Footer'
-import backIcon from '../../../assets/icon-back.svg'
-import CadastrarEncomendaForm from '../components/CadastrarEncomendaForm'
+import Footer from '@/components/Footer'
+import backIcon from '@/assets/icon-back.svg'
+import CadastrarEncomendaForm from '@/features/pedidos/components/CadastrarEncomendaForm'
 
 function CadastrarEncomendas() {
     return (
