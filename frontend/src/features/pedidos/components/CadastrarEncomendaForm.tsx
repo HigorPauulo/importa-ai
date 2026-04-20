@@ -1,4 +1,6 @@
 import { useForm } from 'react-hook-form'
+import { Button } from '../../../components/ui/Button'
+import { Input } from '../../../components/ui/Input'
 
 type CadastrarEncomendaFormData = {
     trackingCode: string
@@ -22,24 +24,12 @@ function CadastrarEncomendaForm() {
             </header>
 
             <form onSubmit={handleSubmit(onSubmit)}>
-                <div className="flex flex-col gap-1 mb-4">
-                    <label className="text-sm font-bold text-gray-700" htmlFor="trackingCode">Código de rastreamento *</label>
-                    <input className="border border-gray-300 rounded-md p-2 focus:outline-none focus:border-primary" type="text" id="trackingCode" name="trackingCode" {...register('trackingCode', { required: 'Código de Rastreio é obrigatório' })} placeholder="Ex: ABC123BR" />
-                    {errors.trackingCode && <p className="text-xs text-red-700">{errors.trackingCode.message as string}</p>}
-                </div>
+                <Input label="Código de rastreamento" name="trackingCode" type="text" error={errors.trackingCode?.message as string} {...register('trackingCode', { required: 'Código de Rastreio é obrigatório' })} placeholder="Ex: ABC123BR" />
 
-                <div className="flex flex-col gap-1 mb-4">
-                    <label className="text-sm font-bold text-gray-700" htmlFor="descriptionProduct">Descrição do produto</label>
-                    <input className="border border-gray-300 rounded-md p-2 focus:outline-none focus:border-primary" type="text" id="descriptionProduct" name="descriptionProduct" {...register('descriptionProduct', { required: 'Descrição do produto é obrigatória' })} placeholder="Ex: Camiseta Nike" />
-                    {errors.descriptionProduct && <p className="text-xs text-red-700">{errors.descriptionProduct.message as string}</p>}
-                </div>
+                <Input label="Descrição do produto" name="descriptionProduct" type="text" error={errors.descriptionProduct?.message as string} {...register('descriptionProduct', { required: 'Descrição do produto é obrigatória' })} placeholder="Ex: Camiseta Nike" />
 
                 <div className="flex flex-col lg:flex-row gap-5 mb-4">
-                    <div className="flex flex-col gap-1 w-full">
-                        <label className="text-sm font-bold text-gray-700" htmlFor="productValue">Valor declarado</label>
-                        <input className="border border-gray-300 rounded-md p-2 focus:outline-none focus:border-primary" type="number" id="productValue" name="productValue" {...register('productValue', { required: 'Valor declarado é obrigatório' })} placeholder="Ex: 100.00" />
-                        {errors.productValue && <p className="text-xs text-red-700">{errors.productValue.message as string}</p>}
-                    </div>
+                    <Input label="Valor declarado" name="productValue" type="number" error={errors.productValue?.message as string} {...register('productValue', { required: 'Valor declarado é obrigatório' })} placeholder="Ex: 100.00" />
 
                     <div className="flex flex-col gap-1 w-full">
                         <label className="text-sm font-bold text-gray-700" htmlFor="coin">Moeda</label>
@@ -62,7 +52,7 @@ function CadastrarEncomendaForm() {
                     </select>
                 </div>
 
-                <button className="w-full bg-primary text-white font-bold rounded-md p-3 cursor-pointer" type="submit">Salvar encomenda</button>
+                <Button type="submit" fullWidth>Salvar encomenda</Button>
             </form>
         </div>
     )
