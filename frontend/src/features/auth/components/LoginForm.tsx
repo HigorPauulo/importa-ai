@@ -1,8 +1,13 @@
 import { useForm } from 'react-hook-form'
 
+type LoginFormData = {
+    email: string
+    password: string
+}
+
 function LoginForm() {
-    const { register, handleSubmit, formState: { errors } } = useForm() 
-    const onSubmit = (data: any) => {
+    const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>() 
+    const onSubmit = (data: LoginFormData) => {
         console.log(data)
     }
 
