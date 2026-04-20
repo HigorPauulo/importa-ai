@@ -1,6 +1,6 @@
-import RegisterForm from '../components/RegisterForm'
-import Header from '../../../components/Header'
-import Footer from '../../../components/Footer'
+import RegisterForm from '@/features/auth/components/RegisterForm'
+import Header from '@/components/Header'
+import Footer from '@/components/Footer'
 
 function RegisterPage() {
     return (
