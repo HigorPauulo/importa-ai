@@ -4,7 +4,7 @@ import Footer from '../../../components/Footer'
 
 function RegisterPage() {
     return (
-        <div className="min-h-dvh bg-background flex flex-col">
+        <div className="min-h-dvh bg-background flex flex-col px-5">
             <Header />
 
             <main className="flex-1 flex items-center justify-center">
