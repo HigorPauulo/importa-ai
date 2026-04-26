@@ -22,20 +22,20 @@ function CotacaoPage() {
                 <div className="w-full max-w-3xl">
                     <header className="mb-6">
                         <h2 className="text-2xl font-bold mb-2">Cotação de câmbio</h2>
-                        <p className="text-gray-500">Valores atualizados para conversão em BRL.</p>
+                        <p className="text-secondary">Valores atualizados para conversão em BRL.</p>
                     </header>
 
                     <CardMoedaPrincipal moeda={moedas[0]} />
 
                     <div className="mt-10">
-                        <h3 className="text-1xl lg:text-2xl text-gray-500 font-bold mb-2">Outras moedas</h3>
+                        <h3 className="text-lg lg:text-xl font-semibold mb-2">Outras moedas</h3>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-2">
                             <CardMoeda moeda={moedas[1]} />
                             <CardMoeda moeda={moedas[2]} />
                         </div>
                     </div>
 
-                    <div className="mt-10 bg-primary/30 text-black p-5 rounded-[5px]">
+                    <div className="mt-10 bg-primary-light p-5 rounded-[5px]">
                         <p className="text-sm"><span className="font-bold">Atenção:</span> Estes valores são para referência baseada em APIs de câmbio comercial e podem variar de acordo com o IOF e taxas do seu cartão.</p>
                     </div>
                 </div>

@@ -3,21 +3,21 @@ import type { TipoEtapa } from '@/types/pedidos'
 export function getEtapaColor(etapa: TipoEtapa) {
     switch (etapa) {
         case 'NA_CHINA':
-            return 'bg-blue-50 text-blue-700 border border-blue-200'
+            return 'bg-etapa-na-china-bg text-etapa-na-china-text border border-etapa-na-china-bg'
         case 'AEROPORTO_ORIGEM':
-            return 'bg-cyan-100 text-cyan-800 border border-cyan-200'
+            return 'bg-etapa-aeroporto-origem-bg text-etapa-aeroporto-origem-text border border-etapa-aeroporto-origem-bg'
         case 'EM_TRANSITO':
-            return 'bg-amber-50 text-amber-700 border border-amber-200'
+            return 'bg-etapa-em-transito-bg text-etapa-em-transito-text border border-etapa-em-transito-bg'
         case 'AEROPORTO_DESTINO':
-            return 'bg-violet-50 text-violet-700 border border-violet-200'
+            return 'bg-etapa-aeroporto-destino-bg text-etapa-aeroporto-destino-text border border-etapa-aeroporto-destino-bg'
         case 'NO_BRASIL':
-            return 'bg-green-50 text-green-700 border border-green-200'
+            return 'bg-etapa-no-brasil-bg text-etapa-no-brasil-text border border-etapa-no-brasil-bg'
         case 'CD_BRASIL':
-            return 'bg-lime-50 text-lime-700 border border-lime-200'
+            return 'bg-etapa-cd-brasil-bg text-etapa-cd-brasil-text border border-etapa-cd-brasil-bg'
         case 'SAIDA_ENTREGA':
-            return 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+            return 'bg-etapa-saida-entrega-bg text-etapa-saida-entrega-text border border-etapa-saida-entrega-bg'
         case 'ENTREGUE':
-            return 'bg-primary/10 text-primary border border-primary/30'
+            return 'bg-etapa-entregue-bg text-etapa-entregue-text border border-etapa-entregue-bg'
         default:
             return 'bg-neutral-50 text-neutral-700 border border-neutral-200'
     }
@@ -38,7 +38,7 @@ export function getEtapaLabel(etapa: TipoEtapa) {
         case 'CD_BRASIL':
             return 'CD Brasil'
         case 'SAIDA_ENTREGA':
-            return 'Saida Entrega'
+            return 'Saída Entrega'
         case 'ENTREGUE':
             return 'Entregue'
         default:

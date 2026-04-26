@@ -16,7 +16,7 @@ function DashboardPage() {
                         <h1 className="text-2xl lg:text-3xl font-bold">Olá, {user.name}</h1>
 
                         <div className="w-10 lg:w-13 h-10 lg:h-13 bg-white shadow-md rounded-[5px] flex items-center justify-center relative">
-                            <span className="absolute top-[-10px] right-[-10px] w-5 lg:w-7 h-5 lg:h-7 text-xs text-white font-bold bg-red-500 rounded-full flex items-center justify-center">
+                            <span className="absolute top-[-10px] right-[-10px] w-5 lg:w-7 h-5 lg:h-7 text-xs text-white font-bold bg-error rounded-full flex items-center justify-center">
                                 {user.notifications}
                             </span>
                        
@@ -35,34 +35,34 @@ function DashboardPage() {
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
                         <div className="bg-white shadow-md rounded-[5px] p-5">
-                            <h3 className="text-base lg:text-lg text-gray-500 mb-4">Cotação Yuan</h3>
+                            <h3 className="text-base lg:text-lg text-secondary mb-4">Cotação Yuan</h3>
                             <p className="text-2xl lg:text-3xl font-bold"><span className="text-xl lg:text-2xl">R$</span> 100,00</p>
                             <Link className="text-primary text-base lg:text-lg text-center block pt-4" to="/cotacao">Ver mais</Link>
                         </div>
 
                         <div className="bg-white shadow-md rounded-[5px] p-5">
-                            <h3 className="text-base lg:text-lg text-gray-500 mb-4">Encomendas ativas</h3>
+                            <h3 className="text-base lg:text-lg text-secondary mb-4">Encomendas ativas</h3>
                             <p className="text-2xl lg:text-3xl font-bold text-primary">10</p>
                         </div>
                     </div>
 
                     <div className="bg-white shadow-md rounded-[5px] p-5">
                         <header className="border-b border-gray-300 pb-5 mb-5">
-                            <h3 className="text-1xl lg:text-2xl font-medium">Últimas Atualizações</h3>
+                            <h3 className="text-lg lg:text-xl font-semibold">Últimas Atualizações</h3>
                         </header>
 
                         <ul>
                             {pedidos.map((pedido) => (
                                 <li key={pedido.codigo} className="border-b border-gray-300 pb-4 mb-4">
                                     <div className="flex items-end justify-between mb-6">
-                                        <span className="text-xs lg:text-sm bg-gray-200 text-gray-500 px-2 py-1 rounded-[5px] font-bold">{pedido.codigo}</span>
+                                        <span className="text-xs lg:text-sm bg-gray-200 text-secondary px-2 py-1 rounded-[5px] font-bold">{pedido.codigo}</span>
 
                                         <p className={`text-xs px-2 py-1 rounded-[5px] font-bold ${getEtapaColor(pedido.etapa)}`}>{getEtapaLabel(pedido.etapa)}</p>
                                     </div>
 
                                     <p className="text-lg lg:text-xl">{pedido.produto}</p>
 
-                                    <div className="flex items-center gap-2 mt-1 text-sm lg:text-base text-gray-500">
+                                    <div className="flex items-center gap-2 mt-1 text-sm lg:text-base text-secondary">
                                         <span>Atualizado em:</span><span>{pedido.atualizacao}</span> - <span>{pedido.cidade}</span>
                                     </div>
                                 </li>
