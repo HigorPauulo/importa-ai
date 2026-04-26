@@ -17,7 +17,7 @@ export type TipoEtapa =
   export interface Pedido {
     codigo: string
     status: StatusPedido
-    etapa: TipoEtapa
+    etapa?: TipoEtapa
     produto: string
     atualizacao: string
     cidade: string

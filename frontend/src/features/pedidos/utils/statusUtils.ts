@@ -1,6 +1,6 @@
 import type { TipoEtapa } from '@/types/pedidos'
 
-export function getEtapaColor(etapa: TipoEtapa) {
+export function getEtapaColor(etapa: TipoEtapa | undefined) {
     switch (etapa) {
         case 'NA_CHINA':
             return 'bg-etapa-na-china-bg text-etapa-na-china-text border border-etapa-na-china-bg'
@@ -23,7 +23,7 @@ export function getEtapaColor(etapa: TipoEtapa) {
     }
 }
 
-export function getEtapaLabel(etapa: TipoEtapa) {
+export function getEtapaLabel(etapa: TipoEtapa | undefined) {
     switch (etapa) {
         case 'NA_CHINA':
             return 'Na China'
