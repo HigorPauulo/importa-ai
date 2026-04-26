@@ -6,6 +6,7 @@ import DashboardPage from '@/features/pedidos/pages/DashboardPage'
 import CadastrarEncomendas from '@/features/pedidos/pages/CadastrarEncomendasPage'
 import CatacaoPage from '@/features/cotacao/pages/CotacaoPage'
 import PedidosPage from '@/features/pedidos/pages/PedidosPage'
+import DetalhesPedidoPage from '@/features/pedidos/pages/DetalhesPedidoPage'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="/cadastrar-encomendas" element={<PrivateRoute><CadastrarEncomendas /></PrivateRoute  >} />
           <Route path="/cotacao" element={<PrivateRoute><CatacaoPage /></PrivateRoute>} />
           <Route path="/pedidos" element={<PrivateRoute><PedidosPage /></PrivateRoute>} />
+          <Route path="/pedidos/:id" element={<PrivateRoute><DetalhesPedidoPage /></PrivateRoute>} />
         </Routes>
       </BrowserRouter>
   )

@@ -13,6 +13,28 @@ export const pedidos: Pedido[] = [
         produto: 'Notebook Xiaomi RedmiBook',
         atualizacao: '12:05',
         cidade: 'Pequim',
+        origem: 'Pequim',
+        valorEstimado: 1000,
+        historico: [
+            {
+                data: '26 MAR 2026',
+                hora: '12:05',
+                descricao: 'Aguardando envio',
+                local: 'Pequim',
+            },
+            {
+                data: '27 MAR 2026',
+                hora: '08:20',
+                descricao: 'Preparando para despacho internacional',
+                local: 'Pequim',
+            },
+            {
+                data: '27 MAR 2026',
+                hora: '15:45',
+                descricao: 'Enviado para o aeroporto de Pequim',
+                local: 'Pequim',
+            },   
+        ],
     },
     {
         codigo: 'ORI200BR',
@@ -21,6 +43,28 @@ export const pedidos: Pedido[] = [
         produto: 'Smartphone Poco X6',
         atualizacao: '12:31',
         cidade: 'Xangai',
+        origem: 'Xangai',
+        valorEstimado: 1000,
+        historico: [
+            {
+                data: '26 MAR 2026',
+                hora: '12:31',
+                descricao: 'Enviado para o aeroporto de Xangai',
+                local: 'Xangai',
+            },
+            {
+                data: '26 MAR 2026',
+                hora: '15:00',
+                descricao: 'Em trânsito para o Brasil',
+                local: 'Aeronave',
+            },
+            {
+                data: '27 MAR 2026',
+                hora: '10:17',
+                descricao: 'Chegou ao aeroporto de São Paulo',
+                local: 'São Paulo',
+            },
+        ],
     },
     {
         codigo: 'TRN210BR',
@@ -29,6 +73,28 @@ export const pedidos: Pedido[] = [
         produto: 'Caixa de Som JBL',
         atualizacao: '12:44',
         cidade: 'Hong Kong',
+        origem: 'Hong Kong',
+        valorEstimado: 1000,
+        historico: [
+            {
+                data: '26 MAR 2026',
+                hora: '12:44',
+                descricao: 'Enviado para o aeroporto de Hong Kong',
+                local: 'Hong Kong',
+            },
+            {
+                data: '26 MAR 2026',
+                hora: '14:00',
+                descricao: 'Desembarcou no aeroporto de São Paulo',
+                local: 'São Paulo',
+            },
+            {
+                data: '26 MAR 2026',
+                hora: '16:20',
+                descricao: 'Processado pela Receita Federal',
+                local: 'Guarulhos',
+            },
+        ],
     },
     {
         codigo: 'DST220BR',
@@ -37,6 +103,28 @@ export const pedidos: Pedido[] = [
         produto: 'Drone DJI Mini',
         atualizacao: '12:55',
         cidade: 'São Paulo',
+        origem: 'São Paulo',
+        valorEstimado: 1000,
+        historico: [
+            {
+                data: '26 MAR 2026',
+                hora: '12:55',
+                descricao: 'Enviado para o aeroporto de São Paulo',
+                local: 'São Paulo',
+            },
+            {
+                data: '26 MAR 2026',
+                hora: '14:10',
+                descricao: 'Desembarcou no aeroporto de Guarulhos',
+                local: 'Guarulhos',
+            },
+            {
+                data: '26 MAR 2026',
+                hora: '16:00',
+                descricao: 'Processado pela Receita Federal',
+                local: 'Guarulhos',
+            },
+        ],
     },
     {
         codigo: 'BRA230BR',
@@ -45,6 +133,28 @@ export const pedidos: Pedido[] = [
         produto: 'Câmera Instax Fuji',
         atualizacao: '13:02',
         cidade: 'Rio de Janeiro',
+        origem: 'Rio de Janeiro',
+        valorEstimado: 1000,
+        historico: [
+            {
+                data: '26 MAR 2026',
+                hora: '13:02',
+                descricao: 'Enviado para o aeroporto de Rio de Janeiro',
+                local: 'Rio de Janeiro',
+            },
+            {
+                data: '26 MAR 2026',
+                hora: '15:20',
+                descricao: 'Desembarcou no aeroporto do Galeão',
+                local: 'Rio de Janeiro',
+            },
+            {
+                data: '26 MAR 2026',
+                hora: '17:05',
+                descricao: 'Processado pela Receita Federal',
+                local: 'Rio de Janeiro',
+            },
+        ],
     },
     {
         codigo: 'CDB240BR',
@@ -53,6 +163,28 @@ export const pedidos: Pedido[] = [
         produto: 'Relógio Amazfit Bip',
         atualizacao: '13:10',
         cidade: 'Campinas',
+        origem: 'Campinas',
+        valorEstimado: 1000,
+        historico: [
+            {
+                data: '26 MAR 2026',
+                hora: '13:10',
+                descricao: 'Enviado para o CD Brasil',
+                local: 'Campinas',
+            },
+            {
+                data: '26 MAR 2026',
+                hora: '14:00',
+                descricao: 'Recebido no CD Brasil',
+                local: 'Campinas',
+            },
+            {
+                data: '26 MAR 2026',
+                hora: '16:30',
+                descricao: 'Processado no CD Brasil e preparação para entrega',
+                local: 'Campinas',
+            },
+        ],
     },
     {
         codigo: 'SAE250BR',
@@ -61,6 +193,28 @@ export const pedidos: Pedido[] = [
         produto: 'Mini Projetor Wanbo',
         atualizacao: '13:15',
         cidade: 'Curitiba',
+        origem: 'Curitiba',
+        valorEstimado: 1000,
+        historico: [
+            {
+                data: '26 MAR 2026',
+                hora: '13:15',
+                descricao: 'Enviado para a saída de entrega',
+                local: 'Curitiba',
+            },
+            {
+                data: '26 MAR 2026',
+                hora: '14:00',
+                descricao: 'Saiu para entrega ao destinatário',
+                local: 'Curitiba',
+            },
+            {
+                data: '26 MAR 2026',
+                hora: '15:00',
+                descricao: 'Objeto em rota de entrega',
+                local: 'Rota de entrega, Curitiba',
+            },
+        ],
     },
     {
         codigo: 'ENT300BR',
@@ -69,6 +223,28 @@ export const pedidos: Pedido[] = [
         produto: 'Fone de Ouvido Bluetooth',
         atualizacao: '13:20',
         cidade: 'Goiânia',
+        origem: 'Goiânia',
+        valorEstimado: 1000,
+        historico: [
+            {
+                data: '26 MAR 2026',
+                hora: '13:20',
+                descricao: 'Saiu para entrega',
+                local: 'Centro de Distribuição GO',
+            },
+            {
+                data: '26 MAR 2026',
+                hora: '13:40',
+                descricao: 'Entregue ao destinatário',
+                local: 'Residencial Granville, Goiânia',
+            },
+            {
+                data: '26 MAR 2026',
+                hora: '14:00',
+                descricao: 'Recebimento confirmado pelo destinatário',
+                local: 'Residencial Granville, Goiânia',
+            },
+        ],
     },
     {
         codigo: 'CNL400BR',
@@ -77,5 +253,27 @@ export const pedidos: Pedido[] = [
         produto: 'Tablet Lenovo Xiaoxin',
         atualizacao: '14:15',
         cidade: 'São Paulo',
+        origem: 'São Paulo',
+        valorEstimado: 1000,
+        historico: [
+            {
+                data: '26 MAR 2026',
+                hora: '14:10',
+                descricao: 'Pedido solicitado para cancelamento',
+                local: 'São Paulo',
+            },
+            {
+                data: '26 MAR 2026',
+                hora: '14:12',
+                descricao: 'Cancelamento em análise',
+                local: 'Centro de Distribuição SP',
+            },
+            {
+                data: '26 MAR 2026',
+                hora: '14:15',
+                descricao: 'Cancelado',
+                local: 'São Paulo',
+            },
+        ],
     },
 ]

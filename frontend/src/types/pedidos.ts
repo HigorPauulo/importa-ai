@@ -14,6 +14,13 @@ export type TipoEtapa =
   | 'SAIDA_ENTREGA'
   | 'ENTREGUE'
 
+  export interface EtapaHistorico {
+    data: string
+    hora: string
+    descricao: string
+    local: string
+  }
+
   export interface Pedido {
     codigo: string
     status: StatusPedido
@@ -21,4 +28,7 @@ export type TipoEtapa =
     produto: string
     atualizacao: string
     cidade: string
+    origem?: string
+    valorEstimado?: number
+    historico?: EtapaHistorico[]
   }
