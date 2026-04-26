@@ -1,6 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 @import 'tailwindcss';
 
 @theme {
-    --color-primary: #0D6EFD;
-    --color-background: #F3F4F6;
+    /* Fontes */
+    --font-sans: 'Inter', sans-serif;
+
+    /* Esquema de Cores — Importa Aí */
+
+    /* Primárias */
+    --color-primary: #0D6EFD;        
+    --color-primary-dark: #0A3B8C;    
+    --color-primary-light: #CFE2FF;   
+    --color-secondary: #6C757D;     
+    --color-background: #F3F4F6;    
+
+    /* Sucesso, Aviso, Erro, Info */
+    --color-success: #22C55E;        
+    --color-success-bg: #D1FAE5;
+    --color-success-dark: #065F46;
+
+    --color-warning: #F59E42;       
+    --color-warning-bg: #FEF3C7;
+
+    --color-error: #DC2626;           
+    --color-error-bg: #FFE6E6;
+
+    /* Status do Pedido */
+    --color-status-processando-bg: var(--color-primary-light);
+    --color-status-processando-text: var(--color-primary-dark);
+
+    --color-status-enviado-bg: var(--color-success-bg);
+    --color-status-enviado-text: var(--color-success-dark);
+
+    --color-status-entregue-bg: var(--color-success-bg);
+    --color-status-entregue-text: var(--color-success-dark);
+
+    --color-status-cancelado-bg: var(--color-error-bg);
+    --color-status-cancelado-text: var(--color-error);
+
+    /* Etapas de Rastreamento */
+    --color-etapa-na-china-bg: var(--color-primary-light);
+    --color-etapa-na-china-text: var(--color-primary-dark);
+
+    --color-etapa-aeroporto-origem-bg: var(--color-primary-light);
+    --color-etapa-aeroporto-origem-text: var(--color-primary-dark);
+
+    --color-etapa-em-transito-bg: var(--color-primary-light);
+    --color-etapa-em-transito-text: var(--color-primary-dark);
+
+    --color-etapa-aeroporto-destino-bg: var(--color-primary-light);
+    --color-etapa-aeroporto-destino-text: var(--color-primary-dark);
+
+    --color-etapa-no-brasil-bg: var(--color-success-bg);
+    --color-etapa-no-brasil-text: var(--color-success-dark);
+
+    --color-etapa-cd-brasil-bg: var(--color-success-bg);
+    --color-etapa-cd-brasil-text: var(--color-success-dark);
+
+    --color-etapa-saida-entrega-bg: var(--color-success-bg);
+    --color-etapa-saida-entrega-text: var(--color-success-dark);
+
+    --color-etapa-entregue-bg: var(--color-success-bg);
+    --color-etapa-entregue-text: var(--color-success-dark);
+
 }
