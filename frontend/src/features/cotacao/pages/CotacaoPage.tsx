@@ -34,8 +34,13 @@ function CotacaoPage() {
                             <CardMoeda moeda={moedas[2]} />
                         </div>
                     </div>
+
+                    <div className="mt-10 bg-primary/30 text-black p-5 rounded-[5px]">
+                        <p className="text-sm"><span className="font-bold">Atenção:</span> Estes valores são para referência baseada em APIs de câmbio comercial e podem variar de acordo com o IOF e taxas do seu cartão.</p>
+                    </div>
                 </div>
             </main>
+
 
             <Footer />
         </div>
