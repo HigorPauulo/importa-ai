@@ -9,11 +9,11 @@ function CardMoeda({ moeda }: CardMoedaProps) {
         <div className="bg-white flex items-center justify-between shadow-md rounded-[5px] p-5">
             <div className="flex items-center gap-2">
                 <div>
-                    <span className="text-xl lg:text-2xl font-light bg-white/40 px-2 py-1">{moeda.sigla.slice(0, 2)}</span>
+                    <span className="text-xl lg:text-2xl font-light px-2 py-1">{moeda.sigla.slice(0, 2)}</span>
                 </div>
                 <div>
                     <h3 className="text-xl lg:text-2xl font-bold">{moeda.nome}</h3>
-                    <p className="text-base lg:text-lg text-gray-500">{moeda.sigla} / BRL</p>
+                    <p className="text-base lg:text-lg text-secondary">{moeda.sigla} / BRL</p>
                 </div>
             </div>
 

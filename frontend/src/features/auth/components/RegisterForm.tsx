@@ -32,7 +32,7 @@ function RegisterForm() {
                         name="acceptTerms"
                     />
                     <label
-                        className="text-sm text-gray-700 flex flex-row flex-wrap items-center gap-1 whitespace-nowrap"
+                        className="text-sm text-secondary flex flex-row flex-wrap items-center gap-1 whitespace-nowrap"
                         htmlFor="acceptTerms"
                     >
                         Aceito os
@@ -48,7 +48,7 @@ function RegisterForm() {
                
                 </div>
                 {errors.acceptTerms && (
-                    <p className="text-xs text-red-700 mb-4">{errors.acceptTerms.message}</p>
+                    <p className="text-xs text-error mb-4">{errors.acceptTerms.message}</p>
                 )}
 
                 <Button type="submit" fullWidth>Cadastrar</Button>
