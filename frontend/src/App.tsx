@@ -4,6 +4,7 @@ import LoginPage from '@/features/auth/pages/LoginPage'
 import RegisterPage from '@/features/auth/pages/RegisterPage'
 import DashboardPage from '@/features/pedidos/pages/DashboardPage'
 import CadastrarEncomendas from '@/features/pedidos/pages/CadastrarEncomendasPage'
+import CatacaoPage from '@/features/cotacao/pages/CotacaoPage'
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
           <Route path="/cadastrar-encomendas" element={<PrivateRoute><CadastrarEncomendas /></PrivateRoute  >} />
+          <Route path="/cotacao" element={<PrivateRoute><CatacaoPage /></PrivateRoute>} />
         </Routes>
       </BrowserRouter>
   )
