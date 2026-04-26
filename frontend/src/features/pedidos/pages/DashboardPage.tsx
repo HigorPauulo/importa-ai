@@ -37,6 +37,7 @@ function DashboardPage() {
                         <div className="bg-white shadow-md rounded-[5px] p-5">
                             <h3 className="text-base lg:text-lg text-gray-500 mb-4">Cotação Yuan</h3>
                             <p className="text-2xl lg:text-3xl font-bold"><span className="text-xl lg:text-2xl">R$</span> 100,00</p>
+                            <Link className="text-primary text-base lg:text-lg text-center block pt-4" to="/cotacao">Ver mais</Link>
                         </div>
 
                         <div className="bg-white shadow-md rounded-[5px] p-5">
