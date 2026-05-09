@@ -1,7 +1,7 @@
 # Especificação de Requisitos de Software (ERS / SRS)
 
 **Sistema:** Importa Aí — Sistema de Gestão e Rastreamento de Encomendas Internacionais
-**Versão:** 1.1
+**Versão:** 1.2
 **Data:** 09 de Maio de 2026
 **Autor:** Equipe Importa Aí
 
@@ -11,6 +11,7 @@
 |------|--------|-----------|-------|
 | 19/03/2026 | 1.0 | Elaboração da primeira versão do documento | Higor Paulo Costa |
 | 09/05/2026 | 1.1 | Substituição de Kafka por RabbitMQ; status do pedido passa a ser derivado das etapas; remoção do escopo de e-mail (cadastro, recuperação de senha e notificações por e-mail) | Higor Paulo Costa |
+| 09/05/2026 | 1.2 | Refinamentos médios pós-auditoria: detalhamento da idempotência (INSERT-first), estratégia da RN09 (FIFO atômico), decisão sobre RabbitMQ indisponível (503 honesto), modelo de dados de autenticação (Apêndice B), plano de contingência da API dos Correios (Apêndice C), co-localização explícita do WebSocket no API Backend, alinhamento de moedas (CNY/USD/EUR ↔ BRL) | Higor Paulo Costa |
 
 ---
 
@@ -120,9 +121,10 @@ O "Importa Aí" é um sistema web independente que atua como camada de gestão e
 ## 8. Premissas
 
 - O usuário possui acesso à internet para usar o sistema.
-- A API dos Correios estará disponível e retornará dados de rastreamento em formato padronizado.
+- A API dos Correios **pode** estar disponível. O sistema é resiliente a sua indisponibilidade via plano de contingência (ver Apêndice C). Em ambiente de desenvolvimento e demonstração, é usado um adapter `stub` que retorna etapas sintéticas.
 - A API de Cotação de Câmbio estará disponível. Em caso de indisponibilidade, o sistema usará a última cotação armazenada em cache (RN07).
 - O broker RabbitMQ estará disponível para receber publicações. Em caso de indisponibilidade, ver tratamento na UC01 (FA02).
+- O endpoint STOMP/WebSocket é exposto pelo próprio API Backend (Spring Boot), no mesmo processo da API REST. Não há container WebSocket separado.
 - Os pedidos são sempre iniciados manualmente pelo usuário (não há integração automática com marketplaces nesta versão).
 
 ---
@@ -239,13 +241,13 @@ As regras de negócio estabelecem as políticas e condições que o sistema deve
 |----|------|-----------|
 | RN01 | Status Derivado da Etapa | O `StatusPedido` **não é armazenado como campo independente** — ele é uma função pura da última `TipoEtapa` registrada do pedido (ou da flag `cancelado`). A tabela de derivação é normativa e está documentada no Apêndice A. Não existe transição manual de status: o Administrador insere etapas (RF13), e o status acompanha automaticamente. |
 | ~~RN02~~ | ~~Pré-requisito de Entrega~~ | **REMOVIDO na v1.1.** Esta regra perdeu sentido com a derivação automática (RN01). O status `ENTREGUE` agora só é alcançado quando a etapa `TipoEtapa.ENTREGUE` é registrada — o que pressupõe naturalmente todas as etapas anteriores. |
-| RN03 | Desacoplamento Frontend | O frontend jamais deve aguardar a confirmação de escrita no banco de dados para liberar a interface. O backend deve sempre retornar HTTP 202 (Aceito) imediatamente após publicar o evento no RabbitMQ, garantindo responsividade da UI. |
+| RN03 | Desacoplamento Frontend | O frontend jamais deve aguardar a confirmação de escrita no banco de dados para liberar a interface. O backend deve sempre retornar HTTP 202 (Aceito) imediatamente após publicar o evento no RabbitMQ, garantindo responsividade da UI. **Exceção:** se o broker RabbitMQ estiver indisponível, o backend retorna HTTP 503 honesto (UC01 FA02) em vez de aceitar uma escrita que não pode garantir. O outbox pattern (que permitiria honrar RN03 mesmo com broker fora) é trabalho de v2 — fora do escopo da N2. |
 | RN04 | Idempotência de Eventos | O reprocessamento de uma mensagem RabbitMQ já processada não deve gerar efeitos colaterais (duplicação de pedidos, etapas ou notificações). A implementação usa uma tabela `evento_processado` com constraint `UNIQUE(exchange, routing_key, message_id)`. O consumer **tenta INSERT primeiro**; se a constraint disparar, descarta a mensagem (acknowledge sem reprocessar). |
 | RN05 | Imutabilidade de Eventos | Mensagens RabbitMQ publicadas são imutáveis e não devem ser alteradas retroativamente. Para corrigir um erro, um novo evento corretivo deve ser publicado. O histórico de eventos deve ser preservado integralmente. |
 | RN06 | Unicidade de Código de Rastreamento | Cada pedido deve ter um código de rastreamento único por usuário. O mesmo código pode ser cadastrado por usuários diferentes (compras compartilhadas), mas não duas vezes pelo mesmo usuário. |
 | RN07 | Cotação de Câmbio Fallback | Em caso de indisponibilidade da API de câmbio, o sistema deve usar a última cotação armazenada em cache, desde que não tenha mais de 24 horas. Cotações com mais de 24 horas devem ser sinalizadas como "desatualizada" na interface. |
 | RN08 | Retenção de Dados Cancelados | Pedidos cancelados não devem ser excluídos do banco de dados. Devem ser mantidos por 12 meses para fins de auditoria e conformidade com a LGPD, após o que podem ser anonimizados. |
-| RN09 | Limite de Notificações | O sistema deve manter no máximo 50 notificações por usuário no histórico. Notificações mais antigas devem ser removidas automaticamente (FIFO) quando o limite for atingido. A operação count + delete + insert deve ser atômica (transação serializável ou trigger no banco). |
+| RN09 | Limite de Notificações | O sistema deve manter no máximo 50 notificações por usuário no histórico. Notificações mais antigas devem ser removidas automaticamente (FIFO) quando o limite for atingido. **Estratégia adotada:** trigger `AFTER INSERT ON notificacao` no MySQL que executa `DELETE FROM notificacao WHERE usuario_id = NEW.usuario_id AND id NOT IN (SELECT id FROM (SELECT id FROM notificacao WHERE usuario_id = NEW.usuario_id ORDER BY criado_em DESC LIMIT 50) tmp)`. Garante atomicidade dentro da mesma transação do INSERT, sem necessidade de lock pessimista no application layer. |
 
 ### Apêndice A — Tabela de Derivação de Status (RN01)
 
@@ -267,6 +269,51 @@ A função `derivarStatus(ultimaEtapa, cancelado): StatusPedido` é normativa:
 **Implicações:**
 - Não existe endpoint `PATCH /api/pedidos/{id}/status`. A única forma de promover o status é registrando uma nova etapa via `POST /api/pedidos/{id}/etapas` (RF13).
 - Para fins de query (dashboard, filtros), o backend pode manter uma coluna `status_cache` em `pedido`, **atualizada por listener interno após cada inserção de etapa**. Essa coluna é cache derivado, nunca fonte de verdade.
+
+### Apêndice B — Modelo de Dados de Autenticação (RF03, RNF06)
+
+JWT é stateless por padrão, mas o sistema exige duas formas de estado server-side: revogação de refresh token (logout) e bloqueio temporário após 5 falhas. Esses dados são modelados em duas tabelas dedicadas.
+
+#### Tabela `refresh_token_revogado` (suporta RF03)
+
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| `id` | UUID | Identificador interno. |
+| `token_hash` | VARCHAR(64) | SHA-256 do refresh token. **Nunca armazenar o token em claro.** |
+| `usuario_id` | UUID FK | Dono do token. |
+| `revogado_em` | TIMESTAMP | Momento da revogação. |
+| `expira_em` | TIMESTAMP | Cópia da expiração original do token (para limpeza). |
+
+- **Índice único:** `token_hash`.
+- **Job de limpeza:** registros com `expira_em < NOW()` podem ser removidos (não há benefício em manter token expirado em blocklist).
+- **Fluxo de validação no refresh:** ao receber um refresh token, calcula-se o hash e consulta-se a tabela. Se houver match, token recusado (HTTP 401).
+
+#### Tabela `tentativa_login_falha` (suporta RNF06)
+
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| `email` | VARCHAR(255) PK | Identificador da tentativa (chave). |
+| `contador` | INT | Número de falhas consecutivas. |
+| `bloqueado_ate` | TIMESTAMP NULL | Quando a conta volta a aceitar login. NULL = não bloqueada. |
+| `atualizado_em` | TIMESTAMP | Última atualização (para reset após N minutos sem tentativa). |
+
+- **Lógica:** a cada login falho, incrementa `contador`. Ao atingir 5, define `bloqueado_ate = NOW() + 15 min`. Login bem-sucedido zera o contador.
+- **Verificação:** antes de validar credenciais, checa se `bloqueado_ate > NOW()` → HTTP 429.
+- **Por que pela `email` e não `usuario_id`?** Para bloquear tentativas com e-mails inexistentes também (defesa contra enumeração de usuários).
+
+### Apêndice C — Plano de Contingência da API dos Correios (M8)
+
+A API dos Correios não possui contrato REST público estável (o antigo SRO foi descontinuado e a nova API exige contrato comercial). Para mitigar esse risco no projeto acadêmico, o `RastreamentoCorreiosPort` (porta de saída do domínio) tem três adapters intercambiáveis selecionados por configuração:
+
+| Adapter | Quando ativar | Comportamento |
+|---------|---------------|---------------|
+| `CorreiosStubAdapter` | Desenvolvimento e demonstração da banca (default em `dev`) | Retorna etapas sintéticas progressivas com base no tempo decorrido desde o cadastro do pedido. Permite simular o ciclo completo sem dependência externa. |
+| `CorreiosHttpAdapter` | Produção (se contrato disponível) | Chama a API real. Implementa **Circuit Breaker** (Resilience4j): após 5 falhas consecutivas, abre o circuito por 60s e usa o último cache conhecido. |
+| `CorreiosCacheOnlyAdapter` | Fallback explícito | Usa só o cache local. Mensagem de UI: "atualização indisponível, exibindo última informação conhecida". |
+
+**Seleção:** propriedade `correios.adapter` em `application.properties` (`stub` | `http` | `cache-only`).
+
+**Implicação para a banca:** mesmo que o avaliador rode o sistema sem acesso à API real, o fluxo de rastreamento funciona ponta-a-ponta com dados sintéticos. Isso é defesa direta contra a pergunta "e se a API cair?". Resposta: já tratado por arquitetura (Hexagonal + Strategy/Decorator de adapters).
 
 ---
 
