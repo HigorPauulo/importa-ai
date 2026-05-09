@@ -6,7 +6,7 @@
 A Arquitetura Hexagonal foi escolhida porque:
 1. **Testabilidade**: o domínio não depende de frameworks — pode ser testado em isolamento
 2. **Independência de mensageria**: RabbitMQ e API REST são adaptadores intercambiáveis
-3. **Projeto solo**: limites claros entre domínio e infraestrutura reduzem acoplamento acidental
+3. **Manutenibilidade**: limites claros entre domínio e infraestrutura reduzem acoplamento acidental e facilitam evolução incremental
 4. **Adequação ao problema**: o sistema possui múltiplos adaptadores de entrada
    (REST, RabbitMQ consumer, scheduler) e saída (MySQL, RabbitMQ producer,
    WebSocket, API Correios, API Câmbio)
