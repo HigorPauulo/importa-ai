@@ -1,7 +1,7 @@
 # Especificação de Requisitos de Software (ERS / SRS)
 
 **Sistema:** Importa Aí — Sistema de Gestão e Rastreamento de Encomendas Internacionais
-**Versão:** 1.2
+**Versão:** 1.3
 **Data:** 09 de Maio de 2026
 **Autor:** Equipe Importa Aí
 
@@ -12,6 +12,7 @@
 | 19/03/2026 | 1.0 | Elaboração da primeira versão do documento | Higor Paulo Costa |
 | 09/05/2026 | 1.1 | Substituição de Kafka por RabbitMQ; status do pedido passa a ser derivado das etapas; remoção do escopo de e-mail (cadastro, recuperação de senha e notificações por e-mail) | Higor Paulo Costa |
 | 09/05/2026 | 1.2 | Refinamentos médios pós-auditoria: detalhamento da idempotência (INSERT-first), estratégia da RN09 (FIFO atômico), decisão sobre RabbitMQ indisponível (503 honesto), modelo de dados de autenticação (Apêndice B), plano de contingência da API dos Correios (Apêndice C), co-localização explícita do WebSocket no API Backend, alinhamento de moedas (CNY/USD/EUR ↔ BRL) | Higor Paulo Costa |
+| 11/05/2026 | 1.3 | Detalhamento dos casos de uso UC04, UC05, UC06, UC08, UC09 e UC10 (anteriormente listados como "iteração posterior") | Higor Paulo Costa |
 
 ---
 
@@ -247,7 +248,24 @@ As regras de negócio estabelecem as políticas e condições que o sistema deve
 | RN06 | Unicidade de Código de Rastreamento | Cada pedido deve ter um código de rastreamento único por usuário. O mesmo código pode ser cadastrado por usuários diferentes (compras compartilhadas), mas não duas vezes pelo mesmo usuário. |
 | RN07 | Cotação de Câmbio Fallback | Em caso de indisponibilidade da API de câmbio, o sistema deve usar a última cotação armazenada em cache, desde que não tenha mais de 24 horas. Cotações com mais de 24 horas devem ser sinalizadas como "desatualizada" na interface. |
 | RN08 | Retenção de Dados Cancelados | Pedidos cancelados não devem ser excluídos do banco de dados. Devem ser mantidos por 12 meses para fins de auditoria e conformidade com a LGPD, após o que podem ser anonimizados. |
-| RN09 | Limite de Notificações | O sistema deve manter no máximo 50 notificações por usuário no histórico. Notificações mais antigas devem ser removidas automaticamente (FIFO) quando o limite for atingido. **Estratégia adotada:** trigger `AFTER INSERT ON notificacao` no MySQL que executa `DELETE FROM notificacao WHERE usuario_id = NEW.usuario_id AND id NOT IN (SELECT id FROM (SELECT id FROM notificacao WHERE usuario_id = NEW.usuario_id ORDER BY criado_em DESC LIMIT 50) tmp)`. Garante atomicidade dentro da mesma transação do INSERT, sem necessidade de lock pessimista no application layer. |
+| RN09 | Limite de Notificações | O sistema deve manter no máximo 50 notificações por usuário no histórico. Notificações mais antigas são removidas automaticamente (FIFO) quando o limite é atingido — detalhes de implementação logo abaixo. |
+
+**Implementação da RN09.** Um *trigger* `AFTER INSERT ON notificacao` no MySQL aplica a janela FIFO de forma atômica:
+
+```sql
+DELETE FROM notificacao
+WHERE usuario_id = NEW.usuario_id
+  AND id NOT IN (
+    SELECT id FROM (
+      SELECT id FROM notificacao
+      WHERE usuario_id = NEW.usuario_id
+      ORDER BY criado_em DESC
+      LIMIT 50
+    ) tmp
+  );
+```
+
+Garante atomicidade dentro da mesma transação do `INSERT`, sem necessidade de *lock* pessimista na camada de aplicação.
 
 ### Apêndice A — Tabela de Derivação de Status (RN01)
 
@@ -303,17 +321,17 @@ JWT é stateless por padrão, mas o sistema exige duas formas de estado server-s
 
 ### Apêndice C — Plano de Contingência da API dos Correios (M8)
 
-A API dos Correios não possui contrato REST público estável (o antigo SRO foi descontinuado e a nova API exige contrato comercial). Para mitigar esse risco no projeto acadêmico, o `RastreamentoCorreiosPort` (porta de saída do domínio) tem três adapters intercambiáveis selecionados por configuração:
+A API dos Correios não possui contrato REST público estável (o antigo SRO foi descontinuado e a nova API exige contrato comercial). Para mitigar esse risco, o `RastreamentoCorreiosPort` (porta de saída do domínio) tem três adapters intercambiáveis selecionados por configuração:
 
 | Adapter | Quando ativar | Comportamento |
 |---------|---------------|---------------|
-| `CorreiosStubAdapter` | Desenvolvimento e demonstração da banca (default em `dev`) | Retorna etapas sintéticas progressivas com base no tempo decorrido desde o cadastro do pedido. Permite simular o ciclo completo sem dependência externa. |
+| `CorreiosStubAdapter` | Desenvolvimento e ambiente de demonstração (default em `dev`) | Retorna etapas sintéticas progressivas com base no tempo decorrido desde o cadastro do pedido. Permite simular o ciclo completo sem dependência externa. |
 | `CorreiosHttpAdapter` | Produção (se contrato disponível) | Chama a API real. Implementa **Circuit Breaker** (Resilience4j): após 5 falhas consecutivas, abre o circuito por 60s e usa o último cache conhecido. |
 | `CorreiosCacheOnlyAdapter` | Fallback explícito | Usa só o cache local. Mensagem de UI: "atualização indisponível, exibindo última informação conhecida". |
 
 **Seleção:** propriedade `correios.adapter` em `application.properties` (`stub` | `http` | `cache-only`).
 
-**Implicação para a banca:** mesmo que o avaliador rode o sistema sem acesso à API real, o fluxo de rastreamento funciona ponta-a-ponta com dados sintéticos. Isso é defesa direta contra a pergunta "e se a API cair?". Resposta: já tratado por arquitetura (Hexagonal + Strategy/Decorator de adapters).
+**Implicação:** mesmo sem acesso à API real, o fluxo de rastreamento funciona ponta-a-ponta com dados sintéticos. A indisponibilidade da API externa é tratada pela arquitetura (Hexagonal + Strategy/Decorator de adapters), sem impacto no domínio.
 
 ---
 
@@ -321,65 +339,319 @@ A API dos Correios não possui contrato REST público estável (o antigo SRO foi
 
 Os casos de uso descrevem as interações entre atores e o sistema em nível de comportamento observável. Seguem a notação textual estruturada (Cockburn).
 
-### Diagrama de Atores
+### Atores e seus Casos de Uso
 
-| Ator | Casos de Uso | Sistemas Externos Acionados |
-|------|--------------|-----------------------------|
-| Usuário (Cliente) | UC01 — Cadastrar Pedido<br>UC02 — Rastrear Pedido<br>UC03 — Receber Notificação em Tempo Real<br>UC04 — Visualizar Cotação<br>UC05 — Gerenciar Conta | API Correios (via UC02)<br>API Câmbio (via UC04) |
-| Administrador | UC06 — Monitorar Dashboard<br>UC07 — Inserir Etapa Manual<br>UC08 — Gerenciar Usuários<br>UC09 — Definir Cotação Manual<br>UC10 — Exportar Dados | — |
+#### Usuário (Cliente)
+
+- UC01 — Cadastrar Pedido
+- UC02 — Rastrear Pedido
+- UC03 — Receber Notificação em Tempo Real
+- UC04 — Visualizar Cotação
+- UC05 — Gerenciar Conta
+
+*Sistemas externos acionados:* API Correios (via UC02), API Câmbio (via UC04).
+
+#### Administrador
+
+- UC06 — Monitorar Dashboard
+- UC07 — Inserir Etapa Manual
+- UC08 — Gerenciar Usuários
+- UC09 — Definir Cotação Manual
+- UC10 — Exportar Dados
+
+*Sistemas externos acionados:* nenhum diretamente.
 
 ---
 
 ### UC01 — Cadastrar Pedido
 
-| Campo | Conteúdo |
-|-------|----------|
-| **Atores** | Usuário autenticado com perfil Cliente ou Administrador. |
-| **Pré-condições** | Usuário está autenticado (JWT válido). Usuário possui menos de 200 pedidos ativos. |
-| **Fluxo Principal** | 1. Usuário acessa a tela "Novo Pedido". 2. Sistema exibe o formulário de cadastro. 3. Usuário preenche: código de rastreamento (obrigatório), descrição, valor e moeda. 4. Usuário confirma o cadastro. 5. Sistema valida os dados (RN06 — unicidade do código). 6. Sistema publica evento `pedido.criado` no RabbitMQ. 7. Sistema retorna HTTP 202 e exibe mensagem de sucesso na UI. 8. Em segundo plano, o consumer RabbitMQ persiste o pedido no MySQL (sem etapas — o status derivado inicial é `PROCESSANDO`). 9. Sistema envia notificação WebSocket ao usuário confirmando a criação (RNF03). |
-| **Fluxos Alternativos / Exceção** | **FA01:** Código de rastreamento já cadastrado pelo mesmo usuário → sistema exibe erro de validação (HTTP 422), pedido não é criado.<br>**FA02:** RabbitMQ indisponível → sistema retorna HTTP 503 e orienta o usuário a tentar novamente. *(Decisão técnica: nesta versão não foi adotado outbox pattern; em v2 a operação será sempre persistida localmente e publicada por worker.)*<br>**FA03:** Campos obrigatórios ausentes → sistema destaca os campos e bloqueia o envio. |
-| **Pós-condições** | Pedido criado com status derivado `PROCESSANDO` (sem etapas registradas). Evento `pedido.criado` persistido no broker. Usuário notificado via WebSocket. |
-| **Regras de Negócio** | RN03 (Desacoplamento), RN06 (Unicidade do código). |
+**Atores:** Usuário autenticado com perfil Cliente ou Administrador.
+
+**Pré-condições:**
+
+- Usuário está autenticado (JWT válido).
+- Usuário possui menos de 200 pedidos ativos.
+
+**Fluxo Principal:**
+
+1. Usuário acessa a tela "Novo Pedido".
+2. Sistema exibe o formulário de cadastro.
+3. Usuário preenche: código de rastreamento (obrigatório), descrição, valor e moeda.
+4. Usuário confirma o cadastro.
+5. Sistema valida os dados (RN06 — unicidade do código).
+6. Sistema publica evento `pedido.criado` no RabbitMQ.
+7. Sistema retorna HTTP 202 e exibe mensagem de sucesso na UI.
+8. Em segundo plano, o consumer RabbitMQ persiste o pedido no MySQL (sem etapas — o status derivado inicial é `PROCESSANDO`).
+9. Sistema envia notificação WebSocket ao usuário confirmando a criação (RNF03).
+
+**Fluxos Alternativos / Exceção:**
+
+- **FA01** — Código de rastreamento já cadastrado pelo mesmo usuário → sistema exibe erro de validação (HTTP 422); pedido não é criado.
+- **FA02** — RabbitMQ indisponível → sistema retorna HTTP 503 e orienta o usuário a tentar novamente. *(Decisão técnica: nesta versão não foi adotado outbox pattern; em v2 a operação será sempre persistida localmente e publicada por worker.)*
+- **FA03** — Campos obrigatórios ausentes → sistema destaca os campos e bloqueia o envio.
+
+**Pós-condições:** Pedido criado com status derivado `PROCESSANDO` (sem etapas registradas). Evento `pedido.criado` persistido no broker. Usuário notificado via WebSocket.
+
+**Regras de Negócio:** RN03 (Desacoplamento), RN06 (Unicidade do código).
 
 ---
 
 ### UC02 — Rastrear Pedido
 
-| Campo | Conteúdo |
-|-------|----------|
-| **Atores** | Usuário autenticado (dono do pedido) ou Administrador (qualquer pedido). |
-| **Pré-condições** | Usuário está autenticado. O pedido existe e pertence ao usuário (ou ator é Administrador). |
-| **Fluxo Principal** | 1. Usuário acessa o detalhe de um pedido. 2. Sistema busca as etapas de rastreamento no MySQL. 3. Sistema calcula o status derivado a partir da última etapa (RN01). 4. Sistema exibe a linha do tempo com todas as etapas em ordem cronológica. 5. Sistema verifica se o pedido está em estado nacional (último `TipoEtapa` ∈ {`NO_BRASIL`, `CD_BRASIL`, `SAIDA_ENTREGA`}) e o último sync foi há mais de 6h; em caso afirmativo, dispara consulta à API dos Correios. 6. Novas etapas retornadas são persistidas e exibidas na linha do tempo. 7. Sistema exibe a cotação atual do valor do pedido em BRL. |
-| **Fluxos Alternativos / Exceção** | **FA01:** API dos Correios indisponível → sistema exibe as últimas etapas conhecidas com aviso de que pode haver atualizações pendentes.<br>**FA02:** Pedido não pertence ao usuário (e ator não é Admin) → HTTP 403 Forbidden. |
-| **Pós-condições** | Linha do tempo exibida e atualizada. Novas etapas persistidas se encontradas. |
-| **Regras de Negócio** | RN01 (Status derivado), RN07 (Fallback de cotação). |
+**Atores:** Usuário autenticado (dono do pedido) ou Administrador (qualquer pedido).
+
+**Pré-condições:** Usuário está autenticado. O pedido existe e pertence ao usuário (ou o ator é Administrador).
+
+**Fluxo Principal:**
+
+1. Usuário acessa o detalhe de um pedido.
+2. Sistema busca as etapas de rastreamento no MySQL.
+3. Sistema calcula o status derivado a partir da última etapa (RN01).
+4. Sistema exibe a linha do tempo com todas as etapas em ordem cronológica.
+5. Sistema verifica se o pedido está em estado nacional (último `TipoEtapa` ∈ {`NO_BRASIL`, `CD_BRASIL`, `SAIDA_ENTREGA`}) e o último *sync* foi há mais de 6 h; em caso afirmativo, dispara consulta à API dos Correios.
+6. Novas etapas retornadas são persistidas e exibidas na linha do tempo.
+7. Sistema exibe a cotação atual do valor do pedido em BRL.
+
+**Fluxos Alternativos / Exceção:**
+
+- **FA01** — API dos Correios indisponível → sistema exibe as últimas etapas conhecidas com aviso de que pode haver atualizações pendentes.
+- **FA02** — Pedido não pertence ao usuário e o ator não é Administrador → HTTP 403 *Forbidden*.
+
+**Pós-condições:** Linha do tempo exibida e atualizada. Novas etapas persistidas se encontradas.
+
+**Regras de Negócio:** RN01 (Status derivado), RN07 (Fallback de cotação).
 
 ---
 
 ### UC03 — Receber Notificação em Tempo Real
 
-| Campo | Conteúdo |
-|-------|----------|
-| **Atores** | Usuário autenticado com sessão WebSocket ativa. |
-| **Pré-condições** | Usuário está autenticado e com WebSocket conectado. Um evento de atualização de pedido foi publicado no RabbitMQ. |
-| **Fluxo Principal** | 1. Consumer RabbitMQ processa evento `pedido.atualizado` ou `rastreamento.atualizado`. 2. NotificacaoService identifica o usuário dono do pedido. 3. Sistema envia mensagem WebSocket ao canal privado do usuário (`/user/{userId}/queue/notificacoes`). 4. Frontend recebe a mensagem e exibe toast/banner de notificação. 5. Sistema persiste a notificação no histórico do usuário (respeitando RN09). 6. Badge de notificações não lidas é incrementado na UI. |
-| **Fluxos Alternativos / Exceção** | **FA01:** Usuário não está conectado via WebSocket → notificação é persistida no histórico para ser vista no próximo login.<br>**FA02:** Envio WebSocket falha → sistema loga o erro, notificação continua no histórico. |
-| **Pós-condições** | Usuário informado em tempo real (se conectado). Notificação registrada no histórico. Badge de não lidas atualizado. |
-| **Regras de Negócio** | RN04 (Idempotência), RN09 (Limite de notificações). |
+**Atores:** Usuário autenticado com sessão WebSocket ativa.
+
+**Pré-condições:** Usuário está autenticado e com WebSocket conectado. Um evento de atualização de pedido foi publicado no RabbitMQ.
+
+**Fluxo Principal:**
+
+1. Consumer RabbitMQ processa o evento `pedido.atualizado` ou `rastreamento.atualizado`.
+2. `NotificacaoService` identifica o usuário dono do pedido.
+3. Sistema envia mensagem WebSocket ao canal privado do usuário (`/user/{userId}/queue/notificacoes`).
+4. Frontend recebe a mensagem e exibe *toast*/banner de notificação.
+5. Sistema persiste a notificação no histórico do usuário (respeitando RN09).
+6. *Badge* de notificações não lidas é incrementado na UI.
+
+**Fluxos Alternativos / Exceção:**
+
+- **FA01** — Usuário não está conectado via WebSocket → notificação é persistida no histórico para ser vista no próximo login.
+- **FA02** — Envio WebSocket falha → sistema loga o erro; notificação continua no histórico.
+
+**Pós-condições:** Usuário informado em tempo real (se conectado). Notificação registrada no histórico. *Badge* de não lidas atualizado.
+
+**Regras de Negócio:** RN04 (Idempotência), RN09 (Limite de notificações).
 
 ---
 
 ### UC07 — Inserir Etapa Manual (Administrador)
 
-| Campo | Conteúdo |
-|-------|----------|
-| **Atores** | Administrador autenticado. |
-| **Pré-condições** | Pedido existe. Ator possui perfil Administrador. |
-| **Fluxo Principal** | 1. Admin acessa o detalhe do pedido. 2. Admin clica em "Inserir etapa manual". 3. Admin escolhe `TipoEtapa`, descrição livre, localização (opcional) e timestamp. 4. Sistema valida que a etapa não retroage (timestamp ≥ última etapa registrada). 5. Sistema publica evento `rastreamento.atualizado`. 6. Sistema retorna HTTP 202. 7. Consumer persiste a etapa e dispara o cálculo do novo status derivado. 8. Se o status derivado mudou, evento `pedido.atualizado` é publicado, gerando notificação ao dono. |
-| **Fluxos Alternativos / Exceção** | **FA01:** Timestamp anterior à última etapa → HTTP 422 (etapas são append-only para preservar a derivação).<br>**FA02:** Tentativa de inserir etapa em pedido `cancelado` → HTTP 422. |
-| **Pós-condições** | Etapa registrada. Status derivado recalculado. Notificação enviada ao dono se o status mudou. |
-| **Regras de Negócio** | RN01 (Status derivado), RN05 (Imutabilidade de eventos). |
+**Atores:** Administrador autenticado.
+
+**Pré-condições:** Pedido existe. O ator possui perfil Administrador.
+
+**Fluxo Principal:**
+
+1. Admin acessa o detalhe do pedido.
+2. Admin clica em "Inserir etapa manual".
+3. Admin escolhe `TipoEtapa`, descrição livre, localização (opcional) e *timestamp*.
+4. Sistema valida que a etapa não retroage (`timestamp` ≥ última etapa registrada).
+5. Sistema publica o evento `rastreamento.atualizado`.
+6. Sistema retorna HTTP 202.
+7. Consumer persiste a etapa e dispara o cálculo do novo status derivado.
+8. Se o status derivado mudou, o evento `pedido.atualizado` é publicado, gerando notificação ao dono.
+
+**Fluxos Alternativos / Exceção:**
+
+- **FA01** — *Timestamp* anterior à última etapa → HTTP 422 (etapas são *append-only* para preservar a derivação).
+- **FA02** — Tentativa de inserir etapa em pedido `cancelado` → HTTP 422.
+
+**Pós-condições:** Etapa registrada. Status derivado recalculado. Notificação enviada ao dono se o status mudou.
+
+**Regras de Negócio:** RN01 (Status derivado), RN05 (Imutabilidade de eventos).
 
 ---
 
-> **Outros casos de uso** (UC04, UC05, UC06, UC08, UC09, UC10) seguem a mesma estrutura e serão detalhados em iterações posteriores conforme prioridade.
+### UC04 — Visualizar Cotação
+
+**Atores:** Usuário autenticado (Cliente ou Administrador).
+
+**Pré-condições:** Usuário está autenticado. O pedido existe e o usuário tem permissão de leitura sobre ele (dono ou Admin).
+
+**Fluxo Principal:**
+
+1. Usuário acessa o detalhe de um pedido (ou abre a tela de Cotação).
+2. Sistema identifica o par de moedas relevante (moeda de origem do pedido → BRL).
+3. Sistema lê a cotação atual em *cache* (RF20).
+4. Sistema verifica se a cotação tem mais de 24 h.
+5. Sistema calcula o valor convertido (`valor_declarado × cotação`).
+6. Sistema exibe o valor convertido junto ao valor original, com indicação do par de moedas, da data/hora da cotação e da fonte (automática ou manual — ver UC09).
+
+**Fluxos Alternativos / Exceção:**
+
+- **FA01** — Cotação em *cache* com mais de 24 h → sistema exibe o valor convertido com *flag* "cotação desatualizada" e *tooltip* explicativo (RN07).
+- **FA02** — Sem cotação em *cache* (primeiro uso da moeda no sistema) → sistema dispara consulta síncrona à API de câmbio. Em caso de sucesso, atualiza o *cache* e exibe; em caso de falha, exibe o valor original sem conversão e a mensagem "Cotação indisponível".
+- **FA03** — Existe cotação manual ativa para o par (UC09) → sistema usa a cotação manual em vez da automática e sinaliza visualmente (`manual=true`).
+
+**Pós-condições:** Valor convertido exibido. *Cache* de cotação eventualmente atualizado (assíncrono).
+
+**Regras de Negócio:** RN07 (fallback de cotação).
+
+---
+
+### UC05 — Gerenciar Conta
+
+**Atores:** Usuário autenticado (Cliente).
+
+**Pré-condições:** Usuário está autenticado.
+
+**Fluxo Principal:**
+
+1. Usuário acessa "Minha Conta".
+2. Sistema exibe dados pessoais (nome, e-mail) e opções de alterar senha, exportar dados pessoais e solicitar exclusão de conta (LGPD).
+3. Usuário edita os dados ou aciona uma das opções.
+4. Sistema valida:
+   - unicidade do novo e-mail (se alterado);
+   - senha atual correta (se a troca de senha for solicitada);
+   - força mínima da nova senha (mesmos critérios de RF01).
+5. Sistema persiste as alterações.
+6. Sistema confirma na UI. Em caso de troca de senha, *refresh tokens* existentes são revogados (RF03).
+
+**Fluxos Alternativos / Exceção:**
+
+- **FA01** — Senha atual incorreta → HTTP 401 + mensagem clara; bloqueio temporário se atingir 5 falhas (RNF06).
+- **FA02** — E-mail novo já em uso → HTTP 422 + mensagem.
+- **FA03** — Usuário solicita exportação de dados pessoais → sistema gera arquivo (CSV ou JSON) com seus dados e disponibiliza para *download* (RNF09).
+- **FA04** — Usuário solicita exclusão de conta → conta é marcada como inativa (*soft delete*); dados anonimizados após 12 meses (RN08, RNF09).
+
+**Pós-condições:** Dados atualizados. Em caso de troca de senha, sessões antigas precisam refazer *login*.
+
+**Regras de Negócio:** RN08 (retenção e anonimização para LGPD), RNF06 (segurança da autenticação), RNF09 (LGPD).
+
+---
+
+### UC06 — Monitorar Dashboard (Administrador)
+
+**Atores:** Administrador.
+
+**Pré-condições:** Usuário autenticado com perfil Administrador.
+
+**Fluxo Principal:**
+
+1. Admin acessa a rota `/admin/dashboard`.
+2. Sistema consulta, em paralelo:
+   - total de pedidos ativos, agregado por status (RF22);
+   - pedidos com taxa aduaneira pendente;
+   - pedidos entregues no mês corrente;
+   - evolução do volume de pedidos nos últimos 30 dias por status (RF23);
+   - 10 pedidos mais recentemente atualizados (RF24).
+3. Sistema renderiza *cards* de KPI e o gráfico de evolução.
+4. Admin pode filtrar o gráfico por status.
+5. Admin pode clicar em qualquer pedido da lista "Recentes" para abrir o caso de uso UC02 (Rastrear Pedido).
+
+**Fluxos Alternativos / Exceção:**
+
+- **FA01** — Uma métrica individual falha (*timeout* em *query* agregada, indisponibilidade temporária) → sistema exibe os *cards* disponíveis e marca os indisponíveis com `—` + ícone de aviso. O *dashboard* nunca falha por completo.
+- **FA02** — Admin sem permissão de visualizar uma métrica específica (em futura expansão de RBAC) → métrica oculta sem erro.
+
+**Pós-condições:** KPIs e gráficos exibidos. Sem efeito colateral persistente.
+
+**Regras de Negócio:** RN01 (o status derivado é base para os agregados); demais agregam dados já existentes.
+
+---
+
+### UC08 — Gerenciar Usuários (Administrador)
+
+**Atores:** Administrador.
+
+**Pré-condições:** Usuário autenticado com perfil Administrador.
+
+**Fluxo Principal:**
+
+1. Admin acessa `/admin/usuarios`.
+2. Sistema lista usuários com paginação (20 por página), busca por nome ou e-mail e filtros por perfil e status (ativo/inativo).
+3. Para cada usuário, o Admin pode:
+   - promover Cliente → Administrador (ou rebaixar Administrador → Cliente);
+   - desativar / reativar (*soft delete*; nunca exclusão física);
+   - redefinir senha (RF25 — substituto operacional do RF04 removido).
+4. Sistema valida cada ação:
+   - Admin não pode rebaixar a si mesmo (proteção operacional);
+   - Sistema não permite a operação que deixaria nenhum Admin ativo.
+5. Para redefinição de senha, o sistema gera uma senha temporária forte, exibe uma única vez (não persiste em claro) e marca a conta com *flag* "senha temporária" — no próximo *login*, o usuário é obrigado a trocar a senha.
+6. Sistema persiste e confirma. Evento de auditoria registrado.
+
+**Fluxos Alternativos / Exceção:**
+
+- **FA01** — Tentativa de rebaixar o último Admin ativo → HTTP 422 + mensagem.
+- **FA02** — Tentativa de rebaixar a si mesmo → HTTP 403 + mensagem.
+- **FA03** — Tentativa de exclusão definitiva (DELETE permanente) → não permitido; apenas *soft delete*.
+- **FA04** — Redefinição de senha com falha de persistência → senha temporária não é exibida (operação atômica).
+
+**Pós-condições:** Perfil, estado ou senha do usuário atualizados. *Refresh tokens* do usuário podem ser revogados (em caso de troca de senha). Evento de auditoria registrado.
+
+**Regras de Negócio:** RF05 (RBAC), RF25 (redefinição de senha pelo Admin), RNF06 (segurança), RNF09 (LGPD).
+
+---
+
+### UC09 — Definir Cotação Manual (Administrador)
+
+**Atores:** Administrador.
+
+**Pré-condições:** Usuário autenticado com perfil Administrador.
+
+**Fluxo Principal:**
+
+1. Admin acessa "Cotação Manual" no painel administrativo.
+2. Admin escolhe o par de moedas (CNY/BRL, USD/BRL ou EUR/BRL).
+3. Admin informa a taxa de câmbio (decimal positivo) e, opcionalmente, uma data de validade.
+4. Sistema valida:
+   - taxa positiva e não-zero;
+   - taxa dentro de *range* plausível (configurável; *default* ±50 % sobre a última cotação automática);
+   - se a data de validade for informada, deve ser futura.
+5. Sistema persiste a cotação como tipo `manual`, sobrescrevendo a automática para o par escolhido.
+6. Sistema sinaliza visualmente em toda a UI (*badge* "M" ou ícone "manual") que a cotação é manual (RF21).
+
+**Fluxos Alternativos / Exceção:**
+
+- **FA01** — Taxa fora do *range* plausível → HTTP 422; Admin precisa marcar "Confirmar valor incomum" para prosseguir (proteção contra erro de digitação).
+- **FA02** — Admin remove a cotação manual → sistema volta a usar a automática; UI deixa de exibir o marcador "manual".
+- **FA03** — Cotação manual com data de validade vencida → cotação é desativada automaticamente e o sistema retorna ao uso da automática.
+
+**Pós-condições:** Cotação manual ativa para o par. Toda exibição do UC04 passa a usar a manual até remoção.
+
+**Regras de Negócio:** RF21 (cotação manual), RN07 (*fallback* de cotação — a manual sempre prevalece sobre a automática enquanto ativa).
+
+---
+
+### UC10 — Exportar Dados (Administrador)
+
+**Atores:** Administrador.
+
+**Pré-condições:** Usuário autenticado com perfil Administrador.
+
+**Fluxo Principal:**
+
+1. Admin acessa "Exportar Pedidos" no painel.
+2. Admin aplica filtros (status, período de criação, faixa de valor, usuário, etc.).
+3. Admin escolhe o formato de saída (CSV ou XLSX).
+4. Sistema estima a quantidade de registros que correspondem aos filtros.
+5. Geração do arquivo:
+   - **resultados pequenos** (< 5.000 linhas): sistema gera o arquivo de forma síncrona e o retorna como *download* imediato;
+   - **resultados grandes** (≥ 5.000 linhas): sistema enfileira um *job* assíncrono, exibe progresso e envia notificação (UC03) ao Admin quando o arquivo estiver pronto.
+6. Admin baixa o arquivo. Evento de exportação registrado para auditoria (quem exportou, quando, quais filtros, quantos registros).
+
+**Fluxos Alternativos / Exceção:**
+
+- **FA01** — Filtros resultam em 0 registros → sistema exibe alerta e não gera arquivo.
+- **FA02** — *Job* assíncrono falha → sistema notifica o Admin com mensagem e oferece opção "tentar novamente".
+- **FA03** — Resultado excede o limite máximo permitido (configurável; *default* 100.000 linhas) → sistema sugere refinar os filtros e bloqueia a exportação.
+- **FA04** — Tentativa de exportar dados de outro usuário sem permissão administrativa adequada → HTTP 403.
+
+**Pós-condições:** Arquivo disponível para *download* (síncrono ou assíncrono). *Log* de exportação registrado.
+
+**Regras de Negócio:** RF26 (exportação), RNF09 (LGPD — toda exportação que contenha dados pessoais é auditada).

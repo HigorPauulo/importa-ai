@@ -1,4 +1,10 @@
 
+# Backups e temporários
+*.bak
+*.tmp
+*~
+.~lock.*#
+
 # Java / Spring Boot
 target/
 *.class

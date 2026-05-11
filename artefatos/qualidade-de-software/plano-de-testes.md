@@ -31,7 +31,7 @@ definidos na ERS v1.2, com foco em:
 
 | Camada | Meta de cobertura | Ferramenta | Observação |
 |--------|-------------------|------------|------------|
-| `domain/` | **≥ 80%** linhas e branches | JaCoCo | Coração da nota da banca. Onde a derivação de status, validações de etapa e regras de negócio vivem. |
+| `domain/` | **≥ 80%** linhas e branches | JaCoCo | Núcleo do sistema — onde a derivação de status, as validações de etapa e as regras de negócio vivem. |
 | `application/usecase/` | **≥ 70%** linhas | JaCoCo | Casos de uso são finos, mas concentram a orquestração. |
 | `infrastructure/adapter/in/rest/` | **≥ 60%** linhas | JaCoCo | Cobertura via `@SpringBootTest` + MockMvc. |
 | `infrastructure/adapter/in/messaging/` | **≥ 60%** linhas | JaCoCo | Consumers RabbitMQ via Testcontainers. |
