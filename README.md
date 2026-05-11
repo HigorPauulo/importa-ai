@@ -122,6 +122,7 @@ UI em `http://localhost:5173`.
 | [Plano de Testes](artefatos/qualidade-de-software/plano-de-testes.md) | Casos de teste TC01–TC31 + metas de cobertura |
 | [Guia de Estilos](artefatos/modelagem-de-interfaces/guia-de-estilos.md) | Tokens visuais, componentes-chave, acessibilidade |
 | [Diagramas C4](artefatos/design-de-software/diagramas-C4/) | Contexto, Container, Componentes (drawio) |
+| [Modelo de Dados](artefatos/modelagem-de-dados/modelo-de-dados.md) | Esquema do banco — tabelas de suporte e pendências do DER |
 
 ---
 
