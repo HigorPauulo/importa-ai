@@ -2,7 +2,7 @@
 
 ## Objetivo
 Garantir que o sistema atenda aos requisitos funcionais e não funcionais
-definidos na ERS v1.2, com foco em:
+definidos na ERS <!-- TODO-versao-ers -->v1.2, com foco em:
 - Confiabilidade do fluxo de mensageria (idempotência, DLQ, ordem).
 - Integridade da derivação de status do pedido (RN01, Apêndice A).
 - Resiliência das integrações externas (Correios, Câmbio).
@@ -12,6 +12,7 @@ definidos na ERS v1.2, com foco em:
 |------|--------|-----------|
 | 12/03/2026 | 1.0 | Plano inicial alinhado à ERS v1.0 |
 | 09/05/2026 | 1.1 | Alinhamento com ERS v1.2 (status derivado, INSERT-first, plano Correios), metas para adapters/infra, critério mensurável de latência WS, novos casos para RN07 e limite de pedidos ativos |
+<!-- TODO-versao-ers: na Fase 6, adicionar a linha v1.2 alinhada à ERS v1.5 com os novos casos (TAXA, p95 real WS, etc.) -->
 
 ---
 
@@ -68,8 +69,9 @@ definidos na ERS v1.2, com foco em:
 | TC19 | Última etapa `ENTREGUE` → status derivado | Unitário | `ENTREGUE` |
 | TC20 | Pedido com `cancelado=true` (qualquer etapa) | Unitário | `CANCELADO` (sobrescreve etapa) |
 | TC21 | Inserir etapa com timestamp anterior à última | Unitário | `EtapaRetroativaException` (HTTP 422) |
+| TC32 | Última etapa `TAXA` → status derivado | Unitário | `ENVIADO` |
 
-> **Cobertura:** TC15–TC20 implementam exatamente as 10 linhas do Apêndice A da ERS — tabela parametrizada com `@ParameterizedTest`.
+> **Cobertura:** TC15–TC20 e TC32 implementam exatamente as 11 linhas do Apêndice A da ERS — tabela parametrizada com `@ParameterizedTest`.
 
 ### Módulo: Mensageria
 
@@ -111,7 +113,7 @@ definidos na ERS v1.2, com foco em:
 
 | ID | Cenário | Tipo | Critério de aceitação |
 |----|---------|------|-----------------------|
-| TC29 | `CorreiosStubAdapter` retorna etapas progressivas | Unitário | Pedido com 1h de idade retorna `NA_CHINA`; com 24h retorna `EM_TRANSITO`; etc. (Apêndice C) |
+| TC29 | `CorreiosStubAdapter` retorna etapas progressivas | Unitário | Pedido com 1h de idade retorna `NA_CHINA`; com 24h retorna `EM_TRANSITO`; etc. (ver [ADR-004](../design-de-software/adrs/004-adapters-correios.md)) |
 | TC30 | `CorreiosHttpAdapter` com circuit breaker aberto | Integração (WireMock) | Após 5 falhas, próxima chamada NÃO toca a API (curto-circuito); retorna do cache |
 | TC31 | Sincronização automática (a cada 6h) | Integração | Scheduler dispara consulta apenas para pedidos em estado nacional; novas etapas persistidas |
 

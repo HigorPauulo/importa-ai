@@ -61,7 +61,7 @@ Importada via Google Fonts em `index.css`:
 
 ### Etapas de rastreamento (`TipoEtapa`)
 
-Para coerência visual com o status macro, etapas que geram status `PROCESSANDO` usam o tom **primary-light**, e etapas que geram `ENVIADO` ou `ENTREGUE` usam o tom **success**.
+Para coerência visual com o status macro, etapas que geram status `PROCESSANDO` usam o tom **primary-light**, e etapas que geram `ENVIADO` ou `ENTREGUE` usam o tom **success**. **Exceção:** `TAXA`, embora derive status `ENVIADO`, exige ação do usuário (pagamento de imposto) e por isso usa o tom **warning** — alinhado com o uso de `--color-warning` para "taxa pendente" definido acima.
 
 | Etapa | Background | Texto |
 |-------|------------|-------|
@@ -70,6 +70,7 @@ Para coerência visual com o status macro, etapas que geram status `PROCESSANDO`
 | `EM_TRANSITO` | `primary-light` | `primary-dark` |
 | `AEROPORTO_DESTINO` | `primary-light` | `primary-dark` |
 | `NO_BRASIL` | `success-bg` | `success-dark` |
+| `TAXA` | `warning-bg` | `warning` |
 | `CD_BRASIL` | `success-bg` | `success-dark` |
 | `SAIDA_ENTREGA` | `success-bg` | `success-dark` |
 | `ENTREGUE` | `success-bg` | `success-dark` |

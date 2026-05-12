@@ -123,7 +123,7 @@ O "Importa Aí" é um sistema web independente que atua como camada de gestão e
 ## 8. Premissas
 
 - O usuário possui acesso à internet para usar o sistema.
-- A API dos Correios **pode** estar disponível. O sistema é resiliente a sua indisponibilidade via plano de contingência (ver Apêndice C). Em ambiente de desenvolvimento e demonstração, é usado um adapter `stub` que retorna etapas sintéticas.
+- A API dos Correios **pode** estar disponível. O sistema é resiliente a sua indisponibilidade via estratégia de adapters intercambiáveis (`stub`, `http` com *circuit breaker*, `cache-only`) — detalhamento em [ADR-004](adrs/004-adapters-correios.md). Em ambiente de desenvolvimento e demonstração, é usado o adapter `stub`, que retorna etapas sintéticas.
 - A API de Cotação de Câmbio estará disponível. Em caso de indisponibilidade, o sistema usará a última cotação armazenada em cache (RN07).
 - O broker RabbitMQ estará disponível para receber publicações. Em caso de indisponibilidade, ver tratamento na UC01 (FA02).
 - O endpoint STOMP/WebSocket é exposto pelo próprio API Backend (Spring Boot), no mesmo processo da API REST. Não há container WebSocket separado.
@@ -134,7 +134,7 @@ O "Importa Aí" é um sistema web independente que atua como camada de gestão e
 ## 9. Dependências
 
 - Backend: Java 17+ / Spring Boot 3.x.
-- Frontend: React 18+ / TypeScript / Tailwind CSS 3.x.
+- Frontend: React 18+ / TypeScript / Tailwind CSS 4.x.
 - **Mensageria: RabbitMQ 3.13+ (protocolo AMQP).**
 - Banco de dados: MySQL 8.x.
 - Tempo real: STOMP sobre WebSocket (SockJS como fallback).
@@ -180,7 +180,7 @@ Cada requisito funcional está classificado por prioridade (Alta / Média / Baix
 | ID | Nome | Descrição | Prioridade |
 |----|------|-----------|------------|
 | RF11 | Etapas Internacionais | O sistema deve registrar e exibir as etapas internacionais: 1) NA_CHINA — pedido processado pelo fornecedor; 2) AEROPORTO_ORIGEM — despacho aduaneiro China; 3) EM_TRANSITO — em voo internacional; 4) AEROPORTO_DESTINO — chegada ao Brasil. | Alta |
-| RF12 | Etapas Nacionais (Correios) | Após chegada ao Brasil, o sistema deve consultar a API dos Correios e registrar as sub-etapas: NO_BRASIL (recebido), Taxa (aguardando pagamento de imposto, quando aplicável), CD_BRASIL (em CD regional), SAIDA_ENTREGA (saída para entrega) e ENTREGUE (entrega ao destinatário). | Alta |
+| RF12 | Etapas Nacionais (Correios) | Após chegada ao Brasil, o sistema deve consultar a API dos Correios e registrar as sub-etapas, como valores do enum `TipoEtapa`: `NO_BRASIL` (recebido), `TAXA` (aguardando pagamento de imposto aduaneiro, quando aplicável), `CD_BRASIL` (em CD regional), `SAIDA_ENTREGA` (saída para entrega) e `ENTREGUE` (entrega ao destinatário). **Trade-off conhecido:** quando a taxa é paga, o pacote avança para `CD_BRASIL` — não há registro persistente de "houve taxa" no `Pedido` (apenas o histórico da linha do tempo preserva isso). Caso o negócio passe a exigir consulta direta ao histórico de taxas, uma entidade `Taxa` separada poderá ser adicionada em v2. | Alta |
 | RF13 | Atualização Manual de Etapa | O Administrador deve poder inserir manualmente uma nova etapa de rastreamento para qualquer pedido, com descrição livre e timestamp. Útil para etapas não capturadas automaticamente pela API dos Correios. **Esta é a única forma de promover o status do pedido (ver RN01).** | Média |
 | RF14 | Linha do Tempo Visual | O sistema deve exibir todas as etapas de rastreamento em uma linha do tempo vertical, com ícone por tipo de etapa, timestamp, localização (quando disponível) e destaque visual para a etapa atual. | Alta |
 | RF15 | Sincronização Automática | O sistema deve consultar automaticamente a API dos Correios a cada 6 horas para pedidos cujo status derivado seja `ENVIADO` (ou seja, com etapas internacionais já concluídas e ainda sem entrega). O intervalo deve ser configurável por variável de ambiente. | Média |
@@ -205,7 +205,7 @@ Cada requisito funcional está classificado por prioridade (Alta / Média / Baix
 
 | ID | Nome | Descrição | Prioridade |
 |----|------|-----------|------------|
-| RF22 | Visão Geral de Pedidos | O dashboard deve exibir cards de resumo com: total de pedidos ativos, pedidos por status (contagem e percentual), pedidos com taxa pendente e pedidos entregues no mês. | Alta |
+| RF22 | Visão Geral de Pedidos | O dashboard deve exibir cards de resumo com: total de pedidos ativos, pedidos por status (contagem e percentual), pedidos com taxa pendente (definição operacional: pedidos cuja última `TipoEtapa` registrada é `TAXA`) e pedidos entregues no mês. | Alta |
 | RF23 | Gráfico de Evolução | O dashboard deve exibir um gráfico de linha com a evolução do volume de pedidos nos últimos 30 dias, com opção de filtrar por status. | Média |
 | RF24 | Lista de Pedidos Recentes | O dashboard deve exibir os 10 pedidos mais recentemente atualizados com acesso rápido ao detalhe de cada um. | Média |
 | RF25 | Gestão de Usuários | O Administrador deve poder listar, buscar, ativar/desativar, promover/rebaixar usuários **e redefinir senha de qualquer usuário** (substituto operacional do antigo RF04). Não é possível excluir usuários (soft delete); apenas desativar. | Média |
@@ -263,6 +263,7 @@ A função `derivarStatus(ultimaEtapa, cancelado): StatusPedido` é normativa:
 | `EM_TRANSITO` | `false` | `ENVIADO` |
 | `AEROPORTO_DESTINO` | `false` | `ENVIADO` |
 | `NO_BRASIL` | `false` | `ENVIADO` |
+| `TAXA` | `false` | `ENVIADO` |
 | `CD_BRASIL` | `false` | `ENVIADO` |
 | `SAIDA_ENTREGA` | `false` | `ENVIADO` |
 | `ENTREGUE` | `false` | `ENTREGUE` |
@@ -494,7 +495,7 @@ Os casos de uso descrevem as interações entre atores e o sistema em nível de 
 1. Admin acessa a rota `/admin/dashboard`.
 2. Sistema consulta, em paralelo:
    - total de pedidos ativos, agregado por status (RF22);
-   - pedidos com taxa aduaneira pendente;
+   - pedidos com taxa aduaneira pendente (última `TipoEtapa` registrada = `TAXA`);
    - pedidos entregues no mês corrente;
    - evolução do volume de pedidos nos últimos 30 dias por status (RF23);
    - 10 pedidos mais recentemente atualizados (RF24).

@@ -21,7 +21,7 @@ Adotar **Arquitetura Hexagonal** (*Ports & Adapters*) com três camadas:
 ## Alternativas consideradas
 
 - **MVC clássico** (Controller → Service → Repository com JPA direto no Service) — rejeitado. Acopla o domínio à persistência; mata a testabilidade isolada.
-- **Clean Architecture** — conceitualmente equivalente. "Hexagonal" foi escolhida porque enfatiza melhor o conceito de *adapters intercambiáveis* (útil no caso do `RastreamentoCorreiosPort`, com 3 adapters: stub, http, cache-only — Apêndice C da ERS).
+- **Clean Architecture** — conceitualmente equivalente. "Hexagonal" foi escolhida porque enfatiza melhor o conceito de *adapters intercambiáveis* (útil no caso do `RastreamentoCorreiosPort`, com 3 adapters: stub, http, cache-only — ver [ADR-004](004-adapters-correios.md)).
 
 ## Consequências
 
@@ -32,5 +32,5 @@ Adotar **Arquitetura Hexagonal** (*Ports & Adapters*) com três camadas:
 
 ## Referências
 
-- ERS — Apêndice C (caso dos adapters de Correios)
+- [ADR-004](004-adapters-correios.md) — Adapters intercambiáveis para integração com Correios
 - [Design Patterns Escolhidos](../design-patterns-escolhidos.md) — Repository, Adapter, Decorator
