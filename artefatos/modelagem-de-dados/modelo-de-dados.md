@@ -1,14 +1,24 @@
 # Modelo de Dados — Importa Aí
 
-**Versão:** 1.0 (rascunho)
-**Data:** 11 de Maio de 2026
+**Versão:** 1.0
+**Data:** 12 de Maio de 2026
 **Autor:** Equipe Importa Aí
+
+## Histórico de Revisão
+
+| Data | Versão | Descrição | Autor |
+|------|--------|-----------|-------|
+| 11/05/2026 | 1.0 (rascunho) | Esquema inicial das tabelas de suporte técnico (autenticação, idempotência, trigger RN09) | Higor Paulo Costa |
+| 12/05/2026 | 1.0 | Publicação: incluído §4 com DER completo das entidades de negócio (`usuario`, `pedido` com `status_cache`, `etapa_rastreamento` append-only, `notificacao`, `cotacao_cache`); referência ao ADR-005 para criptografia de PII | Higor Paulo Costa |
 
 ## Propósito
 
-Este documento descreve o esquema relacional do banco de dados do sistema. O Diagrama Entidade-Relacionamento (DER) completo, com todas as entidades de negócio (`usuario`, `pedido`, `etapa_rastreamento`, `notificacao`, `cotacao_cache`), será produzido em iteração posterior e versionado neste diretório.
+Este documento descreve o esquema relacional do banco de dados do sistema. Contém:
 
-Por ora, este documento contém o esquema das **tabelas de suporte técnico** que dão respaldo a regras de negócio e requisitos não-funcionais específicos da ERS.
+1. O **esquema das entidades de negócio** (§4) — pedido, usuário, etapa de rastreamento, notificação e cotação.
+2. O **esquema das tabelas de suporte técnico** (§1–§3) — autenticação stateless, idempotência de mensageria, FIFO de notificações.
+
+O Diagrama Entidade-Relacionamento (DER) visual está em [`der.drawio`](der.drawio) neste mesmo diretório.
 
 ---
 
@@ -88,14 +98,131 @@ END;
 
 ---
 
-## 4. Pendências
+## 4. Entidades de negócio (DER)
 
-- DER completo das entidades de negócio (`usuario`, `pedido`, `etapa_rastreamento`, `notificacao`, `cotacao_cache`).
-- Definição final de cardinalidades, índices secundários e *constraints* de integridade referencial.
-- Modelo físico anotado (tipos exatos por SGBD).
+Esquema MySQL 8.x. Convenção: `snake_case` para nomes; `id BIGINT AUTO_INCREMENT` como PK técnica em todas as entidades. Todos os timestamps em UTC. *Charset* `utf8mb4` / *collation* `utf8mb4_0900_ai_ci`.
+
+### 4.1 `usuario`
+
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| `id` | BIGINT AUTO_INCREMENT (PK) | Identificador interno. |
+| `email` | VARBINARY(255) NOT NULL | E-mail. Criptografado em repouso via TDE do SGBD (ADR-005). |
+| `email_hash` | CHAR(64) NOT NULL | HMAC-SHA256 determinístico do e-mail. Suporta busca exata sem decriptar (ADR-005). |
+| `senha_hash` | VARCHAR(60) NOT NULL | BCrypt (cost ≥ 12) da senha. |
+| `nome_completo` | VARCHAR(200) NOT NULL | Nome do usuário (TDE em repouso). |
+| `perfil` | ENUM('CLIENTE','ADMINISTRADOR') NOT NULL DEFAULT 'CLIENTE' | RBAC — RF05. |
+| `ativo` | BOOLEAN NOT NULL DEFAULT TRUE | *Soft delete* — RF25. |
+| `criado_em` | TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP | — |
+| `atualizado_em` | TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | — |
+
+- **UNIQUE:** `email_hash` — unicidade e busca rápida.
+- **INDEX:** `(perfil, ativo)` — listagens do RF25.
+
+### 4.2 `pedido`
+
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| `id` | BIGINT AUTO_INCREMENT (PK) | — |
+| `usuario_id` | BIGINT NOT NULL | FK → `usuario(id)`. |
+| `codigo_rastreamento` | VARCHAR(50) NOT NULL | Código do envio (Correios ou equivalente). |
+| `descricao` | VARCHAR(500) NULL | — |
+| `valor_declarado` | DECIMAL(15,2) NOT NULL | Valor na moeda de origem. |
+| `moeda` | CHAR(3) NOT NULL | `CNY` / `USD` / `EUR`. |
+| `cancelado` | BOOLEAN NOT NULL DEFAULT FALSE | Flag usada na derivação de `StatusPedido` (RN01). |
+| `status_cache` | ENUM('PROCESSANDO','ENVIADO','ENTREGUE','CANCELADO') NOT NULL DEFAULT 'PROCESSANDO' | **Cache derivado** (RN01, [ADR-003](../design-de-software/adrs/003-status-derivado-da-etapa.md)). Atualizado por *listener* após cada inserção de etapa. **Nunca é fonte de verdade.** Pode ser reconstruído da tabela `etapa_rastreamento` a qualquer momento. |
+| `estimado_entrega` | DATE NULL | Data estimada (opcional). |
+| `criado_em` | TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP | — |
+| `atualizado_em` | TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | — |
+
+- **UNIQUE:** `(usuario_id, codigo_rastreamento)` — RN06.
+- **FK:** `usuario_id` → `usuario(id)` `ON DELETE RESTRICT`.
+- **INDEX:** `(status_cache)` — filtros do dashboard (RF22).
+- **INDEX:** `(usuario_id, criado_em DESC)` — listagem paginada (RF07).
+
+### 4.3 `etapa_rastreamento`
+
+Entidade dentro do agregado `Pedido`. **Append-only por `criado_em`** (RF13, ADR-003).
+
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| `id` | BIGINT AUTO_INCREMENT (PK) | — |
+| `pedido_id` | BIGINT NOT NULL | FK → `pedido(id)`. |
+| `tipo` | ENUM('NA_CHINA','AEROPORTO_ORIGEM','EM_TRANSITO','AEROPORTO_DESTINO','NO_BRASIL','TAXA','CD_BRASIL','SAIDA_ENTREGA','ENTREGUE') NOT NULL | Sequência cronológica esperada (RF12). |
+| `localizacao` | VARCHAR(255) NULL | — |
+| `descricao` | VARCHAR(500) NULL | — |
+| `criado_em` | TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) | *Timestamp* do evento (precisão de milissegundos). |
+
+- **FK:** `pedido_id` → `pedido(id)` `ON DELETE CASCADE` — etapas pertencem ao agregado; se o pedido for excluído fisicamente (não usual; ver RN08), suas etapas vão junto.
+- **UNIQUE:** `(pedido_id, criado_em)` — reforça *append-only* (impede duplicação ou reescrita) e garante ordenação determinística.
+- **INDEX:** `(pedido_id, criado_em DESC)` — recupera a última etapa em O(log n), crítico para o cálculo do status derivado (RN01).
+
+### 4.4 `notificacao`
+
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| `id` | BIGINT AUTO_INCREMENT (PK) | — |
+| `usuario_id` | BIGINT NOT NULL | FK → `usuario(id)`. |
+| `pedido_id` | BIGINT NULL | FK → `pedido(id)`, opcional (notificação pode não estar atrelada a um pedido). |
+| `mensagem` | VARCHAR(500) NOT NULL | — |
+| `lida` | BOOLEAN NOT NULL DEFAULT FALSE | — |
+| `criado_em` | TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP | — |
+
+- **FK:** `usuario_id` → `usuario(id)` `ON DELETE CASCADE`.
+- **FK:** `pedido_id` → `pedido(id)` `ON DELETE SET NULL`.
+- **INDEX:** `(usuario_id, lida, criado_em DESC)` — listagem + badge de não lidas.
+- **Trigger:** `notificacao_limita_50` (§3) impõe FIFO de 50 itens por usuário (RN09).
+
+### 4.5 `cotacao_cache`
+
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| `id` | BIGINT AUTO_INCREMENT (PK) | — |
+| `moeda_origem` | CHAR(3) NOT NULL | `CNY` / `USD` / `EUR`. |
+| `moeda_destino` | CHAR(3) NOT NULL DEFAULT 'BRL' | — |
+| `taxa` | DECIMAL(12,6) NOT NULL | Valor de 1 unidade da moeda de origem em destino. |
+| `fonte` | ENUM('AUTOMATICA','MANUAL') NOT NULL DEFAULT 'AUTOMATICA' | RF20 / RF21. |
+| `manual_por_usuario_id` | BIGINT NULL | FK → `usuario(id)`. Preenchido apenas quando `fonte = 'MANUAL'`. |
+| `valido_ate` | TIMESTAMP NULL | Validade opcional para cotação manual (UC09 FA03). |
+| `atualizado_em` | TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | — |
+
+- **FK:** `manual_por_usuario_id` → `usuario(id)` `ON DELETE SET NULL`.
+- **INDEX:** `(moeda_origem, moeda_destino, atualizado_em DESC)` — última cotação de um par.
+
+### 4.6 Relacionamentos e cardinalidades
+
+| Origem | Destino | Cardinalidade | Política | Justificativa |
+|--------|---------|---------------|----------|---------------|
+| `pedido.usuario_id` | `usuario.id` | N : 1 | `RESTRICT` | Não excluir usuário com pedidos ativos (LGPD: ver RN08 — soft delete). |
+| `etapa_rastreamento.pedido_id` | `pedido.id` | N : 1 | `CASCADE` | Composição: etapas vivem dentro do agregado Pedido. |
+| `notificacao.usuario_id` | `usuario.id` | N : 1 | `CASCADE` | Notificações pertencem ao usuário. |
+| `notificacao.pedido_id` | `pedido.id` | N : 0..1 | `SET NULL` | Notificação pode existir sem pedido (ex.: mensagens administrativas). |
+| `cotacao_cache.manual_por_usuario_id` | `usuario.id` | N : 0..1 | `SET NULL` | Histórico da cotação manual preservado mesmo se o admin for desativado. |
+
+> **DER visual:** ver [`der.drawio`](der.drawio).
+
+---
+
+## 5. Pendências (próximas iterações)
+
+- Estratégia de **arquivamento** de pedidos com `cancelado = TRUE` após 12 meses (RN08 / LGPD).
+- Avaliar **particionamento** de `etapa_rastreamento` por intervalo de `criado_em` se o volume crescer.
+- **Job de reconciliação** de `pedido.status_cache` (revalidação periódica contra `etapa_rastreamento` para detectar divergências).
+- Trigger SQL de manutenção do `status_cache` após `INSERT` em `etapa_rastreamento` — alternativa ao *listener* da aplicação (ADR-003).
+
+## Risco residual e mitigação — bloqueio por e-mail (RNF06)
+
+A tabela `tentativa_login_falha` (§1.2) usa `email` como chave de bloqueio para evitar enumeração de usuários inexistentes. Trade-off conhecido: um atacante pode **bloquear o login de qualquer e-mail-alvo** disparando 5 tentativas falhas seguidas (DoS direcionado).
+
+Mitigações previstas (não implementadas nesta versão; ver v2):
+
+- *Rate-limit* por IP (ex.: 10 tentativas/min) — protege contra bots.
+- *Captcha* obrigatório após 3 falhas — degradação graduada.
+- *Notificar o dono do e-mail* quando o bloqueio for acionado — torna o ataque visível.
 
 ## Referências
 
-- [ERS](../design-de-software/ERS.md) — RF03, RN04, RN05, RN09, RNF06
+- [ERS](../design-de-software/ERS.md) — RF03, RN04, RN05, RN06, RN08, RN09, RNF06, RNF09
 - [Arquitetura de Mensageria](../mensageria-e-streams/arquitetura-mensageria.md) — §7 (idempotência)
 - [ADR-003](../design-de-software/adrs/003-status-derivado-da-etapa.md) — Status derivado da etapa (motiva a coluna `status_cache` no `pedido`)
+- [ADR-005](../design-de-software/adrs/005-criptografia-em-repouso.md) — Criptografia em repouso (TDE + HMAC para e-mail). **Pendente de redação na Fase 4.**

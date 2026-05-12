@@ -1,0 +1,97 @@
+<mxfile host="Electron">
+  <diagram name="Página-1" id="fukb6SQcEO1NdH8RFsJG">
+    <mxGraphModel dx="1009" dy="574" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1920" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="4SEnNtbIRwwod61QUUVM-1" parent="1" style="ellipse;html=1;shape=startState;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="170" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="4SEnNtbIRwwod61QUUVM-2" edge="1" parent="1" source="4SEnNtbIRwwod61QUUVM-1" style="edgeStyle=orthogonalEdgeStyle;html=1;verticalAlign=bottom;endArrow=classic;rounded=0;" target="4SEnNtbIRwwod61QUUVM-4" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="165" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="4SEnNtbIRwwod61QUUVM-9" connectable="0" parent="4SEnNtbIRwwod61QUUVM-2" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="T1: criar pedido" vertex="1">
+          <mxGeometry relative="1" x="-0.169" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="4SEnNtbIRwwod61QUUVM-4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontSize=12;fontStyle=1;" value="PROCESSANDO" vertex="1">
+          <mxGeometry height="50" width="110" x="130" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="4SEnNtbIRwwod61QUUVM-5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontSize=12;fontStyle=1;" value="ENVIADO" vertex="1">
+          <mxGeometry height="50" width="110" x="500" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="4SEnNtbIRwwod61QUUVM-6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontSize=12;fontStyle=1;" value="ENTREGUE" vertex="1">
+          <mxGeometry height="50" width="110" x="850" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="4SEnNtbIRwwod61QUUVM-7" edge="1" parent="1" source="4SEnNtbIRwwod61QUUVM-4" style="html=1;verticalAlign=bottom;endArrow=classic;curved=0;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="4SEnNtbIRwwod61QUUVM-6" value="">
+          <mxGeometry relative="1" width="80" x="-0.0103" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="540" y="210" />
+            </Array>
+            <mxPoint x="300" y="310" as="sourcePoint" />
+            <mxPoint x="380" y="310" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="4SEnNtbIRwwod61QUUVM-37" connectable="0" parent="4SEnNtbIRwwod61QUUVM-7" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="T4: adicionarEtapa(ENTREGUE) — caso raro" vertex="1">
+          <mxGeometry relative="1" x="0.0812" as="geometry">
+            <mxPoint x="-28" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="4SEnNtbIRwwod61QUUVM-8" edge="1" parent="1" source="4SEnNtbIRwwod61QUUVM-4" style="html=1;verticalAlign=bottom;endArrow=classic;curved=0;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="4SEnNtbIRwwod61QUUVM-5" value="T2: adicionarEtapa(etapa de envio/trânsito)">
+          <mxGeometry relative="1" width="80" as="geometry">
+            <mxPoint x="310" y="295" as="sourcePoint" />
+            <mxPoint x="450" y="310" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="4SEnNtbIRwwod61QUUVM-10" edge="1" parent="1" source="4SEnNtbIRwwod61QUUVM-5" style="html=1;verticalAlign=bottom;endArrow=classic;curved=0;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="4SEnNtbIRwwod61QUUVM-6" value="T3: adicionarEtapa(ENTREGUE)">
+          <mxGeometry relative="1" width="80" as="geometry">
+            <mxPoint x="520" y="320" as="sourcePoint" />
+            <mxPoint x="600" y="320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="4SEnNtbIRwwod61QUUVM-13" parent="1" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="1060" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="4SEnNtbIRwwod61QUUVM-15" edge="1" parent="1" source="4SEnNtbIRwwod61QUUVM-6" style="html=1;verticalAlign=bottom;endArrow=classic;curved=0;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="4SEnNtbIRwwod61QUUVM-13" value="">
+          <mxGeometry relative="1" width="80" as="geometry">
+            <mxPoint x="560" y="310" as="sourcePoint" />
+            <mxPoint x="640" y="310" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="4SEnNtbIRwwod61QUUVM-38" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontSize=12;fontStyle=1;" value="CANCELADO" vertex="1">
+          <mxGeometry height="50" width="110" x="500" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="4SEnNtbIRwwod61QUUVM-39" parent="1" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="730" y="490" as="geometry" />
+        </mxCell>
+        <mxCell id="4SEnNtbIRwwod61QUUVM-40" edge="1" parent="1" source="4SEnNtbIRwwod61QUUVM-38" style="html=1;verticalAlign=bottom;endArrow=classic;curved=0;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="4SEnNtbIRwwod61QUUVM-39" value="">
+          <mxGeometry relative="1" width="80" as="geometry">
+            <mxPoint x="1050" y="335" as="sourcePoint" />
+            <mxPoint x="730" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="4SEnNtbIRwwod61QUUVM-41" edge="1" parent="1" source="4SEnNtbIRwwod61QUUVM-5" style="html=1;verticalAlign=bottom;endArrow=classic;curved=0;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;dashed=1;" target="4SEnNtbIRwwod61QUUVM-38" value="">
+          <mxGeometry relative="1" width="80" as="geometry">
+            <mxPoint x="690" y="500" as="sourcePoint" />
+            <mxPoint x="800" y="500" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="4SEnNtbIRwwod61QUUVM-42" connectable="0" parent="4SEnNtbIRwwod61QUUVM-41" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="T5: cancelar() — global (qualquer estado)" vertex="1">
+          <mxGeometry relative="1" x="-0.2556" y="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="4SEnNtbIRwwod61QUUVM-43" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Não existe transição manual de status. Estados mudam apenas por inserção de etapa (RF13) ou flag cancelado. Ver RN01 e ADR-003." vertex="1">
+          <mxGeometry height="30" width="760" x="220" y="580" as="geometry" />
+        </mxCell>
+        <mxCell id="4SEnNtbIRwwod61QUUVM-44" parent="1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fontColor=#000000;darkOpacity=0.05;fillColor=#FFF9B2;strokeColor=none;fillStyle=solid;direction=west;gradientDirection=north;gradientColor=#FFF2A1;shadow=1;size=20;autosizeText=1;fontSize=14;align=left;fillOpacity=100;spacingLeft=20;" value="&lt;font style=&quot;color: rgb(65, 65, 65);&quot;&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;Etapas que disparam T2:&lt;/span&gt;&lt;br style=&quot;font-size: 10px;&quot;&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;• AEROPORTO_ORIGEM&lt;/span&gt;&lt;br style=&quot;font-size: 10px;&quot;&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;• EM_TRANSITO&lt;/span&gt;&lt;br style=&quot;font-size: 10px;&quot;&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;• AEROPORTO_DESTINO&lt;/span&gt;&lt;br style=&quot;font-size: 10px;&quot;&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;• NO_BRASIL&lt;/span&gt;&lt;br style=&quot;font-size: 10px;&quot;&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;• TAXA&lt;/span&gt;&lt;br style=&quot;font-size: 10px;&quot;&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;• CD_BRASIL&lt;/span&gt;&lt;br style=&quot;font-size: 10px;&quot;&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;• SAIDA_ENTREGA&lt;/span&gt;&lt;/font&gt;" vertex="1">
+          <mxGeometry height="160" width="180" x="130" y="390" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
