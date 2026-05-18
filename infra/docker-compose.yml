@@ -1,0 +1,54 @@
+services:
+  # ======================================
+  #  MySQL 8 — banco relacional do sistema
+  # ======================================
+  mysql:
+    image: mysql:8.0
+    container_name: importaai-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootimportaai123
+      MYSQL_DATABASE: importaai
+      MYSQL_USER: importaai
+      MYSQL_PASSWORD: importaai123
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "importaai", "-pimportaai123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # =========================================
+  #  RabbitMQ 3.13 — broker de mensagens AMQP
+  # =========================================
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: importaai-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: importaai
+      RABBITMQ_DEFAULT_PASS: importaai123
+
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+# ============================================================
+#  Volumes nomeados — declarados aqui para ficarem persistentes
+# ============================================================
+volumes:
+  mysql_data:
+  rabbitmq_data:
