@@ -1,8 +1,8 @@
-# Plano de Testes — Importa Aí v1.1
+# Plano de Testes — Importa Aí v1.2
 
 ## Objetivo
 Garantir que o sistema atenda aos requisitos funcionais e não funcionais
-definidos na ERS <!-- TODO-versao-ers -->v1.2, com foco em:
+definidos na ERS v1.4, com foco em:
 - Confiabilidade do fluxo de mensageria (idempotência, DLQ, ordem).
 - Integridade da derivação de status do pedido (RN01, Apêndice A).
 - Resiliência das integrações externas (Correios, Câmbio).
@@ -12,7 +12,7 @@ definidos na ERS <!-- TODO-versao-ers -->v1.2, com foco em:
 |------|--------|-----------|
 | 12/03/2026 | 1.0 | Plano inicial alinhado à ERS v1.0 |
 | 09/05/2026 | 1.1 | Alinhamento com ERS v1.2 (status derivado, INSERT-first, plano Correios), metas para adapters/infra, critério mensurável de latência WS, novos casos para RN07 e limite de pedidos ativos |
-<!-- TODO-versao-ers: na Fase 6, adicionar a linha v1.2 alinhada à ERS v1.5 com os novos casos (TAXA, p95 real WS, etc.) -->
+| 17/05/2026 | 1.2 | Alinhamento com ERS v1.4: adição de TC32 (etapa TAXA → status ENVIADO), remoção de marcadores de pendência |
 
 ---
 
@@ -23,7 +23,7 @@ definidos na ERS <!-- TODO-versao-ers -->v1.2, com foco em:
 - Testes de contrato da API (validação de request/response com schemas).
 
 ## Fora do escopo (nesta versão)
-- Testes de carga/performance (mantidos como "roadmap pós-N2").
+- Testes de carga/performance (mantidos como "roadmap v2").
 - Testes E2E automatizados de frontend (validação manual via roteiro de aceitação).
 
 ---
@@ -119,7 +119,7 @@ definidos na ERS <!-- TODO-versao-ers -->v1.2, com foco em:
 
 ---
 
-## Métricas de aceitação da N2
+## Métricas de aceitação da release
 
 - [ ] **Domínio:** TC04, TC15–TC21 passando (derivação de status + invariantes)
 - [ ] **Mensageria:** TC06–TC08, TC22 passando (idempotência, DLQ, durabilidade)
