@@ -186,8 +186,8 @@ A primeira linha não passa de 72 caracteres, em PT-BR, no imperativo, e sem pon
 
 ## Equipe
 
-- **Higor Paulo Costa** — modelagem, frontend, backend
+- Higor Paulo Costa — modelagem, frontend, backend, produto e arquitetura
+- Diogo Oliveira Almeida — modelagem, frontend, produto e arquitetura
 - Alex Sander Aprigio Martins — produto e arquitetura
-- Diogo Oliveira Almeida — produto e arquitetura
 - Gustavo Veroneze Ribeiro — produto e arquitetura
 
