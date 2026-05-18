@@ -25,7 +25,7 @@ Sistema web full-stack de gestão e rastreamento de encomendas internacionais, c
 
 | Camada | Tecnologia |
 |--------|-----------|
-| **Backend** | Java 17 + Spring Boot 3.2.x |
+| **Backend** | Java 21 (LTS) + Spring Boot 3.2.x |
 | **Frontend** | React 18 + TypeScript + Vite + Tailwind CSS 4.x |
 | **Mensageria** | RabbitMQ 3.13 (AMQP) |
 | **Banco de dados** | MySQL 8.x |
@@ -88,7 +88,7 @@ Quatro invariantes guiam todo o backend:
 ### Pré-requisitos
 
 - Docker e Docker Compose
-- Java 17+ (o `mvnw` incluso dispensa Maven do sistema)
+- Java 21 (o `mvnw` incluso dispensa Maven do sistema)
 - Node 18+ e npm
 
 ### Subir infraestrutura

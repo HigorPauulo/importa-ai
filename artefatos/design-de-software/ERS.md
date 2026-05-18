@@ -133,7 +133,7 @@ O "Importa Aí" é um sistema web independente que atua como camada de gestão e
 
 ## 9. Dependências
 
-- Backend: Java 17+ / Spring Boot 3.x.
+- Backend: Java 21 (LTS) / Spring Boot 3.x.
 - Frontend: React 18+ / TypeScript / Tailwind CSS 4.x.
 - **Mensageria: RabbitMQ 3.13+ (protocolo AMQP).**
 - Banco de dados: MySQL 8.x.

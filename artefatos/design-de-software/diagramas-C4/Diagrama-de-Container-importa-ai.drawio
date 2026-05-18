@@ -44,7 +44,7 @@
             <mxGeometry height="120" width="240" x="400" y="440" as="geometry" />
           </mxCell>
         </object>
-        <object placeholders="1" c4Name="API Backend" c4Type="Container" c4Technology="Spring Boot 3 / Java 17" c4Description="Núcleo do sistema em arquitetura hexagonal. Expõe REST /api/**, endpoint STOMP /ws e publica/consome eventos AMQP." label="&lt;font style=&quot;font-size: 16px&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;[%c4Type%: %c4Technology%]&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot;&gt;&lt;font&gt;%c4Description%&lt;/font&gt;&lt;/font&gt;&lt;/div&gt;" id="8IHAXQT0TJ0ljem-Ivk_-8">
+        <object placeholders="1" c4Name="API Backend" c4Type="Container" c4Technology="Spring Boot 3 / Java 21" c4Description="Núcleo do sistema em arquitetura hexagonal. Expõe REST /api/**, endpoint STOMP /ws e publica/consome eventos AMQP." label="&lt;font style=&quot;font-size: 16px&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;[%c4Type%: %c4Technology%]&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot;&gt;&lt;font&gt;%c4Description%&lt;/font&gt;&lt;/font&gt;&lt;/div&gt;" id="8IHAXQT0TJ0ljem-Ivk_-8">
           <mxCell parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;labelBackgroundColor=none;fillColor=#23A2D9;fontColor=light-dark(#404040,#DDDDDD);align=center;arcSize=10;strokeColor=#0E7DAD;metaEdit=1;resizable=0;points=[[0.25,0,0],[0.5,0,0],[0.75,0,0],[1,0.25,0],[1,0.5,0],[1,0.75,0],[0.75,1,0],[0.5,1,0],[0.25,1,0],[0,0.75,0],[0,0.5,0],[0,0.25,0]];" vertex="1">
             <mxGeometry height="120" width="240" x="750" y="440" as="geometry" />
           </mxCell>
