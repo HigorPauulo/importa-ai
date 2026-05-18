@@ -25,7 +25,7 @@ Sistema web full-stack de gestão e rastreamento de encomendas internacionais, c
 
 | Camada | Tecnologia |
 |--------|-----------|
-| **Backend** | Java 21 (LTS) + Spring Boot 3.2.x |
+| **Backend** | Java 21 (LTS) + Spring Boot 3.5.x |
 | **Frontend** | React 19 + TypeScript 6 + Vite 8 + Tailwind CSS 4.x |
 | **Estado de servidor** | TanStack Query v5 (cache + invalidação) |
 | **Formulários** | React Hook Form v7 |
