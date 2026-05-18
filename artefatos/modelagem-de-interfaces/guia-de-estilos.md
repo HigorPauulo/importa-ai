@@ -93,6 +93,28 @@ Para coerência visual com o status macro, etapas que geram status `PROCESSANDO`
 
 ---
 
+## Bibliotecas de estado, formulários e roteamento
+
+Padrões obrigatórios — desviar exige justificativa.
+
+| Necessidade | Biblioteca | Quando usar |
+|---|---|---|
+| **Estado de servidor** (dados que vêm da API) | **TanStack Query v5** (`useQuery`, `useMutation`) | Toda chamada `GET`/`POST`/`PATCH` da API. Nunca usar `useEffect + axios + useState` para isso. |
+| **Estado local de UI** (modal aberto, aba ativa) | `useState` / `useReducer` nativos | Estado que não vem da API e não precisa ser compartilhado. |
+| **Estado global compartilhado** (usuário logado, notificações) | **Context API** (`AuthContext`, `NotificacaoContext`) | Estado que múltiplos componentes consomem; evitar Redux/Zustand nesta versão. |
+| **Formulários** | **React Hook Form v7** | Todo formulário com mais de 1 campo. Integra com validação. |
+| **Roteamento** | **React Router v7** (`BrowserRouter`, `Routes`, `Route`) | Toda navegação entre páginas. Proteção via `PrivateRoute`. |
+| **HTTP** | **Axios** com interceptor central em `services/api.ts` | Cliente único; interceptor injeta JWT e dispara refresh em 401. |
+| **WebSocket** | **`@stomp/stompjs`** (a adicionar) com SockJS fallback | Notificações em tempo real via `NotificacaoContext`. |
+
+**Por que essas escolhas:**
+
+- **TanStack Query** dá cache, deduplicação, re-fetch automático, indicadores `isLoading/isError` — substitui ~50 linhas de `useEffect` por chamada.
+- **React Hook Form** elimina re-render por digitação (controla via refs) e tem integração nativa com validação (Zod opcional).
+- **Context** chega antes do Redux/Zustand porque o estado global do Importa Aí é pequeno (auth + notificações). Adicionar gerenciador externo só se o escopo crescer.
+
+---
+
 ## Layout e responsividade
 
 - **Mobile-first.** Breakpoint mínimo: **375px** (RNF13).

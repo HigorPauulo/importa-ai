@@ -26,7 +26,11 @@ Sistema web full-stack de gestão e rastreamento de encomendas internacionais, c
 | Camada | Tecnologia |
 |--------|-----------|
 | **Backend** | Java 21 (LTS) + Spring Boot 3.2.x |
-| **Frontend** | React 18 + TypeScript + Vite + Tailwind CSS 4.x |
+| **Frontend** | React 19 + TypeScript 6 + Vite 8 + Tailwind CSS 4.x |
+| **Estado de servidor** | TanStack Query v5 (cache + invalidação) |
+| **Formulários** | React Hook Form v7 |
+| **Roteamento** | React Router v7 |
+| **HTTP client** | Axios (com interceptor JWT) |
 | **Mensageria** | RabbitMQ 3.13 (AMQP) |
 | **Banco de dados** | MySQL 8.x |
 | **Tempo real** | STOMP sobre WebSocket (SockJS como fallback) |
