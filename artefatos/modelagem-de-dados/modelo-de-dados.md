@@ -107,10 +107,10 @@ Esquema MySQL 8.x. Convenção: `snake_case` para nomes; `id BIGINT AUTO_INCREME
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
 | `id` | BIGINT AUTO_INCREMENT (PK) | Identificador interno. |
-| `email` | VARBINARY(255) NOT NULL | E-mail. Criptografado em repouso via TDE do SGBD (ADR-005). |
+| `email` | VARBINARY(255) NOT NULL | E-mail. Criptografado em repouso na camada de aplicação (AES-256-GCM + IV por linha — ADR-005). |
 | `email_hash` | CHAR(64) NOT NULL | HMAC-SHA256 determinístico do e-mail. Suporta busca exata sem decriptar (ADR-005). |
 | `senha_hash` | VARCHAR(60) NOT NULL | BCrypt (cost ≥ 12) da senha. |
-| `nome_completo` | VARCHAR(200) NOT NULL | Nome do usuário (TDE em repouso). |
+| `nome_completo` | VARCHAR(200) NOT NULL | Nome do usuário. Criptografado em repouso na camada de aplicação (AES-256-GCM — ADR-005). |
 | `perfil` | ENUM('CLIENTE','ADMINISTRADOR') NOT NULL DEFAULT 'CLIENTE' | RBAC — RF05. |
 | `ativo` | BOOLEAN NOT NULL DEFAULT TRUE | *Soft delete* — RF25. |
 | `criado_em` | TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP | — |
