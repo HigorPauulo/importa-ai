@@ -1,0 +1,11 @@
+### Healthcheck do backend
+GET http://localhost:8080/actuator/health
+
+### RabbitMQ Management — overview
+# IntelliJ Basic Auth: separador é ESPAÇO, não dois-pontos. Base64 é automático.
+GET http://localhost:15672/api/overview
+Authorization: Basic importaai importaai123
+
+### RabbitMQ Management — listar filas
+GET http://localhost:15672/api/queues
+Authorization: Basic importaai importaai123
