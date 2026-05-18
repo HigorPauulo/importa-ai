@@ -4,6 +4,8 @@
 *.tmp
 *~
 .~lock.*#
+.$*.drawio.bkp
+.$*.drawio.dtmp
 
 # Java / Spring Boot
 target/
