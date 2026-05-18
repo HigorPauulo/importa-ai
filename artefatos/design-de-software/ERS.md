@@ -2,7 +2,7 @@
 
 **Sistema:** Importa Aí — Sistema de Gestão e Rastreamento de Encomendas Internacionais
 **Versão:** 1.4
-**Data:** 09 de Maio de 2026
+**Data:** 11 de Maio de 2026
 **Autor:** Equipe Importa Aí
 
 ## Histórico de Revisão
