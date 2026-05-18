@@ -13,8 +13,7 @@ target/
 *.jar
 *.war
 *.ear
-.mvn/
-!.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.jar
 
 # Node / React
 node_modules/
