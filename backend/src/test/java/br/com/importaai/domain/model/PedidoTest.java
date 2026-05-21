@@ -19,7 +19,7 @@ public class PedidoTest {
     @Test
     @DisplayName("cria pedido sem etapas com status PROCESSANDO")
     void criarPedido_statusProcessando_etapasVazias() {
-        Pedido pedido = new Pedido("BR123456789", "Computador", T0);
+        Pedido pedido = new Pedido(1L, "BR123456789", "Computador", T0);
 
         assertThat(pedido.getStatus()).isEqualTo(StatusPedido.PROCESSANDO);
         assertThat(pedido.getEtapas()).isEmpty();
@@ -29,7 +29,7 @@ public class PedidoTest {
     @Test
     @DisplayName("adicionar etapa AEROPORTO_ORIGEM muda status para ENVIADO")
     void adicionarEtapa_atualizaStatusDerivado() {
-        Pedido pedido = new Pedido("BR123456789", "Computador", T0);
+        Pedido pedido = new Pedido(1L, "BR123456789", "Computador", T0);
         EtapaRastreamento etapa = new EtapaRastreamento(
                 TipoEtapa.AEROPORTO_ORIGEM, T1, "Shenzhen, CN", null);
         pedido.adicionarEtapa(etapa);
@@ -41,7 +41,7 @@ public class PedidoTest {
     @Test
     @DisplayName("rejeita etapa com timestamp anterior a ultima (TC21)")
     void rejeitaEtapaRetroativa() {
-        Pedido pedido = new Pedido("BR123456789", "Computador", T0);
+        Pedido pedido = new Pedido(1L, "BR123456789", "Computador", T0);
         pedido.adicionarEtapa(new EtapaRastreamento(
                 TipoEtapa.AEROPORTO_ORIGEM, T2, "Shenzhen, CN", null));
         EtapaRastreamento retroativa = new EtapaRastreamento(
@@ -53,7 +53,7 @@ public class PedidoTest {
     @Test
     @DisplayName("cancelar marca o pedido como CANCELADO sobrescrevendo etapa")
     void cancelar_marcaComoCancelado() {
-        Pedido pedido = new Pedido("BR123456789", "Computador", T0);
+        Pedido pedido = new Pedido(1L, "BR123456789", "Computador", T0);
         pedido.adicionarEtapa(new EtapaRastreamento(
                 TipoEtapa.AEROPORTO_ORIGEM, T1, "Shenzhen, CN", null));
         pedido.cancelar();
@@ -65,7 +65,7 @@ public class PedidoTest {
     @Test
     @DisplayName("rejeita adicionar etapa apos ENTREGUE (TC04)")
     void rejeitaEtapaAposEntregue() {
-        Pedido pedido = new Pedido("BR123456789", "Computador", T0);
+        Pedido pedido = new Pedido(1L, "BR123456789", "Computador", T0);
         pedido.adicionarEtapa(new EtapaRastreamento(
                 TipoEtapa.ENTREGUE, T1, "Goiânia, BR", null));
 

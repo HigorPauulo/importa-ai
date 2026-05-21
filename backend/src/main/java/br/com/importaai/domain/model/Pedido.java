@@ -14,6 +14,7 @@ import java.util.Optional;
 public class Pedido {
 
     private final String codigoRastreamento;
+    private final Long usuarioId;
     private final String descricao;
     private final Instant criadoEm;
 
@@ -21,17 +22,21 @@ public class Pedido {
 
     private boolean cancelado;
 
-    public Pedido(String codigoRastreamento, String descricao, Instant criadoEm) {
-        this.codigoRastreamento = Objects.requireNonNull(codigoRastreamento, "codigoRastreamento nao pode ser nulo");
-        this.descricao =  Objects.requireNonNull(descricao, "descricao nao pode ser nula");
-        this.criadoEm = Objects.requireNonNull(criadoEm, "criadoEm nao pode ser nulo");
+    public Pedido(Long usuarioId, String codigoRastreamento, String descricao, Instant criadoEm) {
+        this.usuarioId = Objects.requireNonNull(usuarioId, "usuarioId não pode ser nulo");
+        this.codigoRastreamento = Objects.requireNonNull(codigoRastreamento, "codigoRastreamento não pode ser nulo");
+        this.descricao = Objects.requireNonNull(descricao, "descricao não pode ser nula");
+        this.criadoEm = Objects.requireNonNull(criadoEm, "criadoEm não pode ser nulo");
         this.etapas = new ArrayList<>();
         this.cancelado = false;
     }
 
+
     public String getCodigoRastreamento() {
         return codigoRastreamento;
     }
+
+    public Long getUsuarioId() { return usuarioId; }
 
     public String getDescricao() {
         return descricao;
