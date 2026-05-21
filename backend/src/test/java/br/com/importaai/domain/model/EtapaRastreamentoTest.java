@@ -15,7 +15,7 @@ public class EtapaRastreamentoTest {
     @Test
     @DisplayName("cria etapa válida e expõe os campos pelos acessores")
     void criarEtapaValida_eExpoCampos() {
-        EtapaRastreamentoTest etapa = new EtapaRastreamentoTest(
+        EtapaRastreamento etapa = new EtapaRastreamento (
                 TipoEtapa.NA_CHINA,
                 QUANDO,
                 "Shenzhen, CN",
@@ -24,30 +24,43 @@ public class EtapaRastreamentoTest {
 
         assertThat(etapa.tipo()).isEqualTo(TipoEtapa.NA_CHINA);
         assertThat(etapa.criadoEm()).isEqualTo(QUANDO);
-        assertThat(etapa.descricao()).isEqualTo("Shenzhen, CN");
+        assertThat(etapa.localizacao()).isEqualTo("Shenzhen, CN");
         assertThat(etapa.descricao()).isEqualTo("Pacote recebido no centro de distribuição");
     }
 
     @Test
-    @DisplayName("rejeita tipo nulo com NullPointerExcption")
+    @DisplayName("rejeita tipo nulo com NullPointerException")
     void rejeitarTipoNulo() {
         assertThatNullPointerException().isThrownBy(() ->
-            new EtapaRastreamentoTest(null, QUANDO, "Shenzhen, CN", "qualquer")
+                new EtapaRastreamento(null, QUANDO, "Shenzhen, CN", "qualquer")
         );
     }
 
     @Test
-    @DisplayName("rejeitada criadoEm nulo com NullPointerException")
+    @DisplayName("rejeita criadoEm nulo com NullPointerException")
     void rejeitarCriadoEmNulo() {
         assertThatNullPointerException().isThrownBy(() ->
-            new EtapaRastreamentoTest(TipoEtapa.NA_CHINA, null, "Shenzhen, CN", "qualquer")
+                new EtapaRastreamento(TipoEtapa.NA_CHINA, null, "Shenzhen, CN", "qualquer")
         );
     }
 
     @Test
     @DisplayName("aceita localizacao nula - campo opcional")
     void aceitaLocalizacaoNula() {
-        EtapaRastreamentoTest etapa = new EtapaRastreamentoTest(
+        EtapaRastreamento etapa = new EtapaRastreamento (
+                TipoEtapa.NA_CHINA,
+                QUANDO,
+                null,
+                "sem localização registrada"
+        );
+
+        assertThat(etapa.localizacao()).isNull();
+    }
+
+    @Test
+    @DisplayName("aceita descricao nula - campo opcional")
+    void aceitaDescricaoNula() {
+        EtapaRastreamento etapa = new EtapaRastreamento(
                 TipoEtapa.NA_CHINA,
                 QUANDO,
                 "Shenzhen, CN",
