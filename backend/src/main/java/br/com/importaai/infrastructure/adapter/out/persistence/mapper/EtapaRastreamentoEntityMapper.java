@@ -9,6 +9,7 @@ public final class EtapaRastreamentoEntityMapper {
 
     public static EtapaRastreamentoEntity toEntity(EtapaRastreamento domain) {
         EtapaRastreamentoEntity e = new EtapaRastreamentoEntity();
+        e.setId(domain.id());
         e.setTipo(domain.tipo());
         e.setCriadoEm(domain.criadoEm());
         e.setLocalizacao(domain.localizacao());
@@ -18,6 +19,7 @@ public final class EtapaRastreamentoEntityMapper {
 
     public static EtapaRastreamento toDomain(EtapaRastreamentoEntity e) {
         return new EtapaRastreamento(
+                e.getId(),
                 e.getTipo(),
                 e.getCriadoEm(),
                 e.getLocalizacao(),

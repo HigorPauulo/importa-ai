@@ -105,4 +105,21 @@ class PedidoRepositoryJpaAdapterTest extends PersistenceIntegrationTest {
         assertThat(pedidos).isEmpty();
     }
 
+    @Test
+    @DisplayName("salvar pedido com etapa pre-existente nao re-insere (UPDATE em vez de INSERT)")
+    void salvar_atualiza_etapa_existente_sem_duplicar() {
+        Pedido pedido = new Pedido(usuarioId, "BR-UPD", "fluxo de update", Instant.now());
+        pedido.adicionarEtapa(new EtapaRastreamento(TipoEtapa.NA_CHINA, Instant.now(), "CN", null));
+        Pedido salvo = adapter.salvar(pedido);
+
+        Pedido relido = adapter.buscarPorId(salvo.getId()).orElseThrow();
+        relido.adicionarEtapa(new EtapaRastreamento(
+                TipoEtapa.AEROPORTO_ORIGEM, Instant.now().plusSeconds(1), "GZ", null));
+
+        Pedido atualizado = adapter.salvar(relido);
+
+        assertThat(atualizado.getEtapas()).hasSize(2);
+        assertThat(atualizado.getEtapas().get(0).id()).isNotNull();    // etapa antiga manteve id
+        assertThat(atualizado.getEtapas().get(1).id()).isNotNull();    // etapa nova ganhou id
+    }
 }
