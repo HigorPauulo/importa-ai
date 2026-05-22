@@ -9,3 +9,84 @@ Authorization: Basic importaai importaai123
 ### RabbitMQ Management — listar filas
 GET http://localhost:15672/api/queues
 Authorization: Basic importaai importaai123
+
+# =============================================================================
+# Fase 4 — Pedidos REST API
+# Identidade temporária via header X-User-Id (Fase 6 troca por JWT).
+# Use cases publicam evento via LogEventPublisher (substituído na Fase 5 por RabbitMQ).
+# =============================================================================
+
+### POST criar pedido (202 Accepted + header Location)
+POST http://localhost:8080/api/pedidos
+Content-Type: application/json
+X-User-Id: 1
+
+{
+  "codigoRastreamento": "BR-SMOKE-001",
+  "descricao": "cabo USB-C 1m"
+}
+
+### GET listar pedidos do usuario (200)
+GET http://localhost:8080/api/pedidos
+X-User-Id: 1
+
+### GET detalhe do pedido + linha do tempo (200 / 404 / 403)
+# Troque o {id} pelo retornado no POST acima
+GET http://localhost:8080/api/pedidos/1
+X-User-Id: 1
+
+### POST registrar etapa manual (202) — RF13 / única forma de promover status
+# Tipos válidos: NA_CHINA, AEROPORTO_ORIGEM, EM_TRANSITO, AEROPORTO_DESTINO,
+#                NO_BRASIL, TAXA, CD_BRASIL, SAIDA_ENTREGA, ENTREGUE
+POST http://localhost:8080/api/pedidos/1/etapas
+Content-Type: application/json
+
+{
+  "tipoEtapa": "NA_CHINA",
+  "localizacao": "Shenzhen",
+  "descricao": "pedido processado pelo fornecedor"
+}
+
+### DELETE cancelar pedido (202) — soft delete (RN08 retém 12 meses)
+DELETE http://localhost:8080/api/pedidos/1
+
+# =============================================================================
+# Cenários de erro (smoke tests dos handlers)
+# =============================================================================
+
+### Erro 400 — header X-User-Id ausente
+POST http://localhost:8080/api/pedidos
+Content-Type: application/json
+
+{
+  "codigoRastreamento": "BR-ERR-400",
+  "descricao": "deveria falhar"
+}
+
+### Erro 400 — body com codigoRastreamento vazio (validacao)
+POST http://localhost:8080/api/pedidos
+Content-Type: application/json
+X-User-Id: 1
+
+{
+  "codigoRastreamento": "",
+  "descricao": "deveria falhar"
+}
+
+### Erro 422 — código duplicado (rode 2x pra ver o segundo retornar 422)
+POST http://localhost:8080/api/pedidos
+Content-Type: application/json
+X-User-Id: 1
+
+{
+  "codigoRastreamento": "BR-DUP-TEST",
+  "descricao": "primeira eh 202, segunda eh 422"
+}
+
+### Erro 404 — pedido inexistente
+GET http://localhost:8080/api/pedidos/99999
+X-User-Id: 1
+
+### Erro 403 — pedido de outro usuario (assume que pedido 1 eh do user 1)
+GET http://localhost:8080/api/pedidos/1
+X-User-Id: 2
