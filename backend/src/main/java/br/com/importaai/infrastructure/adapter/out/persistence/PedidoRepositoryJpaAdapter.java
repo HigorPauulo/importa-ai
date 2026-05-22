@@ -8,6 +8,7 @@ import br.com.importaai.infrastructure.adapter.out.persistence.repository.Pedido
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -39,5 +40,15 @@ public class PedidoRepositoryJpaAdapter implements PedidoRepository {
         return jpaRepository
                 .findByUsuarioIdAndCodigoRastreamento(usuarioId, codigoRastreamento)
                 .map(PedidoEntityMapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Pedido> listarPorUsuario(Long usuarioId) {
+        return jpaRepository
+                .findAllByUsuarioIdOrderByCriadoEmDesc(usuarioId)
+                .stream()
+                .map(PedidoEntityMapper::toDomain)
+                .toList();
     }
 }

@@ -11,6 +11,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -74,4 +75,34 @@ class PedidoRepositoryJpaAdapterTest extends PersistenceIntegrationTest {
         assertThatThrownBy(() -> adapter.salvar(new Pedido(usuarioId, "BR999", "Duplicado", Instant.now())))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
+
+    @Test
+    @DisplayName("listarPorUsuario retorna pedidos do dono em ordem desc e ignora pedidos de outros usuarios")
+    void listarPorUsuario_ordenadoDescETenanted() {
+        Usuario outro = usuarioAdapter.salvar(
+                new Usuario("Outro", "outro@x.com", "$2a$12$hash", PerfilUsuario.CLIENTE, Instant.now())
+        );
+
+        Instant t1 = Instant.parse("2026-05-22T10:00:00Z");
+        Instant t2 = Instant.parse("2026-05-22T11:00:00Z");
+        Instant t3 = Instant.parse("2026-05-22T12:00:00Z");
+        adapter.salvar(new Pedido(usuarioId, "BR-A", "primeiro", t1));
+        adapter.salvar(new Pedido(usuarioId, "BR-B", "segundo", t2));
+        adapter.salvar(new Pedido(outro.getId(), "BR-X", "de outro usuario", t3));
+
+        List<Pedido> pedidos = adapter.listarPorUsuario(usuarioId);
+
+        assertThat(pedidos).hasSize(2);
+        assertThat(pedidos.get(0).getCodigoRastreamento()).isEqualTo("BR-B");
+        assertThat(pedidos.get(1).getCodigoRastreamento()).isEqualTo("BR-A");
+    }
+
+    @Test
+    @DisplayName("listarPorUsuario retorna lista vazia quando o usuario nao tem pedidos")
+    void listarPorUsuario_vazio() {
+        List<Pedido> pedidos = adapter.listarPorUsuario(usuarioId);
+
+        assertThat(pedidos).isEmpty();
+    }
+
 }
