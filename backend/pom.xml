@@ -6,7 +6,7 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>3.5.14</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath/>
 	</parent>
 	<groupId>br.com.importaai</groupId>
 	<artifactId>backend</artifactId>
@@ -43,6 +43,12 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+		<!-- AMQP — cliente RabbitMQ: RabbitTemplate, @RabbitListener, AmqpAdmin, Jackson2JsonMessageConverter -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-amqp</artifactId>
 		</dependency>
 
 		<!-- JPA + Hibernate + HikariCP (pool). Traz tudo que precisa pra persistência ORM -->
@@ -93,9 +99,17 @@
 			<artifactId>junit-jupiter</artifactId>
 			<scope>test</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>mysql</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Testcontainers RabbitMQ — sobe broker real em container para testes de integração -->
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>rabbitmq</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
