@@ -24,7 +24,7 @@ public class CancelarPedidoService implements CancelarPedidoUseCase {
         pedido.cancelar();
 
         Pedido salvo = pedidoRepository.salvar(pedido);
-        eventPublisher.publicar("pedido.cancelado", salvo);
+        eventPublisher.publicar("pedido.atualizado", salvo);
         return salvo;
     }
 }

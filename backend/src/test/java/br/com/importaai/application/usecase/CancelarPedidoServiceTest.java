@@ -43,7 +43,7 @@ class CancelarPedidoServiceTest {
         assertThat(resultado.getStatus()).isEqualTo(StatusPedido.CANCELADO);
         assertThat(resultado.isCancelado()).isTrue();
         verify(pedidoRepository).salvar(pedido);
-        verify(eventPublisher).publicar(eq("pedido.cancelado"), any(Pedido.class));
+        verify(eventPublisher).publicar(eq("pedido.atualizado"), any(Pedido.class));
     }
 
     @Test
