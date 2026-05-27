@@ -12,8 +12,12 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
+@DirtiesContext(classMode = ClassMode.AFTER_CLASS)
 class PedidoCriadoConsumerTest extends MessagingIntegrationTest {
 
     @Test
