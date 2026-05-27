@@ -16,6 +16,16 @@ import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import org.springframework.security.access.AccessDeniedException;
+
+import br.com.importaai.domain.exception.CredenciaisInvalidasException;
+import br.com.importaai.domain.exception.EmailJaCadastradoException;
+import br.com.importaai.domain.exception.LoginBloqueadoException;
+import br.com.importaai.domain.exception.TokenInvalidoException;
+
+import java.time.Duration;
+import java.time.Instant;
+
 import java.util.List;
 
 @RestControllerAdvice
@@ -79,6 +89,43 @@ public class RestExceptionHandler {
         // Causas comuns: JSON sintaticamente invalido OU enum com valor desconhecido.
         return build(HttpStatus.BAD_REQUEST, "PAYLOAD_INVALIDO",
                 "corpo da requisicao invalido ou mal formado");
+    }
+
+    // ===== 422 — email ja cadastrado =====
+    @ExceptionHandler(EmailJaCadastradoException.class)
+    public ResponseEntity<ErroResponse> handleEmailJaCadastrado(EmailJaCadastradoException ex) {
+        return build(HttpStatus.UNPROCESSABLE_ENTITY, "EMAIL_JA_CADASTRADO", ex.getMessage());
+    }
+
+    // ===== 401 — credenciais invalidas (senha errada ou email inexistente) =====
+    @ExceptionHandler(CredenciaisInvalidasException.class)
+    public ResponseEntity<ErroResponse> handleCredenciaisInvalidas(CredenciaisInvalidasException ex) {
+        return build(HttpStatus.UNAUTHORIZED, "CREDENCIAIS_INVALIDAS", ex.getMessage());
+    }
+
+    // ===== 429 — login bloqueado por excesso de tentativas (RNF06) =====
+    @ExceptionHandler(LoginBloqueadoException.class)
+    public ResponseEntity<ErroResponse> handleLoginBloqueado(LoginBloqueadoException ex) {
+        long segundosRestantes = Math.max(
+                1L,
+                Duration.between(Instant.now(), ex.getBloqueadoAte()).getSeconds()
+        );
+        return ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", String.valueOf(segundosRestantes))
+                .body(new ErroResponse(429, "LOGIN_BLOQUEADO", ex.getMessage()));
+    }
+
+    // ===== 401 — JWT invalido (assinatura, expirado, revogado, tipo errado) =====
+    @ExceptionHandler(TokenInvalidoException.class)
+    public ResponseEntity<ErroResponse> handleTokenInvalido(TokenInvalidoException ex) {
+        return build(HttpStatus.UNAUTHORIZED, "TOKEN_INVALIDO", ex.getMessage());
+    }
+
+    // ===== 403 — autenticado mas sem permissao no recurso (perfil errado) =====
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErroResponse> handleAccessDenied(AccessDeniedException ex) {
+        return build(HttpStatus.FORBIDDEN, "ACESSO_NEGADO_PERFIL", ex.getMessage());
     }
 
     // ===== 500 — catch-all para nao vazar stacktrace pro cliente =====
