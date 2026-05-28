@@ -51,6 +51,12 @@
 			<artifactId>spring-boot-starter-amqp</artifactId>
 		</dependency>
 
+		<!-- WebSocket + STOMP — endpoint /ws, SimpMessagingTemplate, broker in-memory /topic + /queue -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket</artifactId>
+		</dependency>
+
 		<!-- Spring Security: SecurityFilterChain, @PreAuthorize, BCryptPasswordEncoder, Authentication -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
