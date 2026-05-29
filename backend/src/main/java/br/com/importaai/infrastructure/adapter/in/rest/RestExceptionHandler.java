@@ -22,6 +22,7 @@ import br.com.importaai.domain.exception.CredenciaisInvalidasException;
 import br.com.importaai.domain.exception.EmailJaCadastradoException;
 import br.com.importaai.domain.exception.LoginBloqueadoException;
 import br.com.importaai.domain.exception.TokenInvalidoException;
+import br.com.importaai.domain.exception.CotacaoIndisponivelException;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -126,6 +127,12 @@ public class RestExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErroResponse> handleAccessDenied(AccessDeniedException ex) {
         return build(HttpStatus.FORBIDDEN, "ACESSO_NEGADO_PERFIL", ex.getMessage());
+    }
+
+    // ===== 503 — cotacao indisponivel (sem cache e API fora) =====
+    @ExceptionHandler(CotacaoIndisponivelException.class)
+    public ResponseEntity<ErroResponse> handleCotacaoIndisponivel(CotacaoIndisponivelException ex) {
+        return build(HttpStatus.SERVICE_UNAVAILABLE, "COTACAO_INDISPONIVEL", ex.getMessage());
     }
 
     // ===== 500 — catch-all para nao vazar stacktrace pro cliente =====

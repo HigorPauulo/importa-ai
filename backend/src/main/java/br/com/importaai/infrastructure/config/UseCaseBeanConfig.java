@@ -40,6 +40,9 @@ import br.com.importaai.domain.port.in.ConsultarCotacaoUseCase;
 import br.com.importaai.domain.port.out.CotacaoRepository;
 import br.com.importaai.domain.port.out.CambioPort;
 
+import br.com.importaai.application.usecase.DefinirCotacaoManualService;
+import br.com.importaai.domain.port.in.DefinirCotacaoManualUseCase;
+
 
 @Configuration
 public class UseCaseBeanConfig {
@@ -120,5 +123,11 @@ public class UseCaseBeanConfig {
             CotacaoRepository cotacaoRepository,
             CambioPort cambioPort) {
         return new ConsultarCotacaoService(cotacaoRepository, cambioPort);
+    }
+
+    @Bean
+    public DefinirCotacaoManualUseCase definirCotacaoManualUseCase(
+            CotacaoRepository cotacaoRepository) {
+        return new DefinirCotacaoManualService(cotacaoRepository);
     }
 }
