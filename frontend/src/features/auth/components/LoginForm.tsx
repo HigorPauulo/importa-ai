@@ -1,16 +1,25 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { useAuth } from '@/context/AuthContext'
 import type { LoginFormData } from '@/types/auth'
 
 function LoginForm() {
     const navigate = useNavigate()
-    const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>()
-    const onSubmit = (data: LoginFormData) => {
-        console.log(data)
-        localStorage.setItem('token', 'meu-token')
-        navigate('/dashboard')
+    const { login } = useAuth()
+    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginFormData>()
+    const [erroLogin, setErroLogin] = useState<string | null>(null)
+
+    const onSubmit = async (data: LoginFormData) => {
+        setErroLogin(null)
+        try {
+            const perfil = await login(data.email, data.senha)
+            navigate(perfil === 'ADMINISTRADOR' ? '/admin/dashboard' : '/dashboard')
+        } catch {
+            setErroLogin('Email ou senha inválidos.')
+        }
     }
 
     return (
@@ -18,14 +27,18 @@ function LoginForm() {
             <h2 className="text-2xl font-bold mb-6 text-center">Acessar Conta</h2>
 
             <form onSubmit={handleSubmit(onSubmit)}>
-                <Input label="Email" name="email" type="email" error={errors.email?.message} {...register('email', { required: 'Email é obrigatório' })} />
+                <Input label="Email" name="email" type="email" error={errors.email?.message}
+                       {...register('email', { required: 'Email é obrigatório' })} />
 
-                <Input label="Senha" name="password" type="password" error={errors.password?.message} {...register('password', { required: 'Senha é obrigatório' })} />
-               
-                <Button type="submit" fullWidth>Entrar</Button>
+                <Input label="Senha" name="senha" type="password" error={errors.senha?.message}
+                       {...register('senha', { required: 'Senha é obrigatória' })} />
+
+                {erroLogin && <p className="text-sm text-error mb-3">{erroLogin}</p>}
+
+                <Button type="submit" fullWidth loading={isSubmitting}>Entrar</Button>
             </form>
 
-            <p className="text-center text-sm mt-8">Não tem uma conta? <Link to="/register" className="text-primary">Cadastre-se</Link></p>
+            <p className="text-center text-sm mt-8">Não tem uma conta?<Link to="/register" className="text-primary">Cadastre-se</Link></p>
         </div>
     )
 }
