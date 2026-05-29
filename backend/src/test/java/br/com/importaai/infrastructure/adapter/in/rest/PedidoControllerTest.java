@@ -30,6 +30,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -98,7 +99,7 @@ class PedidoControllerTest {
     void criar_ok() throws Exception {
         when(criarPedido.executar(any())).thenReturn(pedidoExemplo(42L, 1L, "BR-OK"));
 
-        String body = json.writeValueAsString(Map.of("codigoRastreamento", "BR-OK", "descricao", "cabo USB-C"));
+        String body = json.writeValueAsString(Map.of("codigoRastreamento", "BR-OK", "descricao", "cabo USB-C", "valorDeclarado", new BigDecimal("100.00"), "moeda", "BRL"));
 
         mvc.perform(post("/api/pedidos")
                         .with(cliente(1L))
@@ -110,15 +111,14 @@ class PedidoControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/pedidos sem autenticacao retorna 401 ou 403")
+    @DisplayName("POST /api/pedidos sem autenticacao retorna 401")
     void criar_semAuth_naoAutorizado() throws Exception {
-        String body = json.writeValueAsString(Map.of("codigoRastreamento", "BR-OK", "descricao", "cabo USB-C"));
+        String body = json.writeValueAsString(Map.of("codigoRastreamento", "BR-OK", "descricao", "cabo USB-C", "valorDeclarado", new BigDecimal("100.00"), "moeda", "BRL"));
 
         mvc.perform(post("/api/pedidos")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().is(org.hamcrest.Matchers.anyOf(
-                        org.hamcrest.Matchers.is(401), org.hamcrest.Matchers.is(403))));
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -126,7 +126,7 @@ class PedidoControllerTest {
     void criar_duplicado_422() throws Exception {
         when(criarPedido.executar(any()))
                 .thenThrow(new CodigoRastreamentoDuplicadoException("usuario ja possui pedido com codigo BR-DUP"));
-                        String body = json.writeValueAsString(Map.of("codigoRastreamento", "BR-DUP", "descricao", "fone"));
+                        String body = json.writeValueAsString(Map.of("codigoRastreamento", "BR-DUP", "descricao", "fone", "valorDeclarado", new BigDecimal("100.00"), "moeda", "BRL"));
 
         mvc.perform(post("/api/pedidos")
                         .with(cliente(1L))

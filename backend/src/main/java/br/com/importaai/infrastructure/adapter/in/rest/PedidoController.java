@@ -56,7 +56,9 @@ public class PedidoController {
         Pedido pedido = criarPedido.executar(new CriarPedidoUseCase.Input(
                 usuarioId,
                 body.codigoRastreamento(),
-                body.descricao()
+                body.descricao(),
+                body.valorDeclarado(),
+                body.moeda()
         ));
 
         URI location = ServletUriComponentsBuilder

@@ -27,8 +27,8 @@ public class CriarPedidoService implements CriarPedidoUseCase {
                             "usuario ja possui pedido com codigo " + input.codigoRastreamento());
                 });
 
-        Pedido pedido = new Pedido(input.usuarioId(), input.
-                codigoRastreamento(), input.descricao(), Instant.now());
+        Pedido pedido = new Pedido(input.usuarioId(), input.codigoRastreamento(), input.descricao(),
+                input.valorDeclarado(), input.moeda(), Instant.now());
         Pedido salvo = pedidoRepository.salvar(pedido);
 
         eventPublisher.publicar("pedido.criado", salvo);

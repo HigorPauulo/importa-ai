@@ -1,6 +1,7 @@
 package br.com.importaai.application.usecase;
 
 import br.com.importaai.domain.exception.CodigoRastreamentoDuplicadoException;
+import br.com.importaai.domain.model.Moeda;
 import br.com.importaai.domain.model.Pedido;
 import br.com.importaai.domain.port.in.CriarPedidoUseCase;
 import br.com.importaai.domain.port.out.EventPublisher;
@@ -12,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,7 +39,7 @@ class CriarPedidoServiceTest {
     @Test
     @DisplayName("cria pedido novo, salva e publica evento")
     void criaPedidoSalvarPublicarEvento() {
-        CriarPedidoUseCase.Input input = new CriarPedidoUseCase.Input(1L, "BR123456789", "Tenis");
+        CriarPedidoUseCase.Input input = new CriarPedidoUseCase.Input(1L, "BR123456789", "Tenis", new BigDecimal("100.00"), Moeda.BRL);
 
         when(pedidoRepository.buscarPorCodigoRastreamentoEUsuario("BR123456789", 1L))
                 .thenReturn(Optional.empty());
@@ -57,7 +59,7 @@ class CriarPedidoServiceTest {
     @Test
     @DisplayName("rejeita criação se codigo já existe para o usuario (RN06)")
     void rejeitaCodigoDuplicado() {
-        CriarPedidoUseCase.Input input = new CriarPedidoUseCase.Input(1L, "BR123456789", "Tênis");
+        CriarPedidoUseCase.Input input = new CriarPedidoUseCase.Input(1L, "BR123456789", "Tênis", new BigDecimal("100.00"), Moeda.BRL);
         Pedido existente = new Pedido(1L, "BR123456789", "outro", java.time.Instant.now());
 
         when(pedidoRepository.buscarPorCodigoRastreamentoEUsuario("BR123456789", 1L))

@@ -21,6 +21,8 @@ public final class PedidoResponseMapper {
                 pedido.getUsuarioId(),
                 pedido.getCodigoRastreamento(),
                 pedido.getDescricao(),
+                pedido.getValorDeclarado(),
+                pedido.getMoeda(),
                 pedido.getStatus(),
                 pedido.isCancelado(),
                 pedido.getCriadoEm(),

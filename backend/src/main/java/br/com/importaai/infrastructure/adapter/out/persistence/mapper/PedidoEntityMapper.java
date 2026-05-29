@@ -16,6 +16,8 @@ public final class PedidoEntityMapper {
         e.setUsuarioId(domain.getUsuarioId());
         e.setCodigoRastreamento(domain.getCodigoRastreamento());
         e.setDescricao(domain.getDescricao());
+        e.setValorDeclarado(domain.getValorDeclarado());
+        e.setMoeda(domain.getMoeda());
         e.setCancelado(domain.isCancelado());
         e.setCriadoEm(domain.getCriadoEm());
 
@@ -35,6 +37,8 @@ public final class PedidoEntityMapper {
                 e.getUsuarioId(),
                 e.getCodigoRastreamento(),
                 e.getDescricao(),
+                e.getValorDeclarado(),
+                e.getMoeda(),
                 e.getCriadoEm(),
                 etapas,
                 e.isCancelado()

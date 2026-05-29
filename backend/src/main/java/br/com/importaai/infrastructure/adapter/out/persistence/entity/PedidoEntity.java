@@ -1,10 +1,12 @@
 package br.com.importaai.infrastructure.adapter.out.persistence.entity;
 
+import br.com.importaai.domain.model.Moeda;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +30,13 @@ public class PedidoEntity {
 
     @Column(length = 500)
     private String descricao;
+
+    @Column(name = "valor_declarado", precision = 15, scale = 2)
+    private BigDecimal valorDeclarado;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 10)
+    private Moeda moeda;
 
     @Column(nullable = false)
     private boolean cancelado;
