@@ -1,19 +1,21 @@
 import { Link, useParams } from 'react-router-dom'
-import { pedidos } from '@/mocks/pedidos'
+import { useQuery } from '@tanstack/react-query'
+import { buscarPedido } from '@/services/pedidos'
 import Footer from '@/components/Footer'
 import backIcon from '@/assets/icon-back.svg'
 import starIcon from '@/assets/icon-star.svg'
 
 function DetalhesPedidoPage() {
     const { id } = useParams()
-    const pedido = pedidos.find(p => p.codigo === id)
 
-    if (!pedido) {
-        return <div>Pedido não encontrado</div>
-    }
+    const { data: pedido, isLoading, isError } = useQuery({
+        queryKey: ['pedido', id],
+        queryFn: () => buscarPedido(id!),
+        enabled: !!id,
+    })
 
     return (
-        <div className="min-h-dvh bg-background flex flex-col px-5"> 
+        <div className="min-h-dvh bg-background flex flex-col px-5">
             <header className="w-full max-w-3xl mx-auto flex items-center justify-between my-8 pt-5">
                 <Link to="/pedidos">
                     <div className="w-10 lg:w-13 h-10 lg:h-13 bg-white shadow-md rounded-[5px] flex items-center justify-center">
@@ -26,6 +28,13 @@ function DetalhesPedidoPage() {
 
             <main className="flex-1 flex justify-center">
                 <div className="w-full max-w-3xl">
+                    {isLoading && <p className="text-center text-secondary mt-10">Carregando detalhes...</p>}
+                    {(isError || (!isLoading && !pedido)) && (
+                        <p className="text-center text-secondary mt-10">Pedido não encontrado.</p>
+                    )}
+
+                    {pedido && (
+                    <>
                     <header className="mb-6">
                         <div className="flex items-center justify-between">
                             <h2 className="text-2xl font-bold">Detalhes do pedido</h2>
@@ -53,7 +62,7 @@ function DetalhesPedidoPage() {
 
                                 <div className="text-center">
                                     <span className="text-sm text-secondary uppercase">Valor estimado</span>
-                                    <p className="text-base font-bold">{pedido.valorEstimado?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                                    <p className="text-base font-bold">{pedido.valorEstimado?.toLocaleString('pt-BR', { style: 'currency', currency: pedido.moeda ?? 'BRL' })}</p>
                                 </div>
                             </div>
                         </div>
@@ -112,6 +121,8 @@ function DetalhesPedidoPage() {
                             </div>
                         </div>
                     </div>
+                    </>
+                    )}
                 </div>
             </main>
 
