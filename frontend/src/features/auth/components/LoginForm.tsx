@@ -33,7 +33,11 @@ function LoginForm() {
                 <Input label="Senha" name="senha" type="password" error={errors.senha?.message}
                        {...register('senha', { required: 'Senha é obrigatória' })} />
 
-                {erroLogin && <p className="text-sm text-error mb-3">{erroLogin}</p>}
+                {erroLogin && (
+                    <div role="alert" className="bg-error-bg border border-error rounded-md p-3 mb-4">
+                        <p className="text-sm text-error">{erroLogin}</p>
+                    </div>
+                )}
 
                 <Button type="submit" fullWidth loading={isSubmitting}>Entrar</Button>
             </form>
