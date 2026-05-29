@@ -22,7 +22,7 @@ public class NotificacaoRepositoryJpaAdapter implements NotificacaoRepository {
     @Override
     @Transactional
     public Notificacao salvarComLimite(Notificacao notificacao, int limite) {
-        jpaRepository.lockByUsuario(notificacao.usuarioId());
+        jpaRepository.lockUsuario(notificacao.usuarioId());
 
         NotificacaoEntity salva = jpaRepository.save(NotificacaoEntityMapper.toEntity(notificacao));
 

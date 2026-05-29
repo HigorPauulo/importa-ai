@@ -9,14 +9,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface NotificacaoJpaRepository extends JpaRepository<NotificacaoEntity, Long> {
 
     List<NotificacaoEntity> findByUsuarioIdOrderByCriadoEmDesc(Long usuarioId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT n FROM NotificacaoEntity n WHERE n.usuarioId = :usuarioId ORDER BY n.criadoEm DESC")
-    List<NotificacaoEntity> lockByUsuario(@Param("usuarioId") Long usuarioId);
+    @Query("SELECT u.id FROM UsuarioEntity u WHERE u.id = :usuarioId")
+    Optional<Long> lockUsuario(@Param("usuarioId") Long usuarioId);
 
     @Modifying
     @Query("DELETE FROM NotificacaoEntity n WHERE n.usuarioId = :usuarioId AND n.id NOT IN :idsManter")
