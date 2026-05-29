@@ -35,6 +35,11 @@ import br.com.importaai.application.usecase.SincronizarRastreamentoService;
 import br.com.importaai.domain.port.in.SincronizarRastreamentoUseCase;
 import br.com.importaai.domain.port.out.RastreamentoCorreiosPort;
 
+import br.com.importaai.application.usecase.ConsultarCotacaoService;
+import br.com.importaai.domain.port.in.ConsultarCotacaoUseCase;
+import br.com.importaai.domain.port.out.CotacaoRepository;
+import br.com.importaai.domain.port.out.CambioPort;
+
 
 @Configuration
 public class UseCaseBeanConfig {
@@ -108,5 +113,12 @@ public class UseCaseBeanConfig {
             RastreamentoCorreiosPort correiosPort,
             EventPublisher eventPublisher) {
         return new SincronizarRastreamentoService(pedidoRepository, correiosPort, eventPublisher);
+    }
+
+    @Bean
+    public ConsultarCotacaoUseCase consultarCotacaoUseCase(
+            CotacaoRepository cotacaoRepository,
+            CambioPort cambioPort) {
+        return new ConsultarCotacaoService(cotacaoRepository, cambioPort);
     }
 }
