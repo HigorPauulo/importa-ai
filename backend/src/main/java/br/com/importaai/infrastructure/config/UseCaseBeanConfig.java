@@ -31,6 +31,10 @@ import br.com.importaai.application.usecase.PersistirNotificacaoService;
 import br.com.importaai.domain.port.in.PersistirNotificacaoUseCase;
 import br.com.importaai.domain.port.out.NotificacaoRepository;
 
+import br.com.importaai.application.usecase.SincronizarRastreamentoService;
+import br.com.importaai.domain.port.in.SincronizarRastreamentoUseCase;
+import br.com.importaai.domain.port.out.RastreamentoCorreiosPort;
+
 
 @Configuration
 public class UseCaseBeanConfig {
@@ -96,5 +100,13 @@ public class UseCaseBeanConfig {
     public PersistirNotificacaoUseCase persistirNotificacaoUseCase(
             NotificacaoRepository notificacaoRepository) {
         return new PersistirNotificacaoService(notificacaoRepository);
+    }
+
+    @Bean
+    public SincronizarRastreamentoUseCase sincronizarRastreamentoUseCase(
+            PedidoRepository pedidoRepository,
+            RastreamentoCorreiosPort correiosPort,
+            EventPublisher eventPublisher) {
+        return new SincronizarRastreamentoService(pedidoRepository, correiosPort, eventPublisher);
     }
 }

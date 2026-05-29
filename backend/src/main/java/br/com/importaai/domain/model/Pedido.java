@@ -6,11 +6,16 @@ import br.com.importaai.domain.exception.PedidoImutavelException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 public class Pedido {
+
+    private static final Set<TipoEtapa> ETAPAS_NACIONAIS =
+            EnumSet.of(TipoEtapa.NO_BRASIL, TipoEtapa.CD_BRASIL, TipoEtapa.SAIDA_ENTREGA);
 
     private final Long id;
     private final Long usuarioId;
@@ -93,5 +98,18 @@ public class Pedido {
 
     public void cancelar() {
         this.cancelado = true;
+    }
+
+    public Optional<EtapaRastreamento> ultimaEtapa() {
+        return etapas.isEmpty() ? Optional.empty() : Optional.of(etapas.get(etapas.size() - 1));
+    }
+
+    public boolean estaEmEstadoNacional() {
+        return !cancelado
+                && ultimaEtapa().map(e -> ETAPAS_NACIONAIS.contains(e.tipo())).orElse(false);
+    }
+
+    public boolean temEtapaDoTipo(TipoEtapa tipo) {
+        return etapas.stream().anyMatch(e -> e.tipo() == tipo);
     }
 }

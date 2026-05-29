@@ -10,4 +10,6 @@ public interface PedidoJpaRepository extends JpaRepository<PedidoEntity, Long> {
     Optional<PedidoEntity> findByUsuarioIdAndCodigoRastreamento(Long usuarioId, String codigoRastreamento);
 
     List<PedidoEntity> findAllByUsuarioIdOrderByCriadoEmDesc(Long usuarioId);
+
+    List<PedidoEntity> findByCanceladoFalse();
 }
