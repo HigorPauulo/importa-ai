@@ -153,6 +153,28 @@
 			<artifactId>rabbitmq</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- ===== Integrações externas (Fase 8) ===== -->
+		<!-- Resilience4j - Circuit Breaker para o CorreiosHttpAdapter (ADR-004) -->
+		<dependency>
+			<groupId>io.github.resilience4j</groupId>
+			<artifactId>resilience4j-spring-boot3</artifactId>
+			<version>2.2.0</version>
+		</dependency>
+
+		<!-- AOP - exigido pelo resilience4j para interceptar @CircuitBreaker -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-aop</artifactId>
+		</dependency>
+
+		<!-- WireMock - mocka API Correios/Câmbio nos testes de integração (TC30, TC25) -->
+		<dependency>
+			<groupId>org.wiremock</groupId>
+			<artifactId>wiremock-standalone</artifactId>
+			<version>3.9.2</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<dependencyManagement>
