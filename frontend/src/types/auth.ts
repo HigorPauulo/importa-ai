@@ -6,7 +6,7 @@ export interface User {
 
 export interface LoginFormData {
     email: string
-    password: string
+    senha: string
 }
 
 export interface RegisterFormData {
