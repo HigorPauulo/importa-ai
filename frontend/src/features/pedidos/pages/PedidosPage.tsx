@@ -2,17 +2,25 @@ import Footer from '@/components/Footer'
 import type { StatusPedido } from '@/types/pedidos'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { pedidos } from '@/mocks/pedidos'
+import { useQuery } from '@tanstack/react-query'
+import { listarPedidos } from '@/services/pedidos'
+
 import CardPedido from '../components/CardPedido'
 import FiltrosPedidos from '../components/FiltrosPedidos'
 import backIcon from '@/assets/icon-back.svg'
 
 function PedidosPage() {
-    const [filtroAtivo, setFiltroAtivo] = useState<StatusPedido | "TODOS">("TODOS");
-    
-    const pedidosFiltrados = filtroAtivo === 'TODOS' ? pedidos :
-    pedidos.filter(p => p.status === filtroAtivo)
-  
+    const [filtroAtivo, setFiltroAtivo] = useState<StatusPedido | "TODOS">("TODOS")
+
+    const { data: pedidos, isLoading, isError } = useQuery({
+        queryKey: ['pedidos'],
+        queryFn: listarPedidos,
+    })
+
+    const pedidosFiltrados = (pedidos ?? []).filter(
+        (p) => filtroAtivo === 'TODOS' || p.status === filtroAtivo
+    )
+
     return (
         <div className="min-h-dvh bg-background flex flex-col px-5"> 
             <header className="w-full max-w-3xl mx-auto flex items-center justify-between my-8 pt-5">
@@ -41,14 +49,21 @@ function PedidosPage() {
                     <FiltrosPedidos filtroAtivo={filtroAtivo} onFiltroChange={setFiltroAtivo} />
 
                     <div className="mt-10">
+                        {isLoading && <p className="text-center text-secondary">Carregando encomendas...</p>}
+                        {isError && <p className="text-center text-error">Não foi possível carregar suas encomendas.</p>}
+                        {!isLoading && !isError && pedidosFiltrados.length === 0 && (
+                            <p className="text-center text-secondary">Nenhuma encomenda encontrada.</p>
+                        )}
+
                         <ul className="grid grid-cols-1 gap-7">
                             {pedidosFiltrados.map((pedido) => (
-                                <li key={pedido.codigo}>
+                                <li key={pedido.id}>
                                     <CardPedido pedido={pedido} />
                                 </li>
                             ))}
                         </ul>
                     </div>
+
                 </div>
             </main>
 

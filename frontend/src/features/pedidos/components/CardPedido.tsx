@@ -8,7 +8,7 @@ interface CardPedidoProps {
 
 function CardPedido({ pedido }: CardPedidoProps) {
     return (
-        <Link to={`/pedidos/${pedido.codigo}`}>
+        <Link to={`/pedidos/${pedido.id}`}>
             <div className="bg-white flex flex-col gap-4 shadow-md rounded-[5px] p-5">
                 <div className="w-full flex items-center justify-between gap-2 mb-3">
                     <p className={`text-xs uppercase px-2 py-1 rounded-[5px] font-bold ${getEtapaColor(pedido.etapa)}`}>{getEtapaLabel(pedido.etapa)}</p>
@@ -24,7 +24,6 @@ function CardPedido({ pedido }: CardPedidoProps) {
                 </div>
 
                 <div className="w-full flex items-center gap-2 text-secondary text-sm lg:text-base border-t border-gray-300 pt-4">
-        
                     <span>{pedido.atualizacao}</span>
                     <span>-</span>
                     <span>{pedido.cidade}</span>

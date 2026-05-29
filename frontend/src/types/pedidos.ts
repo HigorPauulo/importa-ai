@@ -14,6 +14,8 @@ export type TipoEtapa =
   | 'SAIDA_ENTREGA'
   | 'ENTREGUE'
 
+export type Moeda = 'BRL' | 'USD' | 'CNY' | 'EUR'
+
   export interface EtapaHistorico {
     data: string
     hora: string
@@ -22,6 +24,7 @@ export type TipoEtapa =
   }
 
   export interface Pedido {
+    id: number
     codigo: string
     status: StatusPedido
     etapa?: TipoEtapa
@@ -30,5 +33,6 @@ export type TipoEtapa =
     cidade: string
     origem?: string
     valorEstimado?: number
+    moeda?: Moeda
     historico?: EtapaHistorico[]
   }
