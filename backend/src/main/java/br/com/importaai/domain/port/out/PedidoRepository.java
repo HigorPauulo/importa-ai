@@ -16,4 +16,6 @@ public interface PedidoRepository {
     List<Pedido> listarPorUsuario(Long usuarioId);
 
     List<Pedido> listarNaoCancelados();
+
+    List<Pedido> listarTodos();
 }

@@ -60,4 +60,13 @@ public class PedidoRepositoryJpaAdapter implements PedidoRepository {
                 .map(PedidoEntityMapper::toDomain)
                 .toList();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Pedido> listarTodos() {
+        return jpaRepository.findAll()
+                .stream()
+                .map(PedidoEntityMapper::toDomain)
+                .toList();
+    }
 }

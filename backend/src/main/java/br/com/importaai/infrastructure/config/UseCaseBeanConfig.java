@@ -43,6 +43,11 @@ import br.com.importaai.domain.port.out.CambioPort;
 import br.com.importaai.application.usecase.DefinirCotacaoManualService;
 import br.com.importaai.domain.port.in.DefinirCotacaoManualUseCase;
 
+import br.com.importaai.application.usecase.MonitorarDashboardService;
+import br.com.importaai.domain.port.in.MonitorarDashboardUseCase;
+
+import java.time.Clock;
+
 
 @Configuration
 public class UseCaseBeanConfig {
@@ -129,5 +134,11 @@ public class UseCaseBeanConfig {
     public DefinirCotacaoManualUseCase definirCotacaoManualUseCase(
             CotacaoRepository cotacaoRepository) {
         return new DefinirCotacaoManualService(cotacaoRepository);
+    }
+
+    @Bean
+    public MonitorarDashboardUseCase monitorarDashboardUseCase(
+            PedidoRepository pedidoRepository) {
+        return new MonitorarDashboardService(pedidoRepository, Clock.systemDefaultZone());
     }
 }
