@@ -11,7 +11,7 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.containers.RabbitMQContainer;
 
 @SpringBootTest
-abstract class MessagingIntegrationTest {
+public abstract class MessagingIntegrationTest {
 
     @SuppressWarnings("resource")
     static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.0")
