@@ -74,27 +74,16 @@ Apoia a regra RN04. Detalhes operacionais da estratégia *INSERT-first*: ver [Ar
 
 ---
 
-## 3. Trigger de suporte à RN09
+## 3. Aplicação da RN09 (limite FIFO de 50)
 
-Aplica a janela FIFO de no máximo 50 notificações por usuário, atomicamente dentro da transação do `INSERT`. Permite cumprir a regra de negócio RN09 sem *lock* pessimista na camada de aplicação.
+A janela FIFO de no máximo 50 notificações por usuário é aplicada na **camada de aplicação**, dentro do caso de uso `PersistirNotificacao`: o `INSERT` da nova notificação e o `DELETE` das que excedem o limite ocorrem na mesma transação, com `SELECT ... FOR UPDATE` por `usuario_id` para serializar inserções concorrentes do mesmo usuário.
 
-```sql
-CREATE TRIGGER notificacao_limita_50
-AFTER INSERT ON notificacao
-FOR EACH ROW
-BEGIN
-    DELETE FROM notificacao
-    WHERE usuario_id = NEW.usuario_id
-      AND id NOT IN (
-        SELECT id FROM (
-          SELECT id FROM notificacao
-          WHERE usuario_id = NEW.usuario_id
-          ORDER BY criado_em DESC
-          LIMIT 50
-        ) tmp
-      );
-END;
-```
+A regra **não** é implementada por *trigger* SQL. Motivos:
+
+- **Coerência arquitetural:** mantém a regra de negócio no núcleo da aplicação, como a RN01 (status derivado), em vez de escondê-la no banco.
+- **Menor privilégio:** `CREATE TRIGGER` exige `SUPER` no MySQL 8 com *binary logging* habilitado (default); o usuário de aplicação não o possui.
+
+A migration `V4` cria apenas a tabela `notificacao` e seus índices.
 
 ---
 
@@ -171,7 +160,7 @@ Entidade dentro do agregado `Pedido`. **Append-only por `criado_em`** (RF13, ADR
 - **FK:** `usuario_id` → `usuario(id)` `ON DELETE CASCADE`.
 - **FK:** `pedido_id` → `pedido(id)` `ON DELETE SET NULL`.
 - **INDEX:** `(usuario_id, lida, criado_em DESC)` — listagem + badge de não lidas.
-- **Trigger:** `notificacao_limita_50` (§3) impõe FIFO de 50 itens por usuário (RN09).
+- **RN09:** limite FIFO de 50 itens por usuário aplicado na camada de aplicação (§3), não por *trigger*.
 
 ### 4.5 `cotacao_cache`
 

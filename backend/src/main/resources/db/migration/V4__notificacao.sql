@@ -16,20 +16,5 @@ CREATE TABLE notificacao (
      FOREIGN KEY (pedido_id) REFERENCES pedido(id) ON DELETE SET NULL,
      INDEX ix_notificacao_usuario_lida_criado (usuario_id, lida, criado_em DESC)
 ) ENGINE=InnoDB
-    DEFAULT CHARACTER SET utf8mb4
-    COLLATE utf8mb4_0900_ai_ci;
-
-CREATE TRIGGER notificacao_limita_50
-    AFTER INSERT ON notificacao
-    FOR EACH ROW
-    DELETE FROM notificacao
-    WHERE usuario_id = NEW.usuario_id
-      AND id NOT IN (
-        SELECT id FROM (
-           SELECT id FROM notificacao
-           WHERE usuario_id = NEW.usuario_id
-           ORDER BY criado_em DESC
-               LIMIT 50
-       ) tmp
-    );
-
+      DEFAULT CHARACTER SET utf8mb4
+      COLLATE utf8mb4_0900_ai_ci;
