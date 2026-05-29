@@ -1,6 +1,7 @@
 package br.com.importaai.infrastructure.adapter.in.messaging;
 
 import br.com.importaai.infrastructure.adapter.out.messaging.Envelope;
+import br.com.importaai.infrastructure.adapter.out.persistence.entity.EventoProcessadoEntity;
 import br.com.importaai.infrastructure.config.RabbitMQConfig;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.DisplayName;
@@ -9,6 +10,7 @@ import org.springframework.amqp.core.MessageDeliveryMode;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -29,27 +31,21 @@ class PedidoCriadoConsumerTest extends MessagingIntegrationTest {
                 "pedido.criado",
                 "1.0",
                 Instant.now(),
-                Map.of("id", 1, "codigoRastreamento", "BR-TC06")
+                Map.of("id", 1, "usuarioId", 1, "codigoRastreamento", "BR-TC06")
         );
 
-        rabbitTemplate.convertAndSend(
-                RabbitMQConfig.EXCHANGE_EVENTS,
-                RabbitMQConfig.RK_PEDIDO_CRIADO,
-                env,
-                msg -> {
-                    msg.getMessageProperties().setMessageId(messageId);
-                    msg.getMessageProperties().setDeliveryMode(MessageDeliveryMode.PERSISTENT);
-                    return msg;
-                }
-        );
+        publicarComMessageId(env, messageId);
 
-        // Aguarda até 5s o consumer processar
+        // Aguarda até 5s o consumer registrar o evento pedido.criado
         Awaitility.await()
                 .atMost(Duration.ofSeconds(5))
-                .untilAsserted(() -> assertThat(eventoRepo.count()).isEqualTo(1L));
+                .untilAsserted(() -> assertThat(
+                        eventoRepo.countByRoutingKey(RabbitMQConfig.RK_PEDIDO_CRIADO)).isEqualTo(1L));
 
-        // Confere o conteúdo da linha
-        var registros = eventoRepo.findAll();
+        // Confere o conteúdo da linha de pedido.criado (a cadeia tambem grava notificacao.usuario)
+        List<EventoProcessadoEntity> registros = eventoRepo.findAll().stream()
+                .filter(r -> RabbitMQConfig.RK_PEDIDO_CRIADO.equals(r.getRoutingKey()))
+                .toList();
         assertThat(registros).hasSize(1);
         assertThat(registros.get(0).getMessageId()).isEqualTo(messageId);
         assertThat(registros.get(0).getRoutingKey()).isEqualTo("pedido.criado");
@@ -65,7 +61,7 @@ class PedidoCriadoConsumerTest extends MessagingIntegrationTest {
                 "pedido.criado",
                 "1.0",
                 Instant.now(),
-                Map.of("id", 2, "codigoRastreamento", "BR-TC07")
+                Map.of("id", 2, "usuarioId", 2, "codigoRastreamento", "BR-TC07")
         );
 
         // Publica a primeira vez
@@ -74,7 +70,8 @@ class PedidoCriadoConsumerTest extends MessagingIntegrationTest {
         // Aguarda a primeira ser processada
         Awaitility.await()
                 .atMost(Duration.ofSeconds(5))
-                .untilAsserted(() -> assertThat(eventoRepo.count()).isEqualTo(1L));
+                .untilAsserted(() -> assertThat(
+                        eventoRepo.countByRoutingKey(RabbitMQConfig.RK_PEDIDO_CRIADO)).isEqualTo(1L));
 
         // Publica a SEGUNDA vez com o mesmo message_id
         publicarComMessageId(env, messageId);
@@ -83,7 +80,8 @@ class PedidoCriadoConsumerTest extends MessagingIntegrationTest {
         Awaitility.await()
                 .pollDelay(Duration.ofSeconds(2))
                 .atMost(Duration.ofSeconds(5))
-                .untilAsserted(() -> assertThat(eventoRepo.count()).isEqualTo(1L)); // continua 1!
+                .untilAsserted(() -> assertThat(
+                        eventoRepo.countByRoutingKey(RabbitMQConfig.RK_PEDIDO_CRIADO)).isEqualTo(1L)); // continua 1!
     }
 
     private void publicarComMessageId(Envelope env, String messageId) {

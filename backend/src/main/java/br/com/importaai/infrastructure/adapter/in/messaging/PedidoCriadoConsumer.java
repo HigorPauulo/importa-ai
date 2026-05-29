@@ -1,9 +1,13 @@
 package br.com.importaai.infrastructure.adapter.in.messaging;
 
+import br.com.importaai.domain.port.out.EventPublisher;
 import br.com.importaai.infrastructure.adapter.out.messaging.Envelope;
+import br.com.importaai.infrastructure.adapter.out.messaging.NotificacaoEvento;
+import br.com.importaai.infrastructure.adapter.out.messaging.PedidoCriadoEvento;
 import br.com.importaai.infrastructure.adapter.out.persistence.entity.EventoProcessadoEntity;
 import br.com.importaai.infrastructure.adapter.out.persistence.repository.EventoProcessadoJpaRepository;
 import br.com.importaai.infrastructure.config.RabbitMQConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,11 +24,19 @@ import java.time.Instant;
 public class PedidoCriadoConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(PedidoCriadoConsumer.class);
+    private static final String MENSAGEM_PEDIDO_CRIADO =
+            "Seu pedido foi registrado e está em processamento.";
 
     private final EventoProcessadoJpaRepository eventoRepo;
+    private final EventPublisher eventPublisher;
+    private final ObjectMapper objectMapper;
 
-    public PedidoCriadoConsumer(EventoProcessadoJpaRepository eventoRepo) {
+    public PedidoCriadoConsumer(EventoProcessadoJpaRepository eventoRepo,
+                                EventPublisher eventPublisher,
+                                ObjectMapper objectMapper) {
         this.eventoRepo = eventoRepo;
+        this.eventPublisher = eventPublisher;
+        this.objectMapper = objectMapper;
     }
 
     @RabbitListener(queues = RabbitMQConfig.Q_PEDIDO_CRIADO)
@@ -43,6 +55,12 @@ public class PedidoCriadoConsumer {
                     Instant.now()
             );
             eventoRepo.saveAndFlush(registro);
+
+            PedidoCriadoEvento pedido = objectMapper.convertValue(envelope.data(), PedidoCriadoEvento.class);
+
+            eventPublisher.publicar(
+                    RabbitMQConfig.RK_NOTIFICACAO_USUARIO,
+                    new NotificacaoEvento(pedido.usuarioId(), pedido.id(), MENSAGEM_PEDIDO_CRIADO));
 
             log.info("pedido.criado processado — messageId={} eventId={}", messageId, envelope.eventId());
 

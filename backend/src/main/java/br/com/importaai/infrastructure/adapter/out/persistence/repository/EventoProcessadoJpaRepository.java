@@ -4,4 +4,6 @@ import br.com.importaai.infrastructure.adapter.out.persistence.entity.EventoProc
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface EventoProcessadoJpaRepository extends JpaRepository<EventoProcessadoEntity, Long> {
+
+    long countByRoutingKey(String routingKey);
 }
