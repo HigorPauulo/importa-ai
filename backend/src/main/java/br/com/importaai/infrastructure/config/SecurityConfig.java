@@ -4,6 +4,8 @@ import br.com.importaai.infrastructure.security.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -32,6 +34,10 @@ public class SecurityConfig {
                     .requestMatchers("/actuator/health").permitAll()
                     .requestMatchers("/ws/**").permitAll()
                     .anyRequest().authenticated()
+            )
+            // não autenticado -> 401 (deixa o @PreAuthorize devolver 403 quando for falta de permissão)
+            .exceptionHandling(ex -> ex
+                    .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
