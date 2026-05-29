@@ -27,6 +27,10 @@ import br.com.importaai.domain.port.out.TentativaLoginFalhaRepository;
 import br.com.importaai.domain.port.out.TokenIssuer;
 import br.com.importaai.domain.port.out.UsuarioRepository;
 
+import br.com.importaai.application.usecase.PersistirNotificacaoService;
+import br.com.importaai.domain.port.in.PersistirNotificacaoUseCase;
+import br.com.importaai.domain.port.out.NotificacaoRepository;
+
 
 @Configuration
 public class UseCaseBeanConfig {
@@ -86,5 +90,11 @@ public class UseCaseBeanConfig {
             RefreshTokenRevogadoRepository refreshRepository,
             TokenIssuer tokenIssuer) {
         return new LogoutService(refreshRepository, tokenIssuer);
+    }
+
+    @Bean
+    public PersistirNotificacaoUseCase persistirNotificacaoUseCase(
+            NotificacaoRepository notificacaoRepository) {
+        return new PersistirNotificacaoService(notificacaoRepository);
     }
 }
