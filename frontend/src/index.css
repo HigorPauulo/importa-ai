@@ -64,3 +64,9 @@
     --color-etapa-entregue-text: var(--color-success-dark);
 
 }
+
+/* Entrada do toast de notificação (NotificacaoContext → ToastContext) */
+@keyframes toast-in {
+    from { opacity: 0; transform: translateX(1rem); }
+    to   { opacity: 1; transform: translateX(0); }
+}
