@@ -1,13 +1,22 @@
-import Footer from '@/components/Footer'
 import { Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import Footer from '@/components/Footer'
 import backIcon from '@/assets/icon-back.svg'
 import CardMoeda from '@/features/cotacao/components/CardMoeda'
-import CardMoedaPrincipal from '@/features/cotacao/components/CardMoedaPrincipal'   
-import { moedas } from '@/mocks/moedas'
+import CardMoedaPrincipal from '@/features/cotacao/components/CardMoedaPrincipal'
+import { buscarCotacoes } from '@/services/cotacao'
 
 function CotacaoPage() {
+    const { data: moedas, isLoading, isError } = useQuery({
+        queryKey: ['cotacoes'],
+        queryFn: buscarCotacoes,
+    })
+
+    const principal = moedas?.find((m) => m.sigla === 'USD')
+    const outras = moedas?.filter((m) => m.sigla !== 'USD') ?? []
+
     return (
-        <div className="min-h-dvh bg-background flex flex-col px-5"> 
+        <div className="min-h-dvh bg-background flex flex-col px-5">
             <header className="w-full max-w-3xl mx-auto flex items-center justify-between my-8 pt-5">
                 <Link to="/dashboard">
                     <div className="w-10 lg:w-13 h-10 lg:h-13 bg-white shadow-md rounded-[5px] flex items-center justify-center">
@@ -25,22 +34,29 @@ function CotacaoPage() {
                         <p className="text-secondary">Valores atualizados para conversão em BRL.</p>
                     </header>
 
-                    <CardMoedaPrincipal moeda={moedas[0]} />
+                    {isLoading && <p className="text-center text-secondary">Carregando cotações...</p>}
+                    {isError && <p className="text-center text-error">Não foi possível carregar as cotações.</p>}
 
-                    <div className="mt-10">
-                        <h3 className="text-lg lg:text-xl font-semibold mb-2">Outras moedas</h3>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-2">
-                            <CardMoeda moeda={moedas[1]} />
-                            <CardMoeda moeda={moedas[2]} />
-                        </div>
-                    </div>
+                    {!isLoading && !isError && (
+                        <>
+                            {principal && <CardMoedaPrincipal moeda={principal} />}
 
-                    <div className="mt-10 bg-primary-light p-5 rounded-[5px]">
-                        <p className="text-sm"><span className="font-bold">Atenção:</span> Estes valores são para referência baseada em APIs de câmbio comercial e podem variar de acordo com o IOF e taxas do seu cartão.</p>
-                    </div>
+                            <div className="mt-10">
+                                <h3 className="text-lg lg:text-xl font-semibold mb-2">Outras moedas</h3>
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-2">
+                                    {outras.map((moeda) => (
+                                        <CardMoeda key={moeda.sigla} moeda={moeda} />
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="mt-10 bg-primary-light p-5 rounded-[5px]">
+                                <p className="text-sm"><span className="font-bold">Atenção:</span> Estes valores são para referência baseada em APIs de câmbio comercial e podem variar de acordo com o IOF e taxas do seu cartão.</p>
+                            </div>
+                        </>
+                    )}
                 </div>
             </main>
-
 
             <Footer />
         </div>
