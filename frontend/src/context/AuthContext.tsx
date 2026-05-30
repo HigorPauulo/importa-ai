@@ -3,9 +3,15 @@ import * as authService from '@/services/auth'
 
 export type Perfil = 'CLIENTE' | 'ADMINISTRADOR'
 
+interface Sessao {
+    perfil: Perfil
+    email: string
+}
+
 interface AuthContextType {
     isAuthenticated: boolean
     perfil: Perfil | null
+    email: string | null
     isAdmin: boolean
     login: (email: string, senha: string) => Promise<Perfil | null>
     logout: () => Promise<void>
@@ -16,30 +22,29 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 const ACCESS_KEY = 'accessToken'
 const REFRESH_KEY = 'refreshToken'
 
-// Lê o claim 'perfil' do payload do JWT sem validar a assinatura — a validação
-// real é responsabilidade do backend; aqui é só pra decidir o que mostrar na UI.
-function lerPerfil(token: string | null): Perfil | null {
+// Lê os claims 'perfil' e 'email' do payload do JWT sem validar a assinatura — a
+// validação real é do backend; aqui é só pra decidir o que mostrar na UI.
+function lerSessao(token: string | null): Sessao | null {
     if (!token) return null
     try {
         const payload = JSON.parse(atob(token.split('.')[1]))
-        return payload.perfil === 'ADMINISTRADOR' ? 'ADMINISTRADOR' : 'CLIENTE'
+        const perfil: Perfil = payload.perfil === 'ADMINISTRADOR' ? 'ADMINISTRADOR' : 'CLIENTE'
+        return { perfil, email: payload.email ?? '' }
     } catch {
         return null
     }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [perfil, setPerfil] = useState<Perfil | null>(() => lerPerfil(localStorage.getItem(ACCESS_KEY)))
-
-    const isAuthenticated = perfil !== null
+    const [sessao, setSessao] = useState<Sessao | null>(() => lerSessao(localStorage.getItem(ACCESS_KEY)))
 
     const login = async (email: string, senha: string) => {
         const { accessToken, refreshToken } = await authService.login(email, senha)
         localStorage.setItem(ACCESS_KEY, accessToken)
         localStorage.setItem(REFRESH_KEY, refreshToken)
-        const novoPerfil = lerPerfil(accessToken)
-        setPerfil(novoPerfil)
-        return novoPerfil
+        const nova = lerSessao(accessToken)
+        setSessao(nova)
+        return nova?.perfil ?? null
     }
 
     const logout = async () => {
@@ -49,12 +54,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } finally {
             localStorage.removeItem(ACCESS_KEY)
             localStorage.removeItem(REFRESH_KEY)
-            setPerfil(null)
+            setSessao(null)
         }
     }
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, perfil, isAdmin: perfil === 'ADMINISTRADOR', login, logout }}>
+        <AuthContext.Provider value={{
+            isAuthenticated: sessao !== null,
+            perfil: sessao?.perfil ?? null,
+            email: sessao?.email ?? null,
+            isAdmin: sessao?.perfil === 'ADMINISTRADOR',
+            login,
+            logout,
+        }}>
             {children}
         </AuthContext.Provider>
     )
