@@ -4,6 +4,7 @@ import br.com.importaai.domain.exception.EtapaRetroativaException;
 import br.com.importaai.domain.exception.PedidoImutavelException;
 import br.com.importaai.domain.model.EtapaRastreamento;
 import br.com.importaai.domain.model.Pedido;
+import br.com.importaai.domain.model.StatusPedido;
 import br.com.importaai.domain.port.in.SincronizarRastreamentoUseCase;
 import br.com.importaai.domain.port.out.EventPublisher;
 import br.com.importaai.domain.port.out.PedidoRepository;
@@ -29,7 +30,9 @@ public class SincronizarRastreamentoService implements SincronizarRastreamentoUs
     public int executar() {
         int atualizados = 0;
         for (Pedido pedido : pedidoRepository.listarNaoCancelados()) {
-            if (!pedido.estaEmEstadoNacional()) {
+            // so o pedido entregue e terminal; qualquer outro ativo deve ser
+            // consultado para que a fonte de rastreamento alimente as etapas.
+            if (pedido.getStatus() == StatusPedido.ENTREGUE) {
                 continue;
             }
             if (sincronizar(pedido)) {

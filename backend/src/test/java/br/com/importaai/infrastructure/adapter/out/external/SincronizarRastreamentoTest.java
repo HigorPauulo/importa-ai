@@ -66,28 +66,29 @@ class SincronizarRastreamentoTest extends MessagingIntegrationTest {
     }
 
     @Test
-    @DisplayName("TC31: sincroniza apenas pedidos em estado nacional e persiste novas etapas")
-    void tc31_sincronizaApenasEstadoNacional() {
-        Pedido nacional = new Pedido(null, usuarioId, "BR-NAC", "nacional", base, List.of(
-                new EtapaRastreamento(TipoEtapa.NA_CHINA, base, "CN", null),
-                new EtapaRastreamento(TipoEtapa.NO_BRASIL, base.plusSeconds(3600), "BR", null)), false);
-        Long idNacional = pedidoRepository.salvar(nacional).getId();
-
-        Pedido china = new Pedido(null, usuarioId, "BR-CHINA", "internacional", base, List.of(
+    @DisplayName("TC31: sincroniza pedidos ativos (inclusive internacionais) e pula os entregues")
+    void tc31_sincronizaAtivosEPulaEntregues() {
+        // pedido ainda na China (status PROCESSANDO) agora tambem deve ser consultado
+        Pedido ativo = new Pedido(null, usuarioId, "BR-ATIVO", "ativo", base, List.of(
                 new EtapaRastreamento(TipoEtapa.NA_CHINA, base, "CN", null)), false);
-        pedidoRepository.salvar(china);
+        Long idAtivo = pedidoRepository.salvar(ativo).getId();
 
-        when(correiosPort.consultar(eq("BR-NAC"), any())).thenReturn(List.of(
-                new EtapaRastreamento(TipoEtapa.CD_BRASIL, base.plusSeconds(7200), "CD Regional", "nova")));
+        // pedido ja entregue (terminal) nao deve ser consultado
+        Pedido entregue = new Pedido(null, usuarioId, "BR-ENTREGUE", "entregue", base, List.of(
+                new EtapaRastreamento(TipoEtapa.ENTREGUE, base, "BR", null)), false);
+        pedidoRepository.salvar(entregue);
+
+        when(correiosPort.consultar(eq("BR-ATIVO"), any())).thenReturn(List.of(
+                new EtapaRastreamento(TipoEtapa.AEROPORTO_ORIGEM, base.plusSeconds(3600), "Aeroporto", "nova")));
 
         int atualizados = sincronizar.executar();
 
         assertThat(atualizados).isEqualTo(1);
-        verify(correiosPort).consultar(eq("BR-NAC"), any());
-        verify(correiosPort, never()).consultar(eq("BR-CHINA"), any());
+        verify(correiosPort).consultar(eq("BR-ATIVO"), any());
+        verify(correiosPort, never()).consultar(eq("BR-ENTREGUE"), any());
 
-        Pedido recarregado = pedidoRepository.buscarPorId(idNacional).orElseThrow();
-        assertThat(recarregado.temEtapaDoTipo(TipoEtapa.CD_BRASIL)).isTrue();
-        assertThat(recarregado.getEtapas()).hasSize(3);
+        Pedido recarregado = pedidoRepository.buscarPorId(idAtivo).orElseThrow();
+        assertThat(recarregado.temEtapaDoTipo(TipoEtapa.AEROPORTO_ORIGEM)).isTrue();
+        assertThat(recarregado.getEtapas()).hasSize(2);
     }
 }

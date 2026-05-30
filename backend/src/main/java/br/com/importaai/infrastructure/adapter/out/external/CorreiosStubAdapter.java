@@ -15,17 +15,17 @@ import java.util.List;
 @ConditionalOnProperty(name = "correios.adapter", havingValue = "stub", matchIfMissing = true)
 public class CorreiosStubAdapter implements RastreamentoCorreiosPort {
 
-    private record Marco(long horasMinimas, TipoEtapa tipo, String localizacao) {}
+    private record Marco(long horasMinimas, TipoEtapa tipo, String localizacao, String descricao) {}
 
     private static final List<Marco> LINHA_DO_TEMPO = List.of(
-            new Marco(0, TipoEtapa.NA_CHINA, "Shenzhen, CN"),
-            new Marco(24, TipoEtapa.AEROPORTO_ORIGEM, "Guangzhou Airport, CN"),
-            new Marco(48, TipoEtapa.EM_TRANSITO, "Em transito internacional"),
-            new Marco(96, TipoEtapa.AEROPORTO_DESTINO, "Aeroporto de Guarulhos, BR"),
-            new Marco(120, TipoEtapa.NO_BRASIL, "Centro de Triagem, BR"),
-            new Marco(168, TipoEtapa.CD_BRASIL, "CD Regional, BR"),
-            new Marco(192, TipoEtapa.SAIDA_ENTREGA, "Saiu para entrega"),
-            new Marco(216, TipoEtapa.ENTREGUE, "Entregue ao destinatario")
+            new Marco(0, TipoEtapa.NA_CHINA, "Shenzhen, CN", "Objeto postado pelo remetente"),
+            new Marco(24, TipoEtapa.AEROPORTO_ORIGEM, "Guangzhou Airport, CN", "Objeto recebido no aeroporto de origem"),
+            new Marco(48, TipoEtapa.EM_TRANSITO, "Em transito internacional", "Objeto em transito internacional"),
+            new Marco(96, TipoEtapa.AEROPORTO_DESTINO, "Aeroporto de Guarulhos, BR", "Objeto chegou ao pais de destino"),
+            new Marco(120, TipoEtapa.NO_BRASIL, "Centro de Triagem, BR", "Objeto recebido pelos Correios no Brasil"),
+            new Marco(168, TipoEtapa.CD_BRASIL, "CD Regional, BR", "Objeto em transito para o centro de distribuicao"),
+            new Marco(192, TipoEtapa.SAIDA_ENTREGA, "Saiu para entrega", "Objeto saiu para entrega ao destinatario"),
+            new Marco(216, TipoEtapa.ENTREGUE, "Entregue ao destinatario", "Objeto entregue ao destinatario")
     );
 
     @Override
@@ -37,8 +37,7 @@ public class CorreiosStubAdapter implements RastreamentoCorreiosPort {
             if (horas >= marco.horasMinimas()) {
                 Instant momento = pedidoCriadoEm.plus(Duration.ofHours(marco.horasMinimas()));
                 etapas.add(new EtapaRastreamento(
-                        marco.tipo(), momento, marco.localizacao(),
-                        "Etapa sintetica (stub) para " + codigoRastreamento));
+                        marco.tipo(), momento, marco.localizacao(), marco.descricao()));
             }
         }
         return etapas;
