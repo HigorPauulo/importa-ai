@@ -1,5 +1,6 @@
 package br.com.importaai.infrastructure.adapter.out.persistence;
 
+import br.com.importaai.domain.exception.CodigoRastreamentoDuplicadoException;
 import br.com.importaai.domain.model.*;
 import br.com.importaai.infrastructure.adapter.out.persistence.repository.PedidoJpaRepository;
 import br.com.importaai.infrastructure.adapter.out.persistence.repository.UsuarioJpaRepository;
@@ -7,7 +8,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -68,12 +68,14 @@ class PedidoRepositoryJpaAdapterTest extends PersistenceIntegrationTest {
     }
 
     @Test
-    @DisplayName("RN06: salvar 2 pedidos com mesmo código no mesmo usuário viola o UNIQUE")
+    @DisplayName("RN06: salvar 2 pedidos com mesmo código no mesmo usuário traduz o UNIQUE para exceção de domínio")
     void rn06_unique() {
         adapter.salvar(new Pedido(usuarioId, "BR999", "Primeiro", Instant.now()));
 
+        // O adapter intercepta a violação da constraint e a traduz para a exceção de
+        // domínio (→ HTTP 422), cobrindo a corrida em que dois POSTs passam pelo check do service.
         assertThatThrownBy(() -> adapter.salvar(new Pedido(usuarioId, "BR999", "Duplicado", Instant.now())))
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .isInstanceOf(CodigoRastreamentoDuplicadoException.class);
     }
 
     @Test
