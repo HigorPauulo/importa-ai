@@ -1,7 +1,7 @@
 # Modelo de Dados — Importa Aí
 
-**Versão:** 1.0
-**Data:** 12 de Maio de 2026
+**Versão:** 1.1
+**Data:** 31 de Maio de 2026
 **Autor:** Equipe Importa Aí
 
 ## Histórico de Revisão
@@ -10,6 +10,7 @@
 |------|--------|-----------|-------|
 | 11/05/2026 | 1.0 (rascunho) | Esquema inicial das tabelas de suporte técnico (autenticação, idempotência, trigger RN09) | Higor Paulo Costa |
 | 12/05/2026 | 1.0 | Publicação: incluído §4 com DER completo das entidades de negócio (`usuario`, `pedido` com `status_cache`, `etapa_rastreamento` append-only, `notificacao`, `cotacao_cache`); referência ao ADR-005 para criptografia de PII | Higor Paulo Costa |
+| 31/05/2026 | 1.1 | Nota de status em §4.1 `usuario`: cifragem de PII e `email_hash` são alvo do ADR-005, não implementados na V1 (texto claro) — dívida v2 | Higor Paulo Costa |
 
 ## Propósito
 
@@ -107,6 +108,8 @@ Esquema MySQL 8.x. Convenção: `snake_case` para nomes; `id BIGINT AUTO_INCREME
 
 - **UNIQUE:** `email_hash` — unicidade e busca rápida.
 - **INDEX:** `(perfil, ativo)` — listagens do RF25.
+
+> **Status de implementação (2026-05-31):** a cifragem de PII (`email`/`nome_completo` em `VARBINARY`) e o campo `email_hash` acima são o **alvo do ADR-005 e ainda não foram implementados**. A migration vigente (`V1`) grava `email` e `nome` em texto claro (`VARCHAR`), com `UNIQUE (email)` e sem `email_hash`. Dívida técnica para a próxima versão (ERS RNF09).
 
 ### 4.2 `pedido`
 
@@ -214,4 +217,4 @@ Mitigações previstas (não implementadas nesta versão; ver v2):
 - [ERS](../design-de-software/ERS.md) — RF03, RN04, RN05, RN06, RN08, RN09, RNF06, RNF09
 - [Arquitetura de Mensageria](../mensageria-e-streams/arquitetura-mensageria.md) — §7 (idempotência)
 - [ADR-003](../design-de-software/adrs/003-status-derivado-da-etapa.md) — Status derivado da etapa (motiva a coluna `status_cache` no `pedido`)
-- [ADR-005](../design-de-software/adrs/005-criptografia-em-repouso.md) — Criptografia em repouso (TDE + HMAC para e-mail). **Pendente de redação na Fase 4.**
+- [ADR-005](../design-de-software/adrs/005-criptografia-em-repouso.md) — Criptografia em repouso (AES-256-GCM + HMAC para e-mail). Decisão redigida; **implementação pendente (dívida v2)**.

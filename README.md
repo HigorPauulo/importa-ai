@@ -78,7 +78,7 @@ importa-ai/
 
 Quatro invariantes guiam todo o backend:
 
-1. **HTTP 202 inegociável** — toda operação de escrita responde em < 200 ms publicando no broker; a persistência é assíncrona (RN03, RNF02).
+1. **HTTP 202 nas escritas** — toda operação de escrita persiste o registro, publica o evento no broker e responde 202; os efeitos colaterais (notificações, integrações) são processados de forma assíncrona pelos consumers (RN03, RNF02).
 2. **Status derivado, nunca armazenado como verdade** — `StatusPedido` é função pura da última etapa + flag `cancelado`. `status_cache` no banco é só índice de query (RN01).
 3. **Idempotência por design** — cada mensagem AMQP tem `message_id` único; o consumer tenta `INSERT` na tabela `evento_processado` antes do trabalho de negócio. UNIQUE constraint protege contra redelivery (RN04).
 4. **Domínio sem Spring** — o pacote `domain/` é Java puro. Qualquer import de `org.springframework.*` ali significa que a arquitetura quebrou.
@@ -139,9 +139,9 @@ UI em `http://localhost:5173`.
 | Documento | Propósito |
 |-----------|-----------|
 | [ERS](artefatos/design-de-software/ERS.md) | Especificação completa de requisitos (RF, RNF, RN, casos de uso) |
-| [Arquitetura de Mensageria](artefatos/mensageria-e-streams/arquitetura-mensageria.md) | Topologia, fluxos, retry/DLQ, idempotência, observabilidade |
+| [Arquitetura de Mensageria](artefatos/mensageria-e-streams/arquitetura-mensageria.md) | Topologia, fluxos, DLQ, idempotência, observabilidade |
 | [Design Patterns Escolhidos](artefatos/design-de-software/design-patterns-escolhidos.md) | Lista de patterns adotados e descartados |
-| [ADRs](artefatos/design-de-software/adrs/) | Registros de decisões arquiteturais (5 ADRs) |
+| [ADRs](artefatos/design-de-software/adrs/) | Registros de decisões arquiteturais (6 ADRs) |
 | [Plano de Testes](artefatos/qualidade-de-software/plano-de-testes.md) | Casos de teste TC01–TC32 + metas de cobertura |
 | [Guia de Estilos](artefatos/modelagem-de-interfaces/guia-de-estilos.md) | Tokens visuais, componentes-chave, acessibilidade |
 | [Diagramas C4](artefatos/design-de-software/diagramas-C4/) | Contexto, Container, Componentes (drawio) |

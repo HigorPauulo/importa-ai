@@ -4,6 +4,8 @@
 **Data:** 2026-05-17
 **Autor:** Equipe Importa Aí
 
+> **Status de implementação (2026-05-31):** decisão aceita, **ainda não implementada nesta versão**. A migration vigente (`V1__schema_inicial.sql`) armazena `email` e `nome` em texto claro (`VARCHAR`), sem o campo `email_hash`. A cifragem de coluna descrita abaixo é dívida técnica registrada para a próxima versão (ver ERS RNF09).
+
 ## Contexto
 
 RNF09 exige que dados pessoais (nome e e-mail do usuário) sejam criptografados em repouso (AES-256) para conformidade com a LGPD. Dois requisitos conflitantes precisam ser atendidos simultaneamente:

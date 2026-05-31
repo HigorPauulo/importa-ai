@@ -1,8 +1,8 @@
-# Plano de Testes — Importa Aí v1.2
+# Plano de Testes — Importa Aí v1.3
 
 ## Objetivo
 Garantir que o sistema atenda aos requisitos funcionais e não funcionais
-definidos na ERS v1.4, com foco em:
+definidos na ERS v1.5, com foco em:
 - Confiabilidade do fluxo de mensageria (idempotência, DLQ, ordem).
 - Integridade da derivação de status do pedido (RN01, Apêndice A).
 - Resiliência das integrações externas (Correios, Câmbio).
@@ -13,6 +13,7 @@ definidos na ERS v1.4, com foco em:
 | 12/03/2026 | 1.0 | Plano inicial alinhado à ERS v1.0 |
 | 09/05/2026 | 1.1 | Alinhamento com ERS v1.2 (status derivado, INSERT-first, plano Correios), metas para adapters/infra, critério mensurável de latência WS, novos casos para RN07 e limite de pedidos ativos |
 | 17/05/2026 | 1.2 | Alinhamento com ERS v1.4: adição de TC32 (etapa TAXA → status ENVIADO), remoção de marcadores de pendência |
+| 31/05/2026 | 1.3 | Alinhamento com ERS v1.5: TC01/TC06 sem persistência no consumer (pedido persistido de forma síncrona); TC08 DLQ imediata (sem backoff nesta versão) |
 
 ---
 
@@ -52,7 +53,7 @@ definidos na ERS v1.4, com foco em:
 
 | ID | Cenário | Tipo | Critério de aceitação |
 |----|---------|------|-----------------------|
-| TC01 | Criar pedido com dados válidos | Integração | Retorna HTTP 202; evento `pedido.criado` publicado no RabbitMQ; pedido persistido pelo consumer em < 1s |
+| TC01 | Criar pedido com dados válidos | Integração | Retorna HTTP 202; pedido persistido de forma síncrona; evento `pedido.criado` publicado no RabbitMQ; consumer publica `notificacao.usuario` |
 | TC02 | Criar pedido com código duplicado (mesmo usuário) | Integração | Retorna HTTP 422 com mensagem clara; pedido NÃO é criado (RN06) |
 | TC03 | Criar pedido quando usuário já tem 200 pedidos ativos | Integração | Retorna HTTP 422; pré-condição da UC01 violada |
 | TC04 | Editar pedido com status derivado `ENTREGUE` | Unitário | Domínio rejeita com `PedidoImutavelException` (RF09) |
@@ -77,9 +78,9 @@ definidos na ERS v1.4, com foco em:
 
 | ID | Cenário | Tipo | Critério de aceitação |
 |----|---------|------|-----------------------|
-| TC06 | Consumer processa evento `pedido.criado` | Integração | Pedido persistido no MySQL; tabela `evento_processado` recebe registro |
+| TC06 | Consumer processa evento `pedido.criado` | Integração | Tabela `evento_processado` recebe registro (idempotência); evento `notificacao.usuario` publicado |
 | TC07 | Reprocessamento de evento já processado (mesmo `message_id`) | Integração | Nenhum efeito colateral; consumer ack sem reprocessar (UNIQUE constraint dispara, exceção tratada) |
-| TC08 | Falha no consumer → DLQ após 3 tentativas | Integração | Mensagem aparece em `q.pedido.criado.dlq`; backoff 1s → 2s → 4s validado por timestamps |
+| TC08 | Falha no consumer → DLQ imediata | Integração | `basicNack(requeue=false)`; mensagem aparece em `q.pedido.criado.dlq` com headers `x-death`/`x-first-death-reason` (sem retry automático nesta versão) |
 | TC22 | Publisher confirms desativados acidentalmente | Unitário (config) | Falha o teste de configuração — guarda contra regressão de RNF05 |
 
 ### Módulo: Notificações

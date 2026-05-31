@@ -1,7 +1,7 @@
 # Arquitetura de Mensageria — Importa Aí
 
-**Versão:** 2.0
-**Data:** 11 de Maio de 2026
+**Versão:** 2.1
+**Data:** 31 de Maio de 2026
 **Autor:** Equipe Importa Aí
 
 ## Histórico de Revisão
@@ -10,6 +10,7 @@
 |------|--------|-----------|
 | 11/05/2026 | 1.0 | Versão completa (12 seções, 1.013 linhas) |
 | 11/05/2026 | 2.0 | Consolidação de escopo e remoção de seções acessórias |
+| 31/05/2026 | 2.1 | Reconciliação com a implementação: §6 sem retry automático (DLQ imediata; backoff vira dívida v2); §7.2 sem atomicidade efeito↔registro; §8.1 com persistência síncrona do pedido; §9 persistência-primeiro + Outbox como dívida |
 
 ---
 
@@ -150,21 +151,13 @@ CAPTURAR qualquer outra exceção (validação, regra de negócio, schema)
 
 ---
 
-## 6. Política de retry e Dead Letter Queue
+## 6. Política de Dead Letter Queue
 
-**Política adotada:** 1 entrega original + 3 retentativas com backoff exponencial.
+**Política adotada nesta versão:** sem retry automático. Ao falhar o processamento, o consumer faz `basicNack(requeue=false)` e a mensagem é roteada imediatamente para a DLQ correspondente.
 
-| Tentativa | Espera antes |
-|-----------|--------------|
-| 1ª (entrega original) | 0 |
-| 2ª | 1 s |
-| 3ª | 2 s |
-| 4ª | 4 s |
-| → DLQ | após ≈ 7 s totais |
+**Justificativa:** as falhas de processamento previstas (payload malformado, violação de invariante de domínio, bug) são determinísticas — reentregar a mesma mensagem reproduziria a mesma falha. Encaminhar direto à DLQ evita reprocessamento inútil e expõe o problema mais rápido ao operador. Retry com *backoff* exponencial em memória fica registrado como evolução para v2, útil quando houver falhas transitórias (ex.: indisponibilidade momentânea de um recurso consultado pelo consumer).
 
-**Implementação:** retry **em memória** pelo framework AMQP. Alternativas (filas TTL, plugin *delayed messages*) descartadas por adicionar complexidade desproporcional ao volume.
-
-**Roteamento para DLQ:** após esgotar retries, o consumer faz `basicNack(requeue=false)`. O broker consulta `x-dead-letter-exchange` e `x-dead-letter-routing-key` da fila e re-publica na DLX correspondente. A mensagem chega na DLQ com headers `x-death`, `x-first-death-queue` e `x-first-death-reason` injetados pelo broker — facilitam diagnóstico.
+**Roteamento para DLQ:** o consumer faz `basicNack(requeue=false)`. O broker consulta `x-dead-letter-exchange` e `x-dead-letter-routing-key` da fila e re-publica na DLX correspondente. A mensagem chega na DLQ com headers `x-death`, `x-first-death-queue` e `x-first-death-reason` injetados pelo broker — facilitam diagnóstico.
 
 **Investigação:** DLQs **não têm consumer automático**. Operador acessa o painel Management, inspeciona a mensagem e decide: re-publicar (com **novo `message_id`** — ver §7), descartar, ou aguardar correção de bug.
 
@@ -189,17 +182,19 @@ A garantia *at-least-once* do RabbitMQ implica que uma mesma mensagem pode chega
 ### 7.2 Estratégia INSERT-first
 
 ```
-ABRIR transação
-TENTAR INSERT INTO evento_processado VALUES (X, R, I)
+INSERT (flush) INTO evento_processado VALUES (X, R, I)
     CASO sucesso:
-        processar trabalho de negócio
-        COMMIT + ACK manual
+        processar trabalho de negócio (efeito: publicar evento derivado)
+        ACK manual
     CASO violação de UNIQUE:
-        ROLLBACK
         ACK silencioso (mensagem já processada antes)
+    CASO falha no trabalho de negócio:
+        NACK (requeue=false) → DLQ (§6)
 ```
 
-O registro de idempotência é feito **antes** do trabalho de negócio, dentro da mesma transação. Se o trabalho falha, a transação aborta e o registro some — preservando a possibilidade de retry futuro.
+O registro de idempotência é gravado **antes** do trabalho de negócio; o `INSERT` com *flush* imediato torna a violação de UNIQUE detectável na hora, garantindo que uma redelivery seja descartada (ACK silencioso).
+
+**Trade-off conhecido (sem atomicidade efeito ↔ registro):** o efeito típico de um consumer é publicar outro evento — recurso externo à transação JPA. Não há, portanto, transação única cobrindo "marcar processado" e "produzir efeito". Se o trabalho falha depois de o registro ter sido gravado, a mensagem vai para a DLQ e o efeito não é reexecutado automaticamente; o reprocessamento é manual (reinjeção com novo `message_id`, §7.4). O Outbox pattern (§9) eliminaria essa janela — registrado como dívida para v2.
 
 ### 7.3 Por que INSERT-first e não SELECT-then-INSERT?
 
@@ -223,19 +218,18 @@ Job diário: remover registros com `processado_em < NOW() - INTERVAL 30 DAY`. Ap
 
 ```
 1. Controller recebe POST /api/pedidos.
-2. CriarPedidoUseCase valida o payload.
-3. UseCase publica "pedido.criado" via EventPublisher.
-4. Broker confirma (publisher confirm ACK).
-5. Controller retorna HTTP 202.
-   ── FIM da jornada síncrona (RNF02: < 200 ms) ──
+2. CriarPedidoUseCase valida o payload e a unicidade (RN06).
+3. Persiste o Pedido (transação síncrona).
+4. Publica "pedido.criado" via EventPublisher; broker confirma (publisher confirm).
+5. Controller retorna HTTP 202 com o recurso criado.
+   ── FIM da jornada síncrona (RNF02: p95 < 200 ms) ──
 
 == ASSÍNCRONO A PARTIR DAQUI ==
 6. PedidoCriadoConsumer consome de q.pedido.criado.
 7. INSERT-first em evento_processado (§7).
-8. Persiste o Pedido.
-9. Publica "notificacao.usuario" (evento derivado).
-10. ACK.
-11. NotificacaoConsumer consome → persiste a notificação (trigger RN09 limita a 50) → envia STOMP → ACK.
+8. Publica "notificacao.usuario" (evento derivado).
+9. ACK.
+10. NotificacaoConsumer consome → persiste a notificação (trigger RN09 limita a 50) → envia STOMP → ACK.
 ```
 
 ### 8.2 Inserir Etapa Manual (UC07)
@@ -275,14 +269,11 @@ Cada consumer reage a um evento e publica o próximo (quando faz sentido), sem o
 
 ## 9. Tratamento de indisponibilidade do broker
 
-Se a publicação falha (timeout no publisher confirm, falha de conexão, NACK explícito), o backend retorna **HTTP 503 honesto** em vez de aceitar a operação:
+A operação de escrita persiste o registro de forma síncrona e, em seguida, publica o evento. Como a persistência ocorre **primeiro**, a indisponibilidade do broker não perde o dado já gravado.
 
-```
-HTTP/1.1 503 Service Unavailable
-Retry-After: 30
-```
+Se a publicação falha (timeout no publisher confirm, falha de conexão), o erro é propagado e o cliente recebe resposta 5xx mesmo com o registro já persistido. A consequência prática é que os efeitos colaterais (notificação) não são disparados para aquela operação.
 
-**Por que não Outbox pattern?** Outbox (gravar local + worker republica) resolveria o conflito RN03 vs broker fora, mas adiciona complexidade significativa: tabela `outbox`, worker dedicado, atomicidade entre transação de negócio e INSERT na outbox. Registrado como dívida para v2; nesta versão, **503 honesto é melhor que 202 mentiroso**.
+**Dívida conhecida — Outbox pattern.** A janela "registro persistido, evento não publicado" seria eliminada gravando o evento numa tabela `outbox` dentro da mesma transação do negócio, com um worker republicando depois. Outbox adiciona complexidade (tabela, worker, atomicidade entre a transação de negócio e o INSERT na outbox) e está registrado como evolução para v2. Nesta versão, a persistência-primeiro garante que nenhum pedido se perca, ao custo de a notificação poder não ser emitida enquanto o broker estiver fora.
 
 ---
 

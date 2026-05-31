@@ -14,6 +14,7 @@
 | 09/05/2026 | 1.2 | Refinamentos médios pós-auditoria: detalhamento da idempotência (INSERT-first), estratégia da RN09 (FIFO atômico), decisão sobre RabbitMQ indisponível (503 honesto), modelo de dados de autenticação (Apêndice B), plano de contingência da API dos Correios (Apêndice C), co-localização explícita do WebSocket no API Backend, alinhamento de moedas (CNY/USD/EUR ↔ BRL) | Higor Paulo Costa |
 | 11/05/2026 | 1.3 | Detalhamento dos casos de uso UC04, UC05, UC06, UC08, UC09 e UC10 (anteriormente listados como "iteração posterior") | Higor Paulo Costa |
 | 11/05/2026 | 1.4 | Remoção de detalhes de implementação do documento (separação "o que" vs "como"): RN03/RN04/RN09 reduzidas; Apêndice B movido para Modelo de Dados; Apêndice C movido para ADR-004 | Higor Paulo Costa |
+| 31/05/2026 | 1.5 | Reconciliação com a implementação: RF06/RNF02/RN03 passam a descrever o fluxo real (persistência síncrona + publicação de evento + HTTP 202, com efeitos colaterais assíncronos); RNF09 (criptografia de PII em repouso) marcada como planejada/dívida técnica (ADR-005) | Higor Paulo Costa |
 
 ---
 
@@ -169,7 +170,7 @@ Cada requisito funcional está classificado por prioridade (Alta / Média / Baix
 
 | ID | Nome | Descrição | Prioridade |
 |----|------|-----------|------------|
-| RF06 | Cadastro de Pedido | O usuário deve poder cadastrar um novo pedido informando: código de rastreamento (obrigatório), descrição do produto, valor declarado em moeda de origem, moeda (CNY/USD/EUR), fornecedor/plataforma de compra (opcional) e data estimada de entrega (opcional). O sistema deve retornar resposta imediata (HTTP 202) sem aguardar a persistência. | Alta |
+| RF06 | Cadastro de Pedido | O usuário deve poder cadastrar um novo pedido informando: código de rastreamento (obrigatório), descrição do produto, valor declarado em moeda de origem, moeda (CNY/USD/EUR), fornecedor/plataforma de compra (opcional) e data estimada de entrega (opcional). Ao aceitar o cadastro, o sistema persiste o pedido, publica o evento `pedido.criado` e responde **HTTP 202 (Aceito)**; os efeitos colaterais (notificação ao usuário e reações downstream) são processados de forma assíncrona pela mensageria. | Alta |
 | RF07 | Listagem de Pedidos | O usuário deve visualizar todos os seus pedidos em uma lista paginada (20 itens/página), com filtros por: status, período de criação e código de rastreamento. A lista deve exibir: código, status atual, última atualização e valor convertido. | Alta |
 | RF08 | Detalhe do Pedido | Ao selecionar um pedido, o usuário deve ver: informações completas do pedido, linha do tempo com todas as etapas de rastreamento em ordem cronológica, valor convertido na cotação atual e histórico de eventos. | Alta |
 | RF09 | Edição de Pedido | O usuário pode editar descrição, valor declarado e data estimada de entrega enquanto o status derivado do pedido for `PROCESSANDO` ou `ENVIADO`. Pedidos com status derivado `ENTREGUE` são imutáveis. | Média |
@@ -220,14 +221,14 @@ Os RNFs definem as qualidades e restrições do sistema. Cada um possui critéri
 | ID | Nome | Categoria | Descrição | Prioridade |
 |----|------|-----------|-----------|------------|
 | RNF01 | Latência | Desempenho | 95% das requisições à API devem responder em menos de 500ms sob carga de até 100 usuários simultâneos. | Alta |
-| RNF02 | Assincronismo | Desempenho | O backend deve retornar HTTP 202 em menos de 200ms para operações de escrita, sem aguardar a persistência no banco. | Alta |
+| RNF02 | Assincronismo | Desempenho | Em operações de escrita, o backend persiste o registro, publica o evento de domínio e responde HTTP 202; os efeitos colaterais (notificações, integrações) rodam de forma assíncrona nos consumers, fora do ciclo da requisição. Meta de latência: p95 < 200ms. | Alta |
 | RNF03 | Tempo Real | Usabilidade | Notificações WebSocket devem chegar ao cliente em menos de 2 segundos após o evento ser publicado no **RabbitMQ**. | Alta |
 | RNF04 | Disponibilidade | Confiabilidade | O sistema deve ter disponibilidade mínima de 99,5% ao mês (downtime máximo: ~3,6h/mês), excluindo janelas de manutenção programadas. | Alta |
 | RNF05 | Persistência e Durabilidade | Dados | Nenhum evento publicado no **RabbitMQ deve ser perdido**: filas e exchanges marcadas como `durable`, mensagens com `persistent delivery mode`, **publisher confirms habilitados** no producer e **acknowledgement manual** nos consumers. Backup diário do MySQL com retenção de 30 dias. | Alta |
 | RNF06 | Segurança — Autenticação | Segurança | JWT obrigatório em todos os endpoints privados. Tokens expiram em 1h. Refresh token em 7 dias. Bloqueio após 5 tentativas falhas (contador persistido por usuário). | Alta |
 | RNF07 | Segurança — Transporte | Segurança | HTTPS/TLS 1.2+ obrigatório. HTTP deve ser redirecionado para HTTPS automaticamente. HSTS habilitado. | Alta |
 | RNF08 | Segurança — OWASP | Segurança | Zero vulnerabilidades críticas ou altas no relatório SonarQube. Proteção contra SQLi, XSS e CSRF obrigatória. | Alta |
-| RNF09 | LGPD | Conformidade | Dados pessoais (nome, e-mail) devem ser criptografados em repouso (AES-256). Usuário pode solicitar exclusão de conta e exportação de dados pessoais. | Alta |
+| RNF09 | LGPD | Conformidade | **Criptografia de PII em repouso (AES-256): planejada — ver ADR-005.** Na versão atual, nome e e-mail são armazenados em texto claro, protegidos por controle de acesso ao banco; a cifragem de coluna é dívida técnica assumida para a próxima versão. Usuário pode solicitar exclusão de conta (soft delete) e exportação de dados pessoais. | Alta |
 | RNF10 | Manutenibilidade | Qualidade | Cobertura de testes unitários ≥ 80% no pacote `domain/` do backend. Zero issues bloqueantes no SonarQube. Complexidade ciclomática máxima por método: 10. | Média |
 | RNF11 | Escalabilidade | Capacidade | O sistema deve suportar escalonamento horizontal do backend sem alterações de código (stateless). Consumers RabbitMQ devem ser adicionáveis sem downtime (concorrência controlada por `prefetch`). | Média |
 | RNF12 | Observabilidade | Operação | Logs estruturados (JSON) com correlation ID. Métricas de latência, throughput e erros disponíveis em painel de monitoramento (Grafana ou equivalente). | Média |
@@ -243,7 +244,7 @@ As regras de negócio estabelecem as políticas e condições que o sistema deve
 |----|------|-----------|
 | RN01 | Status Derivado da Etapa | O `StatusPedido` **não é armazenado como campo independente** — ele é uma função pura da última `TipoEtapa` registrada do pedido (ou da flag `cancelado`). A tabela de derivação é normativa e está documentada no Apêndice A. Não existe transição manual de status: o Administrador insere etapas (RF13), e o status acompanha automaticamente. |
 | ~~RN02~~ | ~~Pré-requisito de Entrega~~ | **REMOVIDO na v1.1.** Esta regra perdeu sentido com a derivação automática (RN01). O status `ENTREGUE` agora só é alcançado quando a etapa `TipoEtapa.ENTREGUE` é registrada — o que pressupõe naturalmente todas as etapas anteriores. |
-| RN03 | Desacoplamento Frontend | O frontend não deve aguardar a confirmação de escrita no banco de dados para liberar a interface. O backend retorna HTTP 202 (Aceito) imediatamente após aceitar a operação. |
+| RN03 | Desacoplamento Frontend | O frontend não bloqueia a interface aguardando o processamento completo de uma operação de escrita. O backend persiste o registro, publica o evento de domínio e retorna HTTP 202 (Aceito); as reações assíncronas (notificações em tempo real, integrações) são tratadas pelos consumers após a resposta. |
 | RN04 | Idempotência de Eventos | O reprocessamento de uma mensagem já processada não deve gerar efeitos colaterais (duplicação de pedidos, etapas ou notificações). |
 | RN05 | Imutabilidade de Eventos | Mensagens RabbitMQ publicadas são imutáveis e não devem ser alteradas retroativamente. Para corrigir um erro, um novo evento corretivo deve ser publicado. O histórico de eventos deve ser preservado integralmente. |
 | RN06 | Unicidade de Código de Rastreamento | Cada pedido deve ter um código de rastreamento único por usuário. O mesmo código pode ser cadastrado por usuários diferentes (compras compartilhadas), mas não duas vezes pelo mesmo usuário. |
