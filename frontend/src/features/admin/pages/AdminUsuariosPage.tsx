@@ -43,8 +43,8 @@ function AdminUsuariosPage() {
             <PageHeader titulo="Gestão de usuários" subtitulo="Gerencie perfis, status e acessos" />
 
             <Card className="overflow-hidden">
-                <div className="flex items-center justify-between gap-4 p-5">
-                    <div className="relative w-[340px]">
+                <div className="flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="relative w-full lg:w-[340px]">
                         <IconSearch className="pointer-events-none absolute left-[14px] top-1/2 h-4 w-4 -translate-y-1/2 text-secondary" />
                         <input
                             value={busca}
@@ -57,7 +57,7 @@ function AdminUsuariosPage() {
                         <select
                             value={perfil}
                             onChange={(e) => setPerfil(e.target.value)}
-                            className="rounded-[8px] bg-background px-[14px] py-[9px] text-[13px] font-semibold text-secondary focus:outline-none"
+                            className="flex-1 rounded-[8px] bg-background px-[14px] py-[9px] text-[13px] font-semibold text-secondary focus:outline-none lg:flex-none"
                         >
                             <option value="TODOS">Perfil: Todos</option>
                             <option value="CLIENTE">Cliente</option>
@@ -66,7 +66,7 @@ function AdminUsuariosPage() {
                         <select
                             value={status}
                             onChange={(e) => setStatus(e.target.value)}
-                            className="rounded-[8px] bg-background px-[14px] py-[9px] text-[13px] font-semibold text-secondary focus:outline-none"
+                            className="flex-1 rounded-[8px] bg-background px-[14px] py-[9px] text-[13px] font-semibold text-secondary focus:outline-none lg:flex-none"
                         >
                             <option value="TODOS">Status: Todos</option>
                             <option value="ATIVO">Ativo</option>

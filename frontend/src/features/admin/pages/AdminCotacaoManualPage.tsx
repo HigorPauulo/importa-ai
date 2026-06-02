@@ -87,18 +87,16 @@ function AdminCotacaoManualPage() {
                         <h2 className="text-lg font-semibold text-primary-dark">Cotações atuais</h2>
                     </div>
                     {cotacoes.map((moeda) => (
-                        <div key={moeda.sigla} className="flex items-center border-t border-gray-100 px-5 py-[14px]">
-                            <span className="w-[180px] text-[14px] font-medium text-primary-dark">{moeda.sigla} / BRL</span>
-                            <span className="w-[120px] text-[16px] font-medium text-primary-dark">
+                        <div key={moeda.sigla} className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-gray-100 px-5 py-[14px]">
+                            <span className="w-20 text-[14px] font-medium text-primary-dark">{moeda.sigla} / BRL</span>
+                            <span className="text-[16px] font-medium text-primary-dark">
                                 {moeda.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                             </span>
-                            <div className="w-[140px]">
-                                <span className="inline-flex rounded-full bg-background px-[10px] py-1 text-[11px] font-bold text-secondary">
-                                    Automática
-                                </span>
-                            </div>
-                            <span className="flex-1 text-[13px] text-secondary">Sincronizado há {moeda.atualizacao}</span>
-                            <button type="button" className="rounded-[8px] bg-primary-light px-3 py-1.5 text-[12px] text-primary-dark hover:opacity-80">
+                            <span className="inline-flex rounded-full bg-background px-[10px] py-1 text-[11px] font-bold text-secondary">
+                                Automática
+                            </span>
+                            <span className="text-[13px] text-secondary">Sincronizado {moeda.atualizacao}</span>
+                            <button type="button" className="ml-auto rounded-[8px] bg-primary-light px-3 py-1.5 text-[12px] text-primary-dark hover:opacity-80">
                                 Tornar manual
                             </button>
                         </div>

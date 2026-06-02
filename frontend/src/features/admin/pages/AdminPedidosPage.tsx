@@ -42,8 +42,8 @@ function AdminPedidosPage() {
             <PageHeader titulo="Pedidos" subtitulo="Todos os pedidos do sistema" />
 
             <Card className="overflow-hidden">
-                <div className="flex items-center justify-between gap-4 p-5">
-                    <div className="relative w-[360px]">
+                <div className="flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="relative w-full lg:w-[360px]">
                         <IconSearch className="pointer-events-none absolute left-[14px] top-1/2 h-4 w-4 -translate-y-1/2 text-secondary" />
                         <input
                             value={busca}
@@ -52,13 +52,13 @@ function AdminPedidosPage() {
                             className="h-[44px] w-full rounded-[8px] border border-secondary bg-white pl-[38px] pr-3 text-sm text-secondary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                         />
                     </div>
-                    <div className="flex gap-2">
+                    <div className="scrollbar-hide flex gap-2 overflow-x-auto">
                         {TABS.map((tab) => (
                             <button
                                 key={tab.valor}
                                 type="button"
                                 onClick={() => setFiltro(tab.valor)}
-                                className={`rounded-[8px] px-[14px] py-2 text-[13px] font-semibold transition-colors ${
+                                className={`shrink-0 rounded-[8px] px-[14px] py-2 text-[13px] font-semibold transition-colors ${
                                     filtro === tab.valor
                                         ? 'bg-primary text-white'
                                         : 'bg-background text-secondary'
