@@ -40,11 +40,17 @@ function CadastrarEncomendaForm() {
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            <Input label="Código de rastreamento" type="text" placeholder="Ex: ABC123BR"
+            <Input label="Código de rastreamento" type="text" placeholder="Ex: LB123456789BR"
                    error={errors.trackingCode?.message}
-                   {...register('trackingCode', { required: 'Código de rastreio é obrigatório' })} />
+                   {...register('trackingCode', {
+                       required: 'Código de rastreio é obrigatório',
+                       // normaliza antes de validar/enviar: sem espaços, caixa alta (espelha o backend)
+                       setValueAs: (v: string) => (v ?? '').replace(/\s+/g, '').toUpperCase(),
+                       validate: (v: string) =>
+                           /^[A-Z0-9]{8,40}$/.test(v) || 'Use 8 a 40 letras ou números, sem símbolos',
+                   })} />
 
-            <Input label="Descrição do produto" type="text" placeholder="Ex: Camiseta Nike"
+            <Input label="Descrição do produto" type="text" placeholder="Ex: Camiseta"
                    error={errors.descriptionProduct?.message}
                    {...register('descriptionProduct', { required: 'Descrição do produto é obrigatória' })} />
 

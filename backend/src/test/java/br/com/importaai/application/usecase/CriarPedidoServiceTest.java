@@ -1,6 +1,7 @@
 package br.com.importaai.application.usecase;
 
 import br.com.importaai.domain.exception.CodigoRastreamentoDuplicadoException;
+import br.com.importaai.domain.exception.CodigoRastreamentoInvalidoException;
 import br.com.importaai.domain.model.Moeda;
 import br.com.importaai.domain.model.Pedido;
 import br.com.importaai.domain.port.in.CriarPedidoUseCase;
@@ -70,5 +71,32 @@ class CriarPedidoServiceTest {
 
         verify(pedidoRepository, never()).salvar(any());
         verify(eventPublisher, never()).publicar(any(), any());
+    }
+
+    @Test
+    @DisplayName("rejeita codigo de rastreamento com formato invalido (simbolos/curto)")
+    void rejeitaCodigoInvalido() {
+        CriarPedidoUseCase.Input input = new CriarPedidoUseCase.Input(1L, "abc!", "Tenis", new BigDecimal("100.00"), Moeda.BRL);
+
+        assertThatExceptionOfType(CodigoRastreamentoInvalidoException.class)
+                .isThrownBy(() -> service.executar(input));
+
+        verify(pedidoRepository, never()).salvar(any());
+        verify(eventPublisher, never()).publicar(any(), any());
+    }
+
+    @Test
+    @DisplayName("normaliza o codigo: remove espacos e aplica caixa alta antes de salvar")
+    void normalizaCodigo() {
+        CriarPedidoUseCase.Input input = new CriarPedidoUseCase.Input(1L, "lb 123 456 789 br", "Tenis", new BigDecimal("100.00"), Moeda.BRL);
+
+        when(pedidoRepository.buscarPorCodigoRastreamentoEUsuario("LB123456789BR", 1L))
+                .thenReturn(Optional.empty());
+        when(pedidoRepository.salvar(any(Pedido.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Pedido resultado = service.executar(input);
+
+        assertThat(resultado.getCodigoRastreamento()).isEqualTo("LB123456789BR");
     }
 }

@@ -2,6 +2,7 @@ package br.com.importaai.infrastructure.adapter.in.rest;
 
 import br.com.importaai.domain.exception.AcessoNegadoException;
 import br.com.importaai.domain.exception.CodigoRastreamentoDuplicadoException;
+import br.com.importaai.domain.exception.CodigoRastreamentoInvalidoException;
 import br.com.importaai.domain.exception.EtapaRetroativaException;
 import br.com.importaai.domain.exception.PedidoImutavelException;
 import br.com.importaai.domain.exception.PedidoNaoEncontradoException;
@@ -69,6 +70,11 @@ public class RestExceptionHandler {
     }
 
     // ===== 400 — payload mal formado ou validacao falhou =====
+    @ExceptionHandler(CodigoRastreamentoInvalidoException.class)
+    public ResponseEntity<ErroResponse> handleCodigoInvalido(CodigoRastreamentoInvalidoException ex) {
+        return build(HttpStatus.BAD_REQUEST, "CODIGO_RASTREAMENTO_INVALIDO", ex.getMessage());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErroResponse> handleValidation(MethodArgumentNotValidException ex) {
         List<String> detalhes = ex.getBindingResult().getFieldErrors().stream()

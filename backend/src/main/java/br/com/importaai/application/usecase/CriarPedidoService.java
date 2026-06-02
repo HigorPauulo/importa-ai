@@ -1,14 +1,20 @@
 package br.com.importaai.application.usecase;
 
 import br.com.importaai.domain.exception.CodigoRastreamentoDuplicadoException;
+import br.com.importaai.domain.exception.CodigoRastreamentoInvalidoException;
 import br.com.importaai.domain.model.Pedido;
 import br.com.importaai.domain.port.in.CriarPedidoUseCase;
 import br.com.importaai.domain.port.out.EventPublisher;
 import br.com.importaai.domain.port.out.PedidoRepository;
 
 import java.time.Instant;
+import java.util.regex.Pattern;
 
 public class CriarPedidoService implements CriarPedidoUseCase {
+
+    // Validacao LEVE: codigos internacionais (China Post/Cainiao/marketplace) nao seguem
+    // o padrao UPV "AA999999999BR", entao so exigimos 8-40 caracteres alfanumericos.
+    private static final Pattern CODIGO_VALIDO = Pattern.compile("[A-Z0-9]{8,40}");
 
     private final PedidoRepository pedidoRepository;
     private final EventPublisher eventPublisher;
@@ -20,19 +26,30 @@ public class CriarPedidoService implements CriarPedidoUseCase {
 
     @Override
     public Pedido executar(Input input) {
+        String codigo = normalizarCodigo(input.codigoRastreamento());
 
-        pedidoRepository.buscarPorCodigoRastreamentoEUsuario(input.codigoRastreamento(), input.usuarioId())
+        pedidoRepository.buscarPorCodigoRastreamentoEUsuario(codigo, input.usuarioId())
                 .ifPresent(p -> {
                     throw new CodigoRastreamentoDuplicadoException(
-                            "usuario ja possui pedido com codigo " + input.codigoRastreamento());
+                            "usuario ja possui pedido com codigo " + codigo);
                 });
 
-        Pedido pedido = new Pedido(input.usuarioId(), input.codigoRastreamento(), input.descricao(),
+        Pedido pedido = new Pedido(input.usuarioId(), codigo, input.descricao(),
                 input.valorDeclarado(), input.moeda(), Instant.now());
         Pedido salvo = pedidoRepository.salvar(pedido);
 
         eventPublisher.publicar("pedido.criado", salvo);
 
         return salvo;
+    }
+
+    // Remove espacos, normaliza caixa alta e rejeita o que e obviamente invalido.
+    private static String normalizarCodigo(String bruto) {
+        String codigo = bruto == null ? "" : bruto.replaceAll("\\s+", "").toUpperCase();
+        if (!CODIGO_VALIDO.matcher(codigo).matches()) {
+            throw new CodigoRastreamentoInvalidoException(
+                    "codigo de rastreamento invalido: use 8 a 40 letras ou numeros, sem simbolos");
+        }
+        return codigo;
     }
 }
