@@ -16,7 +16,7 @@ Conclusões diretas:
 
 - Não existe endpoint `PATCH /pedidos/{id}/status`.
 - A única forma de promover o status é registrando uma nova etapa via `POST /pedidos/{id}/etapas` (RF13).
-- Uma coluna `status_cache` é mantida em `pedido` apenas para queries (filtros, dashboard); é **cache derivado**, nunca fonte de verdade — pode ser recomputada das etapas a qualquer momento.
+- Uma coluna `status_cache` **poderá** ser mantida em `pedido` apenas para queries (filtros, dashboard) como cache derivado — nunca fonte de verdade. **Nesta versão a coluna não foi implementada**: o status é derivado *on-the-fly* da última etapa (sem cache, sem listener). `status_cache` é otimização v2.
 
 ## Alternativas consideradas
 
@@ -26,8 +26,8 @@ Conclusões diretas:
 ## Consequências
 
 - **(+)** Impossível ter status divergente das etapas — invariante garantida pela linguagem.
-- **(+)** Testável trivialmente: as 10 linhas da tabela do Apêndice A viram 10 casos parametrizados (TC15–TC20).
-- **(−)** `status_cache` precisa ser atualizado de forma confiável pelo listener — mitigado por job futuro de reconciliação.
+- **(+)** Testável trivialmente: as linhas da tabela do Apêndice A (12, incl. `DEVOLVIDO`) viram casos parametrizados (TC15–TC20, TC32, TC33).
+- **(~)** `status_cache` (cache de query) é dívida v2; nesta versão a derivação *on-the-fly* evita qualquer divergência por construção, ao custo de recomputar a partir das etapas.
 
 ## Referências
 

@@ -1,73 +1,48 @@
-# React + TypeScript + Vite
+# Importa Aí — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interface web do Importa Aí (gestão e rastreamento de encomendas internacionais). SPA em React 19 + TypeScript, consumindo a API REST e o canal WebSocket do backend.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| Camada | Tecnologia |
+|--------|-----------|
+| UI | React 19 + TypeScript |
+| Build/dev | Vite |
+| Estilo | Tailwind CSS v4 (tokens em `src/index.css`) |
+| Estado de servidor | TanStack Query v5 (`useQuery`/`useMutation`) |
+| Formulários | React Hook Form v7 |
+| Roteamento | React Router v7 |
+| HTTP | Axios (interceptor JWT + refresh em `services/api.ts`) |
+| Tempo real | STOMP/SockJS (`@stomp/stompjs`) no `NotificacaoContext` |
 
-## React Compiler
+## Como rodar
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Pré-requisitos: Node 20+ e o backend no ar (em dev, o proxy do Vite encaminha `/api` e `/ws` para `localhost:8080`).
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev      # http://localhost:5173
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Outros scripts: `npm run build` (typecheck `tsc -b` + build), `npm run preview`, `npm run lint`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Estrutura (`src/`)
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+components/   Componentes reutilizáveis (ui/, layout/)
+context/      AuthContext, NotificacaoContext, ToastContext
+features/     Módulos por feature (auth, pedidos, admin, perfil) — páginas + componentes + utils
+hooks/        Custom hooks
+lib/          Utilitários
+services/     Chamadas à API (Axios) + cliente STOMP
+types/        Interfaces TypeScript (pedidos, auth, etc.)
+index.css     Tokens de design (Tailwind v4) — fonte das cores/typografia
+```
+
+## Convenções
+
+- Estado de servidor sempre via TanStack Query (não `useState`/`useEffect` para chamadas de API).
+- Formulários via React Hook Form com validação tipada.
+- Cores e estilos saem dos tokens em `index.css` — fiéis ao Figma (não inventar UI).
+
+O design system e os requisitos vivem em [`../artefatos/`](../artefatos/) (guia de estilos, ERS).

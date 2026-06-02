@@ -59,9 +59,11 @@ Em resumo: RabbitMQ foi escolhido pela maturidade do AMQP, suporte nativo a ACK 
 | Nome | Recebe routing key | Consumer |
 |------|--------------------|----------|
 | `q.pedido.criado` | `pedido.criado` | `PedidoCriadoConsumer` |
-| `q.pedido.atualizado` | `pedido.atualizado` | `PedidoAtualizadoConsumer` |
-| `q.rastreamento.atualizado` | `rastreamento.atualizado` | `RastreamentoConsumer` |
+| `q.pedido.atualizado` | `pedido.atualizado` | _sem consumer nesta versão (v2)_ |
+| `q.rastreamento.atualizado` | `rastreamento.atualizado` | _sem consumer nesta versão (v2)_ |
 | `q.notificacao.usuario` | `notificacao.usuario` | `NotificacaoConsumer` |
+
+> **Estado de implementação:** nesta versão existem dois consumers — `PedidoCriadoConsumer` e `NotificacaoConsumer`. As filas `q.pedido.atualizado` e `q.rastreamento.atualizado` são declaradas (a topologia já prevê o fanout), mas os eventos `pedido.atualizado` (cancelamento) e `rastreamento.atualizado` (etapa/sync) são publicados **sem consumer** — a etapa/atualização já é persistida de forma síncrona no use case. A consequência é que a **notificação de mudança de status (RF16) não é emitida nesta versão** (só a de criação, via `PedidoCriadoConsumer`); ligar um `RastreamentoConsumer` que converta esses eventos em `notificacao.usuario` é dívida v2.
 
 Cada fila principal tem uma DLQ correspondente (`*.dlq`), declarada via argumentos `x-dead-letter-exchange = importaai.events.dlq` e `x-dead-letter-routing-key = <routing-key-original>.dlq`.
 
@@ -97,7 +99,7 @@ Cada fila se liga à sua exchange com a routing key correspondente (binding dire
                 ▼     ▼     ▼     ▼
               [q1] [q2] [q3] [q4]         (filas principais)
                 │     │     │     │
-        ── falha 4× ──── ► importaai.events.dlq
+  ── falha → basicNack(requeue=false) ──── ► importaai.events.dlq
                                   │
               ┌──────────┬────────┴───────┬──────────┐
               ▼          ▼                ▼          ▼
@@ -229,12 +231,12 @@ Job diário: remover registros com `processado_em < NOW() - INTERVAL 30 DAY`. Ap
 7. INSERT-first em evento_processado (§7).
 8. Publica "notificacao.usuario" (evento derivado).
 9. Dispara a leitura inicial de rastreio do pedido (best-effort): consulta a fonte de
-   rastreamento ativa e persiste as etapas já conhecidas, evitando que o pedido fique sem
-   etapas até o sync agendado (§8.3). Se houver novidade, segue a cascata de §8.2
-   (`rastreamento.atualizado`). Falha na fonte externa é apenas logada e NÃO derruba a
-   mensagem — a sincronização periódica retoma.
+   rastreamento ativa e **persiste as etapas de forma síncrona** no use case, evitando que
+   o pedido fique sem etapas até o sync agendado (§8.3). O `rastreamento.atualizado`
+   publicado não tem consumer nesta versão (§3.2). Falha na fonte externa é apenas logada
+   e NÃO derruba a mensagem — a sincronização periódica retoma.
 10. ACK.
-11. NotificacaoConsumer consome → persiste a notificação (trigger RN09 limita a 50) → envia STOMP → ACK.
+11. NotificacaoConsumer consome → persiste a notificação (RN09 — FIFO de 50 na camada de aplicação) → envia STOMP → ACK.
 ```
 
 > A leitura de rastreio acontece **no consumer** (assíncrono), não na escrita. A criação
@@ -244,26 +246,27 @@ Job diário: remover registros com `processado_em < NOW() - INTERVAL 30 DAY`. Ap
 ### 8.2 Inserir Etapa Manual (UC07)
 
 ```
-1. Controller recebe POST /api/pedidos/{id}/etapas.
-2. RegistrarEtapaUseCase valida (timestamp ≥ última etapa, pedido não cancelado).
-3. Publica "rastreamento.atualizado".
-4. Controller retorna HTTP 202.
+1. Controller recebe POST /api/pedidos/{id}/etapas (perfil Admin).
+2. RegistrarEtapaUseCase valida (timestamp ≥ última etapa; pedido não terminal) e
+   **persiste a etapa de forma síncrona** — o status é derivado da última etapa (RN01).
+3. Publica "rastreamento.atualizado" e retorna HTTP 202.
 
-== ASSÍNCRONO ==
-5. RastreamentoConsumer consome → INSERT-first → persiste etapa → recalcula status_cache.
-6. Se o status derivado mudou: publica "pedido.atualizado" → cascata gera "notificacao.usuario".
+== v2 ==
+4. Não há consumer de "rastreamento.atualizado" nesta versão — o evento fica disponível
+   para um futuro RastreamentoConsumer que o converta em "notificacao.usuario" (RF16).
+   Nesta versão a notificação de mudança de status NÃO é emitida (ver §3.2).
 ```
 
 ### 8.3 Sincronização Correios (RF15)
 
-Scheduler a cada 6 h consulta a API dos Correios para pedidos com status derivado `ENVIADO`. Para cada nova etapa detectada, publica `rastreamento.atualizado`. O fluxo segue idêntico a §8.2 a partir do passo 5.
+Scheduler em intervalo configurável (padrão **20 min**) consulta a fonte de rastreamento (adapter ativo — 17track em produção) para pedidos ativos (status não terminal). Aplica as novas etapas de forma **síncrona** e publica `rastreamento.atualizado` (sem consumer nesta versão — §3.2/§8.2). A primeira leitura de um pedido recém-criado também é disparada pelo `PedidoCriadoConsumer` (§8.1, passo 9).
 
 ### 8.4 Notificação ao usuário (UC03)
 
 ```
 1. NotificacaoConsumer consome de q.notificacao.usuario.
 2. INSERT-first em evento_processado.
-3. Persiste a notificação (trigger SQL aplica RN09 — FIFO de 50).
+3. Persiste a notificação (RN09 — FIFO de 50 aplicado na **camada de aplicação**, com lock pessimista por usuário; não há trigger SQL).
 4. Envia STOMP para /user/{usuario_id}/queue/notificacoes.
 5. ACK.
 

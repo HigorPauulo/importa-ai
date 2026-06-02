@@ -2,7 +2,7 @@
 
 Sistema web full-stack de gestão e rastreamento de encomendas internacionais, com foco no corredor logístico China–Brasil. Permite cadastrar pedidos, acompanhar etapas em tempo real (do despacho na China à entrega no Brasil), receber notificações via WebSocket e visualizar valores convertidos pela cotação de câmbio.
 
-> **Status:** modelagem concluída — desenvolvimento em andamento para a entrega N2 (22/05/2026) do Projeto Integrador IV — ADS 4º Período — PUC Goiás 2026/1.
+> **Status:** sistema completo e em execução — backend, frontend, mensageria RabbitMQ, rastreamento real (17track), notificações e dashboard admin implantados em container. Projeto Integrador IV — ADS 4º Período — PUC Goiás 2026/1.
 
 ---
 
@@ -46,11 +46,11 @@ Sistema web full-stack de gestão e rastreamento de encomendas internacionais, c
 ```
 importa-ai/
 ├── artefatos/                       Documentação técnica do projeto
-│   ├── design-de-software/          ERS, design patterns, diagramas C4, 5 ADRs
+│   ├── design-de-software/          ERS, design patterns, diagramas C4, 6 ADRs
 │   ├── mensageria-e-streams/        Topologia AMQP, idempotência, DLQ
 │   ├── modelagem-de-dados/          Esquema relacional + DER (drawio)
 │   ├── modelagem-de-interfaces/     Guia de estilos e tokens visuais
-│   └── qualidade-de-software/       Plano de testes (TC01–TC32)
+│   └── qualidade-de-software/       Plano de testes (TC01–TC33)
 ├── backend/                         API + consumidores RabbitMQ (Java/Spring)
 │   └── src/main/java/br/com/importaai/
 │       ├── domain/                  Núcleo puro — entidades, ports, exceções
@@ -67,8 +67,8 @@ importa-ai/
 - **Padrão:** Arquitetura Hexagonal (*Ports & Adapters*) no backend — núcleo de domínio em Java puro, isolado de qualquer framework de infraestrutura. Ver [ADR-002](artefatos/design-de-software/adrs/002-arquitetura-hexagonal.md).
 - **Mensageria:** RabbitMQ via AMQP com ACK manual, Publisher Confirms, idempotência via INSERT-first e Dead Letter Queues. Ver [Arquitetura de Mensageria](artefatos/mensageria-e-streams/arquitetura-mensageria.md) e [ADR-001](artefatos/design-de-software/adrs/001-broker-rabbitmq.md).
 - **Status do pedido:** derivado da última etapa registrada (RN01) — não há endpoint `PATCH /pedidos/{id}/status`. Ver [ADR-003](artefatos/design-de-software/adrs/003-status-derivado-da-etapa.md).
-- **Integração com Correios:** três adapters intercambiáveis (`stub`, `http`, `cache-only`) selecionados por configuração — resiliência sem acoplamento do domínio à API real. Ver [ADR-004](artefatos/design-de-software/adrs/004-adapters-correios.md).
-- **Criptografia de PII:** e-mail e nome cifrados em repouso na aplicação (AES-256-GCM) + busca exata via HMAC-SHA256. Ver [ADR-005](artefatos/design-de-software/adrs/005-criptografia-em-repouso.md).
+- **Rastreamento:** quatro adapters intercambiáveis (`stub`, `http` CWS, `cache-only`, `17track`) para a porta `RastreamentoCorreiosPort`, selecionados por configuração. Em produção usa-se o agregador **17track** (cobre Correios + trecho chinês). Ver [ADR-004](artefatos/design-de-software/adrs/004-adapters-correios.md).
+- **Criptografia de PII (planejada):** decisão registrada (AES-256-GCM + HMAC-SHA256 para busca), **ainda não implementada nesta versão** — nome/e-mail em texto claro, dívida v2. Ver [ADR-005](artefatos/design-de-software/adrs/005-criptografia-em-repouso.md).
 - **Notificações:** STOMP sobre WebSocket no canal privado `/user/{userId}/queue/notificacoes`, com histórico persistido (FIFO de 50 — RN09).
 - **Diagramas C4:** Contexto, Container e Componentes do backend em [`artefatos/design-de-software/diagramas-C4/`](artefatos/design-de-software/diagramas-C4/).
 
@@ -79,7 +79,7 @@ importa-ai/
 Quatro invariantes guiam todo o backend:
 
 1. **HTTP 202 nas escritas** — toda operação de escrita persiste o registro, publica o evento no broker e responde 202; os efeitos colaterais (notificações, integrações) são processados de forma assíncrona pelos consumers (RN03, RNF02).
-2. **Status derivado, nunca armazenado como verdade** — `StatusPedido` é função pura da última etapa + flag `cancelado`. `status_cache` no banco é só índice de query (RN01).
+2. **Status derivado, nunca armazenado como verdade** — `StatusPedido` é função pura da última etapa + flag `cancelado`, calculado on-the-fly (sem coluna `status_cache` nesta versão; o cache de query é dívida v2 — RN01 / ADR-003).
 3. **Idempotência por design** — cada mensagem AMQP tem `message_id` único; o consumer tenta `INSERT` na tabela `evento_processado` antes do trabalho de negócio. UNIQUE constraint protege contra redelivery (RN04).
 4. **Domínio sem Spring** — o pacote `domain/` é Java puro. Qualquer import de `org.springframework.*` ali significa que a arquitetura quebrou.
 
@@ -87,7 +87,7 @@ Quatro invariantes guiam todo o backend:
 
 ## Como rodar localmente
 
-> **Nota:** os diretórios `backend/` e `infra/` estão em fase inicial de implementação. As instruções abaixo descrevem o ambiente de desenvolvimento alvo; serão validadas conforme cada camada for sendo entregue.
+> As instruções abaixo sobem o ambiente de desenvolvimento local completo (infra + backend + frontend). Para o deploy em servidor, ver `DEPLOY.md`.
 
 ### Pré-requisitos
 
@@ -155,8 +155,8 @@ UI em `http://localhost:5173`.
 | Marco | Data | Status |
 |-------|------|--------|
 | N1 — Apresentação | 15/04/2026 | **Aprovada** (Figma + diagramas C4 + plano de testes) |
-| **N2 — Entrega de código** | **22/05/2026** | **Em andamento** |
-| Banca final | 03/06/2026 | Pendente |
+| **N2 — Entrega de código** | **22/05/2026** | **Concluída** — sistema completo + testes |
+| Apresentação final | 03/06/2026 | Sistema deployado e em execução |
 
 ---
 

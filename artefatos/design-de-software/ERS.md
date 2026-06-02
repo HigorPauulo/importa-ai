@@ -1,7 +1,7 @@
 # Especificação de Requisitos de Software (ERS / SRS)
 
 **Sistema:** Importa Aí — Sistema de Gestão e Rastreamento de Encomendas Internacionais
-**Versão:** 1.4
+**Versão:** 1.6
 **Data:** 11 de Maio de 2026
 **Autor:** Equipe Importa Aí
 
@@ -15,6 +15,7 @@
 | 11/05/2026 | 1.3 | Detalhamento dos casos de uso UC04, UC05, UC06, UC08, UC09 e UC10 (anteriormente listados como "iteração posterior") | Higor Paulo Costa |
 | 11/05/2026 | 1.4 | Remoção de detalhes de implementação do documento (separação "o que" vs "como"): RN03/RN04/RN09 reduzidas; Apêndice B movido para Modelo de Dados; Apêndice C movido para ADR-004 | Higor Paulo Costa |
 | 31/05/2026 | 1.5 | Reconciliação com a implementação: RF06/RNF02/RN03 passam a descrever o fluxo real (persistência síncrona + publicação de evento + HTTP 202, com efeitos colaterais assíncronos); RNF09 (criptografia de PII em repouso) marcada como planejada/dívida técnica (ADR-005) | Higor Paulo Costa |
+| 02/06/2026 | 1.6 | Reconciliação com a implementação no ar: intervalo de sincronização (20min, configurável); RF07 sem paginação e RF26 só CSV nesta versão (paginação/XLSX → v2); fonte de rastreamento via adapter plugável (17track em produção, ADR-004); frontend React 19; estado `DEVOLVIDO` (RF12 / Apêndice A) | Higor Paulo Costa |
 
 ---
 
@@ -124,7 +125,7 @@ O "Importa Aí" é um sistema web independente que atua como camada de gestão e
 ## 8. Premissas
 
 - O usuário possui acesso à internet para usar o sistema.
-- A API dos Correios **pode** estar disponível. O sistema é resiliente a sua indisponibilidade via estratégia de adapters intercambiáveis (`stub`, `http` com *circuit breaker*, `cache-only`) — detalhamento em [ADR-004](adrs/004-adapters-correios.md). Em ambiente de desenvolvimento e demonstração, é usado o adapter `stub`, que retorna etapas sintéticas.
+- A fonte de rastreamento **pode** estar disponível. O sistema é resiliente à indisponibilidade via estratégia de adapters intercambiáveis (`stub`, `http` CWS, `cache-only`, `17track`) — detalhamento em [ADR-004](adrs/004-adapters-correios.md). Em desenvolvimento usa-se o `stub` (etapas sintéticas); em produção, o `17track` (agregador real que cobre Correios e o trecho chinês).
 - A API de Cotação de Câmbio estará disponível. Em caso de indisponibilidade, o sistema usará a última cotação armazenada em cache (RN07).
 - O broker RabbitMQ estará disponível para receber publicações. Em caso de indisponibilidade, ver tratamento na UC01 (FA02).
 - O endpoint STOMP/WebSocket é exposto pelo próprio API Backend (Spring Boot), no mesmo processo da API REST. Não há container WebSocket separado.
@@ -135,11 +136,11 @@ O "Importa Aí" é um sistema web independente que atua como camada de gestão e
 ## 9. Dependências
 
 - Backend: Java 21 (LTS) / Spring Boot 3.x.
-- Frontend: React 18+ / TypeScript / Tailwind CSS 4.x.
+- Frontend: React 19 / TypeScript / Tailwind CSS 4.x.
 - **Mensageria: RabbitMQ 3.13+ (protocolo AMQP).**
 - Banco de dados: MySQL 8.x.
 - Tempo real: STOMP sobre WebSocket (SockJS como fallback).
-- Serviço externo: API dos Correios (SRO — Sistema de Rastreamento de Objetos).
+- Serviço externo de rastreamento: agregador 17track (produção) — cobre Correios (SRO) e transportadoras chinesas. API CWS dos Correios é alternativa (requer contrato).
 - Serviço externo: API de cotação (ex.: AwesomeAPI, Open Exchange Rates ou similar).
 
 ---
@@ -171,7 +172,7 @@ Cada requisito funcional está classificado por prioridade (Alta / Média / Baix
 | ID | Nome | Descrição | Prioridade |
 |----|------|-----------|------------|
 | RF06 | Cadastro de Pedido | O usuário deve poder cadastrar um novo pedido informando: código de rastreamento (obrigatório), descrição do produto, valor declarado em moeda de origem, moeda (CNY/USD/EUR), fornecedor/plataforma de compra (opcional) e data estimada de entrega (opcional). Ao aceitar o cadastro, o sistema persiste o pedido, publica o evento `pedido.criado` e responde **HTTP 202 (Aceito)**; os efeitos colaterais (notificação ao usuário e reações downstream) são processados de forma assíncrona pela mensageria. | Alta |
-| RF07 | Listagem de Pedidos | O usuário deve visualizar todos os seus pedidos em uma lista paginada (20 itens/página), com filtros por: status, período de criação e código de rastreamento. A lista deve exibir: código, status atual, última atualização e valor convertido. | Alta |
+| RF07 | Listagem de Pedidos | O usuário deve visualizar todos os seus pedidos em uma lista, com filtros por situação (em trânsito, taxados, entregues, devolvidos) e busca por código/produto. A lista exibe código, status atual, última atualização e valor. **Paginação (20 itens/página) prevista para v2** — nesta versão a lista é completa por usuário. | Alta |
 | RF08 | Detalhe do Pedido | Ao selecionar um pedido, o usuário deve ver: informações completas do pedido, linha do tempo com todas as etapas de rastreamento em ordem cronológica, valor convertido na cotação atual e histórico de eventos. | Alta |
 | RF09 | Edição de Pedido | O usuário pode editar descrição, valor declarado e data estimada de entrega enquanto o status derivado do pedido for `PROCESSANDO` ou `ENVIADO`. Pedidos com status derivado `ENTREGUE` são imutáveis. | Média |
 | RF10 | Cancelamento / Arquivamento | O usuário pode arquivar pedidos com status `ENTREGUE`. O Administrador pode cancelar pedidos em qualquer estado (operação representada por flag `cancelado` no domínio). Pedidos cancelados devem ser mantidos no banco por 12 meses para fins de auditoria (RN08). | Média |
@@ -181,10 +182,10 @@ Cada requisito funcional está classificado por prioridade (Alta / Média / Baix
 | ID | Nome | Descrição | Prioridade |
 |----|------|-----------|------------|
 | RF11 | Etapas Internacionais | O sistema deve registrar e exibir as etapas internacionais: 1) NA_CHINA — pedido processado pelo fornecedor; 2) AEROPORTO_ORIGEM — despacho aduaneiro China; 3) EM_TRANSITO — em voo internacional; 4) AEROPORTO_DESTINO — chegada ao Brasil. | Alta |
-| RF12 | Etapas Nacionais (Correios) | Após chegada ao Brasil, o sistema deve consultar a API dos Correios e registrar as sub-etapas, como valores do enum `TipoEtapa`: `NO_BRASIL` (recebido), `TAXA` (aguardando pagamento de imposto aduaneiro, quando aplicável), `CD_BRASIL` (em CD regional), `SAIDA_ENTREGA` (saída para entrega) e `ENTREGUE` (entrega ao destinatário). **Trade-off conhecido:** quando a taxa é paga, o pacote avança para `CD_BRASIL` — não há registro persistente de "houve taxa" no `Pedido` (apenas o histórico da linha do tempo preserva isso). Caso o negócio passe a exigir consulta direta ao histórico de taxas, uma entidade `Taxa` separada poderá ser adicionada em v2. | Alta |
+| RF12 | Etapas Nacionais (Correios) | Após chegada ao Brasil, o sistema deve consultar a API dos Correios e registrar as sub-etapas, como valores do enum `TipoEtapa`: `NO_BRASIL` (recebido), `TAXA` (aguardando pagamento de imposto aduaneiro, quando aplicável), `CD_BRASIL` (em CD regional), `SAIDA_ENTREGA` (saída para entrega) e `ENTREGUE` (entrega ao destinatário). **Trade-off conhecido:** quando a taxa é paga, o pacote avança para `CD_BRASIL` — não há registro persistente de "houve taxa" no `Pedido` (apenas o histórico da linha do tempo preserva isso). Caso o negócio passe a exigir consulta direta ao histórico de taxas, uma entidade `Taxa` separada poderá ser adicionada em v2. A fonte das etapas é um adapter plugável (ADR-004); em produção, o agregador 17track. Pacotes barrados/devolvidos pela alfândega derivam o estado terminal `DEVOLVIDO` (Apêndice A). | Alta |
 | RF13 | Atualização Manual de Etapa | O Administrador deve poder inserir manualmente uma nova etapa de rastreamento para qualquer pedido, com descrição livre e timestamp. Útil para etapas não capturadas automaticamente pela API dos Correios. **Esta é a única forma de promover o status do pedido (ver RN01).** | Média |
 | RF14 | Linha do Tempo Visual | O sistema deve exibir todas as etapas de rastreamento em uma linha do tempo vertical, com ícone por tipo de etapa, timestamp, localização (quando disponível) e destaque visual para a etapa atual. | Alta |
-| RF15 | Sincronização Automática | O sistema deve consultar automaticamente a API dos Correios a cada 6 horas para pedidos cujo status derivado seja `ENVIADO` (ou seja, com etapas internacionais já concluídas e ainda sem entrega). O intervalo deve ser configurável por variável de ambiente. | Média |
+| RF15 | Sincronização Automática | O sistema deve consultar automaticamente a fonte de rastreamento em intervalo configurável por variável de ambiente (padrão atual: **20 minutos**) para pedidos ativos (status derivado não terminal — exclui `ENTREGUE` e `DEVOLVIDO`). | Média |
 
 ### Módulo: Notificações em Tempo Real
 
@@ -210,7 +211,7 @@ Cada requisito funcional está classificado por prioridade (Alta / Média / Baix
 | RF23 | Gráfico de Evolução | O dashboard deve exibir um gráfico de linha com a evolução do volume de pedidos nos últimos 30 dias, com opção de filtrar por status. | Média |
 | RF24 | Lista de Pedidos Recentes | O dashboard deve exibir os 10 pedidos mais recentemente atualizados com acesso rápido ao detalhe de cada um. | Média |
 | RF25 | Gestão de Usuários | O Administrador deve poder listar, buscar, ativar/desativar, promover/rebaixar usuários **e redefinir senha de qualquer usuário** (substituto operacional do antigo RF04). Não é possível excluir usuários (soft delete); apenas desativar. | Média |
-| RF26 | Exportação de Dados | O Administrador deve poder exportar a lista de pedidos (com filtros aplicados) nos formatos CSV e XLSX. | Baixa |
+| RF26 | Exportação de Dados | O Administrador deve poder exportar a lista de pedidos (com filtros aplicados) no formato **CSV** (geração no cliente). **XLSX previsto para v2.** | Baixa |
 
 ---
 

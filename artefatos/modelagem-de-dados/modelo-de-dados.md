@@ -31,9 +31,9 @@ Apoiam as regras RF03 (revogação de *refresh token*) e RNF06 (bloqueio após 5
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
-| `id` | UUID | Identificador interno. |
-| `token_hash` | VARCHAR(64) | SHA-256 do *refresh token*. **Nunca armazenar o token em claro.** |
-| `usuario_id` | UUID FK | Dono do token. |
+| `id` | BIGINT AUTO_INCREMENT (PK) | Identificador interno. |
+| `token_hash` | CHAR(64) | SHA-256 do *refresh token*. **Nunca armazenar o token em claro.** |
+| `usuario_id` | BIGINT FK | Dono do token. |
 | `revogado_em` | TIMESTAMP | Momento da revogação. |
 | `expira_em` | TIMESTAMP | Cópia da expiração original do token (para limpeza). |
 
@@ -122,6 +122,7 @@ Esquema MySQL 8.x. Convenção: `snake_case` para nomes; `id BIGINT AUTO_INCREME
 | `valor_declarado` | DECIMAL(15,2) NOT NULL | Valor na moeda de origem. |
 | `moeda` | CHAR(3) NOT NULL | `CNY` / `USD` / `EUR`. |
 | `cancelado` | BOOLEAN NOT NULL DEFAULT FALSE | Flag usada na derivação de `StatusPedido` (RN01). |
+| `rastreio_nao_localizado` | BOOLEAN NOT NULL DEFAULT FALSE | Fonte de rastreamento não encontrou o código; a UI exibe aviso. (V10) |
 | `status_cache` | ENUM('PROCESSANDO','ENVIADO','ENTREGUE','DEVOLVIDO','CANCELADO') NOT NULL DEFAULT 'PROCESSANDO' | **Cache derivado** (RN01, [ADR-003](../design-de-software/adrs/003-status-derivado-da-etapa.md)). Atualizado por *listener* após cada inserção de etapa. **Nunca é fonte de verdade.** Pode ser reconstruído da tabela `etapa_rastreamento` a qualquer momento. |
 | `estimado_entrega` | DATE NULL | Data estimada (opcional). |
 | `criado_em` | TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP | — |
@@ -129,8 +130,9 @@ Esquema MySQL 8.x. Convenção: `snake_case` para nomes; `id BIGINT AUTO_INCREME
 
 - **UNIQUE:** `(usuario_id, codigo_rastreamento)` — RN06.
 - **FK:** `usuario_id` → `usuario(id)` `ON DELETE RESTRICT`.
-- **INDEX:** `(status_cache)` — filtros do dashboard (RF22).
-- **INDEX:** `(usuario_id, criado_em DESC)` — listagem paginada (RF07).
+- **INDEX:** `(usuario_id, criado_em DESC)` — listagem ordenada por mais recente (RF07).
+
+> **Status de implementação:** o schema real do `pedido` (migrations V1 + V6 + V10) tem `valor_declarado` e `moeda` (V6) e `rastreio_nao_localizado` (V10). **Não** possui `status_cache`, `estimado_entrega` nem `atualizado_em` nesta versão — o `StatusPedido` é **derivado on-the-fly** da última etapa (sem coluna de cache, sem o índice `(status_cache)`). A coluna `status_cache` e seu índice permanecem como dívida v2 (ADR-003).
 
 ### 4.3 `etapa_rastreamento`
 
@@ -176,6 +178,7 @@ Entidade dentro do agregado `Pedido`. **Append-only por `criado_em`** (RF13, ADR
 | `fonte` | ENUM('AUTOMATICA','MANUAL') NOT NULL DEFAULT 'AUTOMATICA' | RF20 / RF21. |
 | `manual_por_usuario_id` | BIGINT NULL | FK → `usuario(id)`. Preenchido apenas quando `fonte = 'MANUAL'`. |
 | `valido_ate` | TIMESTAMP NULL | Validade opcional para cotação manual (UC09 FA03). |
+| `cotado_em` | TIMESTAMP NULL | Momento informado pela fonte de quando a cotação foi feita — alimenta o "há X min" na UI; distinto de `atualizado_em` (momento do *sync*/TTL). (V9) |
 | `atualizado_em` | TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | — |
 
 - **FK:** `manual_por_usuario_id` → `usuario(id)` `ON DELETE SET NULL`.

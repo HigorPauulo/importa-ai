@@ -21,12 +21,12 @@ Adotar **Arquitetura Hexagonal** (*Ports & Adapters*) com três camadas:
 ## Alternativas consideradas
 
 - **MVC clássico** (Controller → Service → Repository com JPA direto no Service) — rejeitado. Acopla o domínio à persistência; mata a testabilidade isolada.
-- **Clean Architecture** — conceitualmente equivalente. "Hexagonal" foi escolhida porque enfatiza melhor o conceito de *adapters intercambiáveis* (útil no caso do `RastreamentoCorreiosPort`, com 3 adapters: stub, http, cache-only — ver [ADR-004](004-adapters-correios.md)).
+- **Clean Architecture** — conceitualmente equivalente. "Hexagonal" foi escolhida porque enfatiza melhor o conceito de *adapters intercambiáveis* (útil no caso do `RastreamentoCorreiosPort`, com 4 adapters: stub, http CWS, cache-only, 17track — ver [ADR-004](004-adapters-correios.md)).
 
 ## Consequências
 
 - **(+)** Domínio testável sem subir framework, broker ou banco.
-- **(+)** Adapters intercambiáveis comprovadamente úteis (3 adapters de Correios).
+- **(+)** Adapters intercambiáveis comprovadamente úteis (4 adapters de rastreamento — stub, http CWS, cache-only, 17track).
 - **(−)** Mais arquivos e cerimônia que MVC simples.
 - **(−)** Risco de criar "portas para tudo" — exige critério.
 

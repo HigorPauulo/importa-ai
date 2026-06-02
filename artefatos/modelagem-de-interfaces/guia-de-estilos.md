@@ -57,11 +57,12 @@ Importada via Google Fonts em `index.css`:
 | `PROCESSANDO` | `--color-status-processando-bg` (= `--color-primary-light`) | `--color-status-processando-text` (= `--color-primary-dark`) |
 | `ENVIADO` | `--color-status-enviado-bg` (= `--color-success-bg`) | `--color-status-enviado-text` (= `--color-success-dark`) |
 | `ENTREGUE` | `--color-status-entregue-bg` (= `--color-success-bg`) | `--color-status-entregue-text` (= `--color-success-dark`) |
+| `DEVOLVIDO` | `--color-status-devolvido-bg` (= `--color-error-bg`) | `--color-status-devolvido-text` (= `--color-error`) |
 | `CANCELADO` | `--color-status-cancelado-bg` (= `--color-error-bg`) | `--color-status-cancelado-text` (= `--color-error`) |
 
 ### Etapas de rastreamento (`TipoEtapa`)
 
-Para coerência visual com o status macro, etapas que geram status `PROCESSANDO` usam o tom **primary-light**, e etapas que geram `ENVIADO` ou `ENTREGUE` usam o tom **success**. **Exceção:** `TAXA`, embora derive status `ENVIADO`, exige ação do usuário (pagamento de imposto) e por isso usa o tom **warning** — alinhado com o uso de `--color-warning` para "taxa pendente" definido acima.
+Para coerência visual com o status macro, etapas que geram status `PROCESSANDO` usam o tom **primary-light**, e etapas que geram `ENVIADO` ou `ENTREGUE` usam o tom **success**. **Exceção:** `TAXA`, embora derive status `ENVIADO`, exige ação do usuário (pagamento de imposto) e por isso usa o tom **warning** — alinhado com o uso de `--color-warning` para "taxa pendente" definido acima. `DEVOLVIDO` (pacote barrado/devolvido pela alfândega) é terminal negativo e usa o tom **error**, como o cancelamento.
 
 | Etapa | Background | Texto |
 |-------|------------|-------|
@@ -74,6 +75,7 @@ Para coerência visual com o status macro, etapas que geram status `PROCESSANDO`
 | `CD_BRASIL` | `success-bg` | `success-dark` |
 | `SAIDA_ENTREGA` | `success-bg` | `success-dark` |
 | `ENTREGUE` | `success-bg` | `success-dark` |
+| `DEVOLVIDO` | `error-bg` | `error` |
 
 > Tokens completos disponíveis em `frontend/src/index.css` no bloco `@theme`.
 
@@ -85,7 +87,7 @@ Para coerência visual com o status macro, etapas que geram status `PROCESSANDO`
 |------------|------|--------------|
 | **Button** (`components/ui/Button.tsx`) | CTAs, formulários, ações de admin | Variantes baseadas em `--color-primary`. Suporta `fullWidth` para formulários. |
 | **Input** (`components/ui/Input.tsx`) | Formulários de cadastro, login, criação de pedido | Borda `--color-secondary`, foco em `--color-primary`, mensagem de erro em `--color-error`. |
-| **Badge de status do pedido** | Cards de pedido (lista), detalhe do pedido | 4 variantes — uma por valor de `StatusPedido`. Cor é derivada do status, que por sua vez é derivado da etapa. |
+| **Badge de status do pedido** | Cards de pedido (lista), detalhe do pedido | 5 variantes — uma por valor de `StatusPedido` (PROCESSANDO, ENVIADO, ENTREGUE, DEVOLVIDO, CANCELADO). Cor derivada do status, que por sua vez é derivado da etapa. |
 | **Linha do tempo vertical** (`pages/DetalhesPedidoPage.tsx`) | Detalhe do pedido | Ícone por tipo de etapa, timestamp, localização (quando disponível), destaque visual para a etapa atual (ponto preenchido com `--color-primary`). |
 | **Card de pedido** (`components/CardPedido.tsx`) | Lista de pedidos, dashboard | Background `white`, sombra sutil, badge de status no topo direito. |
 | **Toast de notificação em tempo real** | Camada flutuante (top-right) | Disparado pelo recebimento de mensagem WebSocket. Variantes seguem feedback (success / warning / error). Auto-dismiss em 4s. |
@@ -105,7 +107,7 @@ Padrões obrigatórios — desviar exige justificativa.
 | **Formulários** | **React Hook Form v7** | Todo formulário com mais de 1 campo. Integra com validação. |
 | **Roteamento** | **React Router v7** (`BrowserRouter`, `Routes`, `Route`) | Toda navegação entre páginas. Proteção via `PrivateRoute`. |
 | **HTTP** | **Axios** com interceptor central em `services/api.ts` | Cliente único; interceptor injeta JWT e dispara refresh em 401. |
-| **WebSocket** | **`@stomp/stompjs`** (a adicionar) com SockJS fallback | Notificações em tempo real via `NotificacaoContext`. |
+| **WebSocket** | **`@stomp/stompjs`** com SockJS fallback | Notificações em tempo real via `NotificacaoContext`. |
 
 **Por que essas escolhas:**
 

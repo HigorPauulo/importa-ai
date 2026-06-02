@@ -1,8 +1,8 @@
-# Plano de Testes — Importa Aí v1.3
+# Plano de Testes — Importa Aí v1.4
 
 ## Objetivo
 Garantir que o sistema atenda aos requisitos funcionais e não funcionais
-definidos na ERS v1.5, com foco em:
+definidos na ERS v1.6, com foco em:
 - Confiabilidade do fluxo de mensageria (idempotência, DLQ, ordem).
 - Integridade da derivação de status do pedido (RN01, Apêndice A).
 - Resiliência das integrações externas (Correios, Câmbio).
@@ -14,6 +14,7 @@ definidos na ERS v1.5, com foco em:
 | 09/05/2026 | 1.1 | Alinhamento com ERS v1.2 (status derivado, INSERT-first, plano Correios), metas para adapters/infra, critério mensurável de latência WS, novos casos para RN07 e limite de pedidos ativos |
 | 17/05/2026 | 1.2 | Alinhamento com ERS v1.4: adição de TC32 (etapa TAXA → status ENVIADO), remoção de marcadores de pendência |
 | 31/05/2026 | 1.3 | Alinhamento com ERS v1.5: TC01/TC06 sem persistência no consumer (pedido persistido de forma síncrona); TC08 DLQ imediata (sem backoff nesta versão) |
+| 02/06/2026 | 1.4 | Alinhamento com ERS v1.6: TC33 (etapa DEVOLVIDO → status DEVOLVIDO); RN09 aplicada na camada de aplicação (não trigger) em TC10/TC23; TC29 marcos do stub corrigidos; TC31 intervalo 20min e pedidos não terminais; nota sobre o adapter 17track de produção |
 
 ---
 
@@ -71,8 +72,9 @@ definidos na ERS v1.5, com foco em:
 | TC20 | Pedido com `cancelado=true` (qualquer etapa) | Unitário | `CANCELADO` (sobrescreve etapa) |
 | TC21 | Inserir etapa com timestamp anterior à última | Unitário | `EtapaRetroativaException` (HTTP 422) |
 | TC32 | Última etapa `TAXA` → status derivado | Unitário | `ENVIADO` |
+| TC33 | Última etapa `DEVOLVIDO` → status derivado | Unitário | `DEVOLVIDO` (terminal — bloqueia novas etapas, `PedidoImutavelException`) |
 
-> **Cobertura:** TC15–TC20 e TC32 implementam exatamente as 11 linhas do Apêndice A da ERS — tabela parametrizada com `@ParameterizedTest`.
+> **Cobertura:** TC15–TC20, TC32 e TC33 implementam as 12 linhas do Apêndice A da ERS — tabela parametrizada com `@ParameterizedTest`.
 
 ### Módulo: Mensageria
 
@@ -88,8 +90,8 @@ definidos na ERS v1.5, com foco em:
 | ID | Cenário | Tipo | Critério de aceitação |
 |----|---------|------|-----------------------|
 | TC09 | Mudança de status dispara notificação WebSocket | Integração | Cliente STOMP de teste (`StompSession` em Testcontainers) recebe mensagem em **< 2.000ms p95** medido por `Awaitility.await().atMost(2, SECONDS)` em 30 execuções |
-| TC10 | Limite de 50 notificações por usuário (RN09) | Integração | Após 60 inserts, tabela `notificacao` contém exatamente 50 registros do usuário; o trigger removeu os 10 mais antigos |
-| TC23 | 50 notificações concorrentes (10 threads × 5 inserts) | Integração | Após execução, contagem final ≤ 50 (validação do trigger sob concorrência) |
+| TC10 | Limite de 50 notificações por usuário (RN09) | Integração | Após 60 inserts, tabela `notificacao` contém exatamente 50 registros do usuário; a **camada de aplicação** removeu os 10 mais antigos (FIFO) |
+| TC23 | 50 notificações concorrentes (10 threads × 5 inserts) | Integração | Após execução, contagem final ≤ 50 (limite aplicado na **camada de aplicação** com lock pessimista por usuário — não há trigger SQL) |
 
 ### Módulo: Autenticação
 
@@ -114,9 +116,11 @@ definidos na ERS v1.5, com foco em:
 
 | ID | Cenário | Tipo | Critério de aceitação |
 |----|---------|------|-----------------------|
-| TC29 | `CorreiosStubAdapter` retorna etapas progressivas | Unitário | Pedido com 1h de idade retorna `NA_CHINA`; com 24h retorna `EM_TRANSITO`; etc. (ver [ADR-004](../design-de-software/adrs/004-adapters-correios.md)) |
+| TC29 | `CorreiosStubAdapter` retorna etapas progressivas | Unitário | Pedido com 0h retorna `NA_CHINA`; 24h `AEROPORTO_ORIGEM`; 48h `EM_TRANSITO`; etc. (ver [ADR-004](../design-de-software/adrs/004-adapters-correios.md)) |
 | TC30 | `CorreiosHttpAdapter` com circuit breaker aberto | Integração (WireMock) | Após 5 falhas, próxima chamada NÃO toca a API (curto-circuito); retorna do cache |
-| TC31 | Sincronização automática (a cada 6h) | Integração | Scheduler dispara consulta apenas para pedidos em estado nacional; novas etapas persistidas |
+| TC31 | Sincronização automática | Integração | Scheduler (intervalo configurável, padrão 20min) consulta pedidos ativos (status não terminal); novas etapas persistidas |
+
+> **Fonte de produção:** o adapter ativo em produção é o `Rastreamento17TrackAdapter` (agregador 17track — `register` + `gettrackinfo`, classifica por `sub_status`, incl. `Exception_Returning`→`DEVOLVIDO`), validado manualmente contra a API real. Teste de contrato automatizado (WireMock) do 17track é dívida v2.
 
 ---
 
