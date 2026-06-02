@@ -15,6 +15,7 @@ public final class CotacaoCacheEntityMapper {
         e.setManualPorUsuarioId(domain.manualPorUsuarioId());
         e.setValidoAte(domain.validoAte());
         e.setAtualizadoEm(domain.atualizadoEm());
+        e.setCotadoEm(domain.cotadoEm());
     }
 
     public static Cotacao toDomain(CotacaoCacheEntity e) {
@@ -26,7 +27,8 @@ public final class CotacaoCacheEntityMapper {
                 e.getFonte(),
                 e.getManualPorUsuarioId(),
                 e.getValidoAte(),
-                e.getAtualizadoEm()
+                e.getAtualizadoEm(),
+                e.getCotadoEm()
         );
     }
 }

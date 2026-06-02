@@ -49,6 +49,6 @@ public class CotacaoController {
 
         return new CotacaoResponse(
                 manual.moedaOrigem(), manual.moedaDestino(), manual.taxa(),
-                manual.isManual(), false, manual.atualizadoEm());
+                manual.isManual(), false, manual.atualizadoEm(), manual.cotadoEm());
     }
 }

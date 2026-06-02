@@ -20,7 +20,7 @@ function CardMoedaPrincipal({ moeda }: CardMoedaPrincipalProps) {
 
             <p className="mt-4 flex items-center gap-2 text-[13px] text-white/85">
                 <span className="h-2 w-2 rounded-full bg-success" />
-                Sincronizado via API (há {moeda.atualizacao})
+                Sincronizado via API · {moeda.atualizacao}
             </p>
         </div>
     )

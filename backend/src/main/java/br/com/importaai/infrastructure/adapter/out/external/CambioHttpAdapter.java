@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Optional;
 
 @Component
@@ -24,7 +25,7 @@ public class CambioHttpAdapter implements CambioPort {
     }
 
     @Override
-    public Optional<BigDecimal> consultarTaxa(Moeda moedaOrigem, Moeda moedaDestino) {
+    public Optional<TaxaCambio> consultarTaxa(Moeda moedaOrigem, Moeda moedaDestino) {
         String par = moedaOrigem.name() + "-" + moedaDestino.name();
         String chave = moedaOrigem.name() + moedaDestino.name();
         try {
@@ -36,12 +37,23 @@ public class CambioHttpAdapter implements CambioPort {
             if (resposta == null || !resposta.has(chave)) {
                 return Optional.empty();
             }
-            String bid = resposta.get(chave).get("bid").asText();
-            return Optional.of(new BigDecimal(bid));
+            JsonNode cotacao = resposta.get(chave);
+            BigDecimal taxa = new BigDecimal(cotacao.get("bid").asText());
+            return Optional.of(new TaxaCambio(taxa, lerCotadoEm(cotacao)));
 
         } catch (Exception e) {
             log.warn("falha ao consultar cambio {} -> {}: {}", moedaOrigem, moedaDestino, e.getMessage());
             return Optional.empty();
         }
+    }
+
+    // A AwesomeAPI envia "timestamp" em epoch seconds (UTC) = quando o mercado cotou.
+    // Sem esse campo, cai pra agora para nao quebrar a cotacao.
+    private Instant lerCotadoEm(JsonNode cotacao) {
+        JsonNode timestamp = cotacao.get("timestamp");
+        if (timestamp != null && timestamp.asText().matches("\\d+")) {
+            return Instant.ofEpochSecond(Long.parseLong(timestamp.asText()));
+        }
+        return Instant.now();
     }
 }

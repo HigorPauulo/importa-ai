@@ -17,16 +17,16 @@ class CotacaoTest {
     @Test
     @DisplayName("cotacao com menos de 24h nao esta desatualizada")
     void recenteNaoDesatualizada() {
-        Cotacao c = Cotacao.automatica(Moeda.USD, Moeda.BRL, new BigDecimal("5.10"),
-                agora.minus(Duration.ofHours(23)));
+        Instant sync = agora.minus(Duration.ofHours(23));
+        Cotacao c = Cotacao.automatica(Moeda.USD, Moeda.BRL, new BigDecimal("5.10"), sync, sync);
         assertThat(c.estaDesatualizada(agora)).isFalse();
     }
 
     @Test
     @DisplayName("cotacao com mais de 24h esta desatualizada (RN07)")
     void antigaDesatualizada() {
-        Cotacao c = Cotacao.automatica(Moeda.USD, Moeda.BRL, new BigDecimal("5.10"),
-                agora.minus(Duration.ofHours(25)));
+        Instant sync = agora.minus(Duration.ofHours(25));
+        Cotacao c = Cotacao.automatica(Moeda.USD, Moeda.BRL, new BigDecimal("5.10"), sync, sync);
         assertThat(c.estaDesatualizada(agora)).isTrue();
     }
 
@@ -34,7 +34,7 @@ class CotacaoTest {
     @DisplayName("taxa zero ou negativa e rejeitada")
     void taxaInvalida() {
         assertThatIllegalArgumentException().isThrownBy(() ->
-                Cotacao.automatica(Moeda.USD, Moeda.BRL, BigDecimal.ZERO, agora));
+                Cotacao.automatica(Moeda.USD, Moeda.BRL, BigDecimal.ZERO, agora, agora));
     }
 
     @Test

@@ -44,4 +44,7 @@ public class CotacaoCacheEntity {
 
     @Column(name = "atualizado_em", nullable = false)
     private Instant atualizadoEm;
+
+    @Column(name = "cotado_em", nullable = false)
+    private Instant cotadoEm;
 }

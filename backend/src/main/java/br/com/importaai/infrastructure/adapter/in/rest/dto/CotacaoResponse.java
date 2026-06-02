@@ -12,7 +12,8 @@ public record CotacaoResponse(
         BigDecimal taxa,
         boolean manual,
         boolean desatualizada,
-        Instant atualizadoEm
+        Instant atualizadoEm,
+        Instant cotadoEm
 ) {
     public static CotacaoResponse from(ConsultarCotacaoUseCase.Output out) {
         return new CotacaoResponse(
@@ -21,6 +22,7 @@ public record CotacaoResponse(
                 out.cotacao().taxa(),
                 out.cotacao().isManual(),
                 out.desatualizada(),
-                out.cotacao().atualizadoEm());
+                out.cotacao().atualizadoEm(),
+                out.cotacao().cotadoEm());
     }
 }

@@ -37,7 +37,8 @@ class ConsultarCotacaoServiceTest {
     @DisplayName("TC25: cache ausente -> consulta API, grava e retorna fresca (nao desatualizada)")
     void tc25_consultaApiQuandoNaoHaCache() {
         when(cotacaoRepository.buscarPorPar(Moeda.USD, Moeda.BRL)).thenReturn(Optional.empty());
-        when(cambioPort.consultarTaxa(Moeda.USD, Moeda.BRL)).thenReturn(Optional.of(new BigDecimal("5.12")));
+        when(cambioPort.consultarTaxa(Moeda.USD, Moeda.BRL))
+                .thenReturn(Optional.of(new CambioPort.TaxaCambio(new BigDecimal("5.12"), agora)));
         when(cotacaoRepository.salvar(any())).thenAnswer(inv -> inv.getArgument(0));
 
         var out = service.executar(new ConsultarCotacaoUseCase.Input(Moeda.USD, Moeda.BRL)).orElseThrow();
@@ -50,8 +51,8 @@ class ConsultarCotacaoServiceTest {
     @Test
     @DisplayName("TC26: API indisponivel + cache valido (<24h) -> retorna cache, desatualizada=false (RN07)")
     void tc26_apiForaCacheValido() {
-        Cotacao cache = Cotacao.automatica(Moeda.USD, Moeda.BRL, new BigDecimal("5.00"),
-                agora.minus(Duration.ofHours(2)));
+        Instant sync = agora.minus(Duration.ofHours(2));
+        Cotacao cache = Cotacao.automatica(Moeda.USD, Moeda.BRL, new BigDecimal("5.00"), sync, sync);
         when(cotacaoRepository.buscarPorPar(Moeda.USD, Moeda.BRL)).thenReturn(Optional.of(cache));
         // cache valido nao deve nem chamar a API
         var out = service.executar(new ConsultarCotacaoUseCase.Input(Moeda.USD, Moeda.BRL)).orElseThrow();
@@ -64,8 +65,8 @@ class ConsultarCotacaoServiceTest {
     @Test
     @DisplayName("TC27: API indisponivel + cache > 24h -> retorna cache com desatualizada=true (RN07)")
     void tc27_apiForaCacheAntigo() {
-        Cotacao cache = Cotacao.automatica(Moeda.USD, Moeda.BRL, new BigDecimal("4.80"),
-                agora.minus(Duration.ofHours(30)));
+        Instant sync = agora.minus(Duration.ofHours(30));
+        Cotacao cache = Cotacao.automatica(Moeda.USD, Moeda.BRL, new BigDecimal("4.80"), sync, sync);
         when(cotacaoRepository.buscarPorPar(Moeda.USD, Moeda.BRL)).thenReturn(Optional.of(cache));
         when(cambioPort.consultarTaxa(Moeda.USD, Moeda.BRL)).thenReturn(Optional.empty());
 
@@ -79,10 +80,11 @@ class ConsultarCotacaoServiceTest {
     @Test
     @DisplayName("cache > 24h mas API disponivel -> atualiza e retorna fresca")
     void cacheAntigoComApiDisponivelAtualiza() {
-        Cotacao cache = Cotacao.automatica(Moeda.USD, Moeda.BRL, new BigDecimal("4.80"),
-                agora.minus(Duration.ofHours(30)));
+        Instant sync = agora.minus(Duration.ofHours(30));
+        Cotacao cache = Cotacao.automatica(Moeda.USD, Moeda.BRL, new BigDecimal("4.80"), sync, sync);
         when(cotacaoRepository.buscarPorPar(Moeda.USD, Moeda.BRL)).thenReturn(Optional.of(cache));
-        when(cambioPort.consultarTaxa(Moeda.USD, Moeda.BRL)).thenReturn(Optional.of(new BigDecimal("5.20")));
+        when(cambioPort.consultarTaxa(Moeda.USD, Moeda.BRL))
+                .thenReturn(Optional.of(new CambioPort.TaxaCambio(new BigDecimal("5.20"), agora)));
         when(cotacaoRepository.salvar(any())).thenAnswer(inv -> inv.getArgument(0));
 
         var out = service.executar(new ConsultarCotacaoUseCase.Input(Moeda.USD, Moeda.BRL)).orElseThrow();

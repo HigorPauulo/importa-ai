@@ -8,7 +8,8 @@ interface CotacaoResponse {
     taxa: number
     manual: boolean
     desatualizada: boolean
-    atualizadoEm: string
+    atualizadoEm: string // quando o backend sincronizou (controla o cache)
+    cotadoEm: string // quando a API cotou de fato — base do "há X min"
 }
 
 // Nome e país são apresentação — o backend só devolve o código da moeda.
@@ -18,10 +19,14 @@ const META: Record<string, { nome: string; pais: string }> = {
     CNY: { nome: 'Yuan Chinês', pais: 'China' },
 }
 
-// "há X min" a partir do timestamp de atualização do backend.
-function minutosDesde(iso: string): string {
-    const min = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000))
-    return `${min} min`
+// Tempo decorrido desde o instante em que a API cotou (cotadoEm vem em UTC, ISO-8601).
+function tempoDesde(iso: string): string {
+    const min = Math.round((Date.now() - new Date(iso).getTime()) / 60000)
+    if (min <= 0) return 'agora mesmo'
+    if (min < 60) return `há ${min} min`
+    const horas = Math.round(min / 60)
+    if (horas < 24) return `há ${horas} h`
+    return `há ${Math.round(horas / 24)} d`
 }
 
 function toMoeda(c: CotacaoResponse): Moeda {
@@ -32,7 +37,7 @@ function toMoeda(c: CotacaoResponse): Moeda {
         sigla: c.moedaOrigem,
         tipo: c.moedaOrigem as TipoMoeda,
         valor: c.taxa,
-        atualizacao: minutosDesde(c.atualizadoEm),
+        atualizacao: tempoDesde(c.cotadoEm),
     }
 }
 

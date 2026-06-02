@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -31,7 +30,7 @@ public class CambioScheduler {
     @Scheduled(fixedDelayString = "${cambio.sync.interval}")
     public void atualizarCotacoes() {
         for (Moeda origem : ORIGENS) {
-            Optional<BigDecimal> taxa = cambioPort.consultarTaxa(origem, Moeda.BRL);
+            Optional<CambioPort.TaxaCambio> taxa = cambioPort.consultarTaxa(origem, Moeda.BRL);
             if (taxa.isEmpty()) {
                 continue;
             }
@@ -42,9 +41,11 @@ public class CambioScheduler {
             if (manualAtiva) {
                 continue;
             }
+            CambioPort.TaxaCambio tx = taxa.get();
+            // cotadoEm = horario da API; atualizadoEm = agora (momento do sync)
             cotacaoRepository.salvar(
-                    Cotacao.automatica(origem, Moeda.BRL, taxa.get(), Instant.now()));
-            log.debug("cotacao {} -> BRL atualizada: {}", origem, taxa.get());
+                    Cotacao.automatica(origem, Moeda.BRL, tx.taxa(), tx.cotadoEm(), Instant.now()));
+            log.debug("cotacao {} -> BRL atualizada: {}", origem, tx.taxa());
         }
     }
 }

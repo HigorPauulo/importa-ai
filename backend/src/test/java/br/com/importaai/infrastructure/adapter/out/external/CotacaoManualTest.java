@@ -56,7 +56,8 @@ class CotacaoManualTest extends MessagingIntegrationTest {
         // cotacao automatica previa para USD-BRL
         cotacaoRepository.salvar(
                 br.com.importaai.domain.model.Cotacao.automatica(
-                        Moeda.USD, Moeda.BRL, new BigDecimal("5.00"), java.time.Instant.now()));
+                        Moeda.USD, Moeda.BRL, new BigDecimal("5.00"),
+                        java.time.Instant.now(), java.time.Instant.now()));
 
         // admin define manual para o mesmo par
         definirManual.executar(new DefinirCotacaoManualUseCase.Input(

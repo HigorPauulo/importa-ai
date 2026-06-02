@@ -1,12 +1,10 @@
 package br.com.importaai.application.usecase;
 
 import br.com.importaai.domain.model.Cotacao;
-import br.com.importaai.domain.model.Moeda;
 import br.com.importaai.domain.port.in.ConsultarCotacaoUseCase;
 import br.com.importaai.domain.port.out.CambioPort;
 import br.com.importaai.domain.port.out.CotacaoRepository;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -36,10 +34,12 @@ public class ConsultarCotacaoService implements ConsultarCotacaoUseCase {
         }
 
         // Cache ausente ou desatualizado: tenta a API (Cache-Aside miss)
-        Optional<BigDecimal> taxaApi = cambioPort.consultarTaxa(input.moedaOrigem(), input.moedaDestino());
+        Optional<CambioPort.TaxaCambio> taxaApi = cambioPort.consultarTaxa(input.moedaOrigem(), input.moedaDestino());
         if (taxaApi.isPresent()) {
-            Cotacao fresca = cotacaoRepository.salvar(
-                    Cotacao.automatica(input.moedaOrigem(), input.moedaDestino(), taxaApi.get(), agora));
+            CambioPort.TaxaCambio taxa = taxaApi.get();
+            // cotadoEm vem da API; atualizadoEm = agora (controla o TTL do cache-aside)
+            Cotacao fresca = cotacaoRepository.salvar(Cotacao.automatica(
+                    input.moedaOrigem(), input.moedaDestino(), taxa.taxa(), taxa.cotadoEm(), agora));
             return Optional.of(new Output(fresca, false));
         }
 
