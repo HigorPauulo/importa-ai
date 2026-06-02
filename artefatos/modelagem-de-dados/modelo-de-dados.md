@@ -109,7 +109,7 @@ Esquema MySQL 8.x. Convenção: `snake_case` para nomes; `id BIGINT AUTO_INCREME
 - **UNIQUE:** `email_hash` — unicidade e busca rápida.
 - **INDEX:** `(perfil, ativo)` — listagens do RF25.
 
-> **Status de implementação (2026-05-31):** a cifragem de PII (`email`/`nome_completo` em `VARBINARY`) e o campo `email_hash` acima são o **alvo do ADR-005 e ainda não foram implementados**. A migration vigente (`V1`) grava `email` e `nome` em texto claro (`VARCHAR`), com `UNIQUE (email)` e sem `email_hash`. Dívida técnica para a próxima versão (ERS RNF09).
+> **Status de implementação (2026-05-31):** a cifragem de PII (`email`/`nome_completo` em `VARBINARY`) e o campo `email_hash` acima são o **alvo do ADR-005 e ainda não foram implementados**. A migration vigente (`V1`) grava `email` e `nome` em texto claro (`VARCHAR`), com `UNIQUE (email)` e sem `email_hash`. A coluna `atualizado_em` também não existe no `usuario` nesta versão (só `criado_em`; `ativo` foi adicionado em V8). Dívida técnica para a próxima versão (ERS RNF09).
 
 ### 4.2 `pedido`
 

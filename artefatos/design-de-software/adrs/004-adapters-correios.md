@@ -10,7 +10,7 @@ A API dos Correios não possui um contrato REST público estável: o antigo SRO 
 
 ## Decisão
 
-A porta de saída `RastreamentoCorreiosPort` (no domínio) é atendida por **três adapters intercambiáveis**, selecionados por configuração (`correios.adapter`):
+A porta de saída `RastreamentoCorreiosPort` (no domínio) é atendida por **quatro adapters intercambiáveis**, selecionados por configuração (`correios.adapter`):
 
 | Adapter | Quando ativar | Comportamento |
 |---------|---------------|---------------|

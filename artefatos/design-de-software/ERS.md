@@ -591,7 +591,7 @@ Os casos de uso descrevem as interações entre atores e o sistema em nível de 
 
 1. Admin acessa "Exportar Pedidos" no painel.
 2. Admin aplica filtros (status, período de criação, faixa de valor, usuário, etc.).
-3. Admin escolhe o formato de saída (CSV ou XLSX).
+3. Sistema gera o arquivo em CSV (XLSX previsto para v2).
 4. Sistema estima a quantidade de registros que correspondem aos filtros.
 5. Geração do arquivo:
    - **resultados pequenos** (< 5.000 linhas): sistema gera o arquivo de forma síncrona e o retorna como *download* imediato;
