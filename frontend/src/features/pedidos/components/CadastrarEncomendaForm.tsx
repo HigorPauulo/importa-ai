@@ -53,7 +53,7 @@ function CadastrarEncomendaForm() {
                    error={errors.descriptionProduct?.message}
                    {...register('descriptionProduct', { required: 'Descrição do produto é obrigatória' })} />
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-2 gap-4">
                 <Input label="Valor declarado" type="number" step="0.01" placeholder="Ex: 100.00"
                        error={errors.productValue?.message}
                        {...register('productValue', { required: 'Valor declarado é obrigatório', valueAsNumber: true, min: { value: 0.01, message: 'Valor deve ser positivo' } })} />

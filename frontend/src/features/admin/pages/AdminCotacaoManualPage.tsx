@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { PageHeader } from '@/components/layout/PageHeader'
+import { PageHeader, BellButton } from '@/components/layout/PageHeader'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
@@ -40,7 +40,7 @@ function AdminCotacaoManualPage() {
 
     return (
         <>
-            <PageHeader titulo="Cotação manual" subtitulo="Defina manualmente a taxa de câmbio de um par de moedas" />
+            <PageHeader titulo="Cotação manual" subtitulo="Defina manualmente a taxa de câmbio de um par de moedas" acao={<BellButton estatico />} />
 
             <div className="flex flex-col gap-6">
                 <Card className="p-6">

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { PageHeader } from '@/components/layout/PageHeader'
+import { PageHeader, BellButton } from '@/components/layout/PageHeader'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
@@ -66,7 +66,7 @@ function AdminExportarPage() {
 
     return (
         <>
-            <PageHeader titulo="Exportar pedidos" subtitulo="Gere um arquivo dos pedidos com os filtros aplicados" />
+            <PageHeader titulo="Exportar pedidos" subtitulo="Gere um arquivo dos pedidos com os filtros aplicados" acao={<BellButton estatico />} />
 
             <Card className="p-6">
                 <div className="mb-[18px]">

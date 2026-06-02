@@ -18,8 +18,11 @@ export function AuthLayout({ titulo, subtitulo, children }: AuthLayoutProps) {
 
             <div className="flex flex-1 items-center justify-center bg-background p-6">
                 <div className="w-full max-w-[480px]">
-                    <img src={logo} alt="Importa Aí" className="mx-auto mb-6 w-40 lg:hidden" />
-                    <div className="rounded-[16px] bg-white p-10 shadow-[0px_4px_4px_rgba(0,0,0,0.1)]">{children}</div>
+                    <div className="mb-6 text-center lg:hidden">
+                        <img src={logo} alt="Importa Aí" className="mx-auto w-40" />
+                        <p className="mt-2 px-4 text-[14px] leading-[20px] text-secondary">{subtitulo}</p>
+                    </div>
+                    <div className="rounded-[16px] bg-white p-6 shadow-[0px_4px_4px_rgba(0,0,0,0.1)] sm:p-10">{children}</div>
                 </div>
             </div>
         </div>
