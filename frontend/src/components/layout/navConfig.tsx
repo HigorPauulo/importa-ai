@@ -25,3 +25,6 @@ export const navAdmin: NavItem[] = [
     { to: '/admin/cotacao', label: 'Cotação', icon: <IconDollar className={ic} /> },
     { to: '/admin/exportar', label: 'Exportar', icon: <IconDownload className={ic} /> },
 ]
+
+export const bottomNavCliente: NavItem[] = navCliente.filter((i) => i.to !== '/cadastrar-encomendas')
+export const bottomNavAdmin: NavItem[] = navAdmin

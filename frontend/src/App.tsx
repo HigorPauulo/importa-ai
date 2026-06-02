@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { PrivateRoute } from '@/components/PrivateRoute'
 import { AppLayout } from '@/components/layout/AppLayout'
-import { navCliente, navAdmin } from '@/components/layout/navConfig'
+import { navCliente, navAdmin, bottomNavCliente, bottomNavAdmin } from '@/components/layout/navConfig'
 
 import LoginPage from '@/features/auth/pages/LoginPage'
 import RegisterPage from '@/features/auth/pages/RegisterPage'
@@ -28,7 +28,7 @@ function App() {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
 
-                <Route element={<PrivateRoute><AppLayout nav={navCliente} /></PrivateRoute>}>
+                <Route element={<PrivateRoute><AppLayout nav={navCliente} bottomNav={bottomNavCliente} /></PrivateRoute>}>
                     <Route path="/dashboard" element={<DashboardPage />} />
                     <Route path="/pedidos" element={<PedidosPage />} />
                     <Route path="/pedidos/:id" element={<DetalhesPedidoPage />} />
@@ -37,7 +37,7 @@ function App() {
                     <Route path="/notificacoes" element={<NotificacoesPage />} />
                 </Route>
 
-                <Route element={<PrivateRoute adminOnly><AppLayout nav={navAdmin} /></PrivateRoute>}>
+                <Route element={<PrivateRoute adminOnly><AppLayout nav={navAdmin} bottomNav={bottomNavAdmin} /></PrivateRoute>}>
                     <Route path="/admin" element={<AdminPainelPage />} />
                     <Route path="/admin/pedidos" element={<AdminPedidosPage />} />
                     <Route path="/admin/pedidos/:id" element={<AdminDetalhePedidoPage />} />

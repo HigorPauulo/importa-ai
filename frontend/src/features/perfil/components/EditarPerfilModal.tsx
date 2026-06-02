@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { isAxiosError } from 'axios'
 import { Modal } from '@/components/ui/Modal'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
+import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/context/ToastContext'
 import { atualizarMeuPerfil, type MeuPerfil } from '@/services/perfil'
 
@@ -22,8 +24,15 @@ interface FormData {
 
 export function EditarPerfilModal({ aberto, onFechar, perfil }: EditarPerfilModalProps) {
     const { showToast } = useToast()
+    const { logout } = useAuth()
+    const navigate = useNavigate()
     const queryClient = useQueryClient()
     const [erro, setErro] = useState<string | null>(null)
+
+    const sair = async () => {
+        await logout()
+        navigate('/login')
+    }
     const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
         values: { nome: perfil.nome, email: perfil.email, senha: '' },
     })
@@ -61,9 +70,14 @@ export function EditarPerfilModal({ aberto, onFechar, perfil }: EditarPerfilModa
 
                 {erro && <p className="text-sm text-error">{erro}</p>}
 
-                <div className="flex justify-end gap-2 pt-2">
-                    <Button type="button" variant="outline" onClick={onFechar}>Cancelar</Button>
-                    <Button type="submit" loading={isPending}>Salvar</Button>
+                <div className="flex items-center gap-2 pt-2">
+                    <button type="button" onClick={sair} className="text-sm font-bold text-error hover:underline lg:hidden">
+                        Sair da conta
+                    </button>
+                    <div className="ml-auto flex gap-2">
+                        <Button type="button" variant="outline" onClick={onFechar}>Cancelar</Button>
+                        <Button type="submit" loading={isPending}>Salvar</Button>
+                    </div>
                 </div>
             </form>
         </Modal>
