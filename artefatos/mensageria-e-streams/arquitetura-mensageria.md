@@ -228,9 +228,18 @@ Job diário: remover registros com `processado_em < NOW() - INTERVAL 30 DAY`. Ap
 6. PedidoCriadoConsumer consome de q.pedido.criado.
 7. INSERT-first em evento_processado (§7).
 8. Publica "notificacao.usuario" (evento derivado).
-9. ACK.
-10. NotificacaoConsumer consome → persiste a notificação (trigger RN09 limita a 50) → envia STOMP → ACK.
+9. Dispara a leitura inicial de rastreio do pedido (best-effort): consulta a fonte de
+   rastreamento ativa e persiste as etapas já conhecidas, evitando que o pedido fique sem
+   etapas até o sync agendado (§8.3). Se houver novidade, segue a cascata de §8.2
+   (`rastreamento.atualizado`). Falha na fonte externa é apenas logada e NÃO derruba a
+   mensagem — a sincronização periódica retoma.
+10. ACK.
+11. NotificacaoConsumer consome → persiste a notificação (trigger RN09 limita a 50) → envia STOMP → ACK.
 ```
+
+> A leitura de rastreio acontece **no consumer** (assíncrono), não na escrita. A criação
+> segue retornando HTTP 202 imediatamente (RN03/RNF02) — o efeito colateral de integração
+> roda fora do caminho síncrono, como prevê a arquitetura.
 
 ### 8.2 Inserir Etapa Manual (UC07)
 
