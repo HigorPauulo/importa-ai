@@ -4,14 +4,22 @@ interface CardMoedaProps {
     moeda: Moeda
 }
 
-function CardMoeda({ moeda }: CardMoedaProps) {
-    return (
-        <div className="flex items-center gap-4 rounded-[10px] bg-white p-5 shadow-[0px_1px_2px_rgba(0,0,0,0.08)]">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-[13px] font-bold text-white">
-                {moeda.sigla.slice(0, 2)}
-            </div>
+const CORES_BADGE: Record<string, string> = {
+    CNY: 'bg-error',
+    EUR: 'bg-primary',
+    USD: 'bg-primary-dark',
+}
 
-            <div className="flex-1">
+function CardMoeda({ moeda }: CardMoedaProps) {
+    const corBadge = CORES_BADGE[moeda.sigla] ?? 'bg-secondary'
+
+    return (
+        <div className="flex items-center gap-3 rounded-[10px] bg-white p-4 shadow-[0px_1px_2px_rgba(0,0,0,0.08)]">
+            <span className={`flex h-6 shrink-0 items-center justify-center rounded-full px-2.5 text-[11px] font-bold text-white ${corBadge}`}>
+                {moeda.sigla.slice(0, 2)}
+            </span>
+
+            <div className="min-w-0 flex-1">
                 <p className="text-[15px] font-semibold leading-[22px] text-ink">{moeda.nome}</p>
                 <p className="text-[12px] leading-[16px] text-secondary">{moeda.sigla} / BRL</p>
             </div>

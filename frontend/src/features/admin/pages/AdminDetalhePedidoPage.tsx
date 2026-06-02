@@ -1,9 +1,10 @@
-import { useParams } from 'react-router-dom'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { PageHeader } from '@/components/layout/PageHeader'
+import { Link, useParams } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import { IconChevronLeft } from '@/components/layout/icons'
 import { Card } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
 import { useToast } from '@/context/ToastContext'
-import { buscarPedidoAdmin, cancelarPedido } from '@/services/pedidos'
+import { buscarPedidoAdmin } from '@/services/pedidos'
 import { PedidoResumoCard } from '@/features/pedidos/components/PedidoResumoCard'
 import { Timeline } from '@/features/pedidos/components/Timeline'
 import { AvisoRastreioNaoLocalizado } from '@/features/pedidos/components/AvisoRastreioNaoLocalizado'
@@ -12,7 +13,6 @@ import { InserirEtapaForm } from '@/features/admin/components/InserirEtapaForm'
 function AdminDetalhePedidoPage() {
     const { id } = useParams()
     const { showToast } = useToast()
-    const queryClient = useQueryClient()
 
     const { data: pedido, isLoading, isError } = useQuery({
         queryKey: ['pedido', id],
@@ -20,23 +20,23 @@ function AdminDetalhePedidoPage() {
         enabled: !!id,
     })
 
-    const { mutate: cancelar, isPending: cancelando } = useMutation({
-        mutationFn: () => cancelarPedido(Number(id)),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['pedido', id] })
-            queryClient.invalidateQueries({ queryKey: ['admin', 'pedidos'] })
-            showToast('Pedido cancelado.')
-        },
-        onError: () => showToast('Não foi possível cancelar o pedido.'),
-    })
-
-    const aoCancelar = () => {
-        if (window.confirm('Cancelar este pedido? A ação marca o pedido como cancelado.')) cancelar()
+    const compartilhar = async () => {
+        try {
+            await navigator.clipboard.writeText(window.location.href)
+            showToast('Link de rastreio copiado para a área de transferência.')
+        } catch {
+            showToast('Não foi possível copiar o link.')
+        }
     }
 
     return (
         <>
-            <PageHeader titulo="Detalhes do pedido" />
+            <div className="mb-6 flex items-center gap-2">
+                <Link to="/admin/pedidos" aria-label="Voltar" className="-ml-1 text-secondary hover:text-ink">
+                    <IconChevronLeft className="h-7 w-7" />
+                </Link>
+                <h1 className="text-[22px] font-bold leading-[30px] text-ink lg:text-[28px] lg:leading-[36px]">Detalhes do pedido</h1>
+            </div>
 
             {isLoading && <p className="text-secondary">Carregando detalhes...</p>}
             {(isError || (!isLoading && !pedido)) && <p className="text-secondary">Pedido não encontrado.</p>}
@@ -46,23 +46,14 @@ function AdminDetalhePedidoPage() {
                     {pedido.rastreioNaoLocalizado && <AvisoRastreioNaoLocalizado />}
 
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[420px_1fr]">
-                        <div className="flex flex-col gap-5">
-                            <PedidoResumoCard pedido={pedido}>
-                                {pedido.status !== 'CANCELADO' && (
-                                    <button
-                                        type="button"
-                                        onClick={aoCancelar}
-                                        disabled={cancelando}
-                                        className="flex w-full items-center justify-center rounded-[8px] border border-error py-[14px] text-[15px] font-medium text-error transition-colors hover:bg-error-bg disabled:opacity-50"
-                                    >
-                                        Cancelar pedido
-                                    </button>
-                                )}
-                            </PedidoResumoCard>
-                        </div>
+                        <PedidoResumoCard pedido={pedido}>
+                            <Button variant="primary" fullWidth onClick={compartilhar}>
+                                Compartilhar Rastreio
+                            </Button>
+                        </PedidoResumoCard>
 
-                        <section className="rounded-[10px] bg-white p-6 shadow-sm">
-                            <h2 className="mb-4 text-lg font-semibold text-ink">Histórico de Rastreio</h2>
+                        <section className="rounded-[10px] bg-white p-6 shadow-[0px_1px_2px_rgba(0,0,0,0.08)]">
+                            <h2 className="mb-4 text-[18px] font-semibold leading-[26px] text-ink">Histórico de Rastreio</h2>
                             <Timeline historico={pedido.historico} />
                         </section>
                     </div>

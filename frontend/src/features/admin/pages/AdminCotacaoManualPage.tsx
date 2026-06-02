@@ -76,9 +76,7 @@ function AdminCotacaoManualPage() {
                             Confirmar valor incomum (fora de ±50% sobre a cotação automática)
                         </label>
 
-                        <div>
-                            <Button type="submit" loading={isPending}>Salvar cotação manual</Button>
-                        </div>
+                        <Button type="submit" fullWidth loading={isPending}>Salvar cotação manual</Button>
                     </form>
                 </Card>
 
@@ -87,17 +85,21 @@ function AdminCotacaoManualPage() {
                         <h2 className="text-lg font-semibold text-primary-dark">Cotações atuais</h2>
                     </div>
                     {cotacoes.map((moeda) => (
-                        <div key={moeda.sigla} className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-gray-100 px-5 py-[14px]">
-                            <span className="w-20 text-[14px] font-medium text-primary-dark">{moeda.sigla} / BRL</span>
-                            <span className="text-[16px] font-medium text-primary-dark">
-                                {moeda.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                            </span>
-                            <span className="inline-flex rounded-full bg-background px-[10px] py-1 text-[11px] font-bold text-secondary">
-                                Automática
-                            </span>
-                            <span className="text-[13px] text-secondary">Sincronizado {moeda.atualizacao}</span>
-                            <button type="button" className="ml-auto rounded-[8px] bg-primary-light px-3 py-1.5 text-[12px] text-primary-dark hover:opacity-80">
-                                Tornar manual
+                        <div key={moeda.sigla} className="border-t border-gray-100 px-5 py-4">
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-baseline gap-2.5">
+                                    <span className="text-[14px] font-medium text-primary-dark">{moeda.sigla} / BRL</span>
+                                    <span className="text-[16px] font-semibold text-primary-dark">
+                                        {moeda.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                    </span>
+                                </div>
+                                <span className={`inline-flex rounded-full px-[10px] py-1 text-[11px] font-bold ${moeda.manual ? 'bg-primary-light text-primary-dark' : 'bg-background text-secondary'}`}>
+                                    {moeda.manual ? 'Manual' : 'Automática'}
+                                </span>
+                            </div>
+                            <p className="mt-1.5 text-[13px] text-secondary">Sincronizado {moeda.atualizacao}</p>
+                            <button type="button" className={`mt-3 rounded-[8px] px-3 py-1.5 text-[12px] font-medium hover:opacity-80 ${moeda.manual ? 'bg-error-bg text-error' : 'bg-primary-light text-primary-dark'}`}>
+                                {moeda.manual ? 'Remover' : 'Tornar manual'}
                             </button>
                         </div>
                     ))}

@@ -128,6 +128,14 @@ export function IconLogout({ className }: IconProps) {
     )
 }
 
+export function IconChevronLeft({ className }: IconProps) {
+    return (
+        <svg {...base} className={className} aria-hidden="true">
+            <path d="m15 18-6-6 6-6" />
+        </svg>
+    )
+}
+
 export function IconEye({ className }: IconProps) {
     return (
         <svg {...base} className={className} aria-hidden="true">

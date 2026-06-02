@@ -37,6 +37,7 @@ function toMoeda(c: CotacaoResponse): Moeda {
         tipo: c.moedaOrigem as TipoMoeda,
         valor: c.taxa,
         atualizacao: tempoDesde(c.cotadoEm),
+        manual: c.manual,
     }
 }
 

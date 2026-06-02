@@ -11,4 +11,5 @@ export interface Moeda {
     tipo: TipoMoeda
     valor: number
     atualizacao: string
+    manual?: boolean
 }

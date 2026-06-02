@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { buscarPedido } from '@/services/pedidos'
 import { buscarCotacao } from '@/services/cotacao'
 import { useToast } from '@/context/ToastContext'
-import { PageHeader } from '@/components/layout/PageHeader'
+import { IconChevronLeft } from '@/components/layout/icons'
 import { Button } from '@/components/ui/Button'
 import { PedidoResumoCard } from '@/features/pedidos/components/PedidoResumoCard'
 import { Timeline } from '@/features/pedidos/components/Timeline'
@@ -42,10 +42,12 @@ function DetalhesPedidoPage() {
 
     return (
         <>
-            <Link to="/pedidos" className="mb-2 inline-block text-sm text-secondary hover:text-primary">
-                ← Voltar para encomendas
-            </Link>
-            <PageHeader titulo="Detalhes do pedido" />
+            <div className="mb-6 flex items-center gap-2">
+                <Link to="/pedidos" aria-label="Voltar" className="-ml-1 text-secondary hover:text-ink">
+                    <IconChevronLeft className="h-7 w-7" />
+                </Link>
+                <h1 className="text-[22px] font-bold leading-[30px] text-ink lg:text-[28px] lg:leading-[36px]">Detalhes do pedido</h1>
+            </div>
 
             {isLoading && <p className="text-secondary">Carregando detalhes...</p>}
             {(isError || (!isLoading && !pedido)) && <p className="text-secondary">Pedido não encontrado.</p>}
