@@ -36,7 +36,7 @@ export function InserirEtapaForm({ pedidoId }: { pedidoId: number }) {
         mutationFn: (data: FormData) => inserirEtapa(pedidoId, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['pedido', String(pedidoId)] })
-            queryClient.invalidateQueries({ queryKey: ['pedidos'] })
+            queryClient.invalidateQueries({ queryKey: ['admin', 'pedidos'] })
             showToast('Etapa registrada. O status será atualizado em instantes.')
             reset()
         },

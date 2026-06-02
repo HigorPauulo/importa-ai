@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Card } from '@/components/ui/Card'
 import { useToast } from '@/context/ToastContext'
-import { buscarPedido, cancelarPedido } from '@/services/pedidos'
+import { buscarPedidoAdmin, cancelarPedido } from '@/services/pedidos'
 import { PedidoResumoCard } from '@/features/pedidos/components/PedidoResumoCard'
 import { Timeline } from '@/features/pedidos/components/Timeline'
 import { AvisoRastreioNaoLocalizado } from '@/features/pedidos/components/AvisoRastreioNaoLocalizado'
@@ -16,7 +16,7 @@ function AdminDetalhePedidoPage() {
 
     const { data: pedido, isLoading, isError } = useQuery({
         queryKey: ['pedido', id],
-        queryFn: () => buscarPedido(id!),
+        queryFn: () => buscarPedidoAdmin(id!),
         enabled: !!id,
     })
 
@@ -24,7 +24,7 @@ function AdminDetalhePedidoPage() {
         mutationFn: () => cancelarPedido(Number(id)),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['pedido', id] })
-            queryClient.invalidateQueries({ queryKey: ['pedidos'] })
+            queryClient.invalidateQueries({ queryKey: ['admin', 'pedidos'] })
             showToast('Pedido cancelado.')
         },
         onError: () => showToast('Não foi possível cancelar o pedido.'),

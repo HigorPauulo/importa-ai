@@ -62,6 +62,16 @@ export async function listarPedidos(): Promise<Pedido[]> {
     return data.map(toPedidoView)
 }
 
+export async function listarTodosPedidos(): Promise<Pedido[]> {
+    const { data } = await api.get<PedidoResponse[]>('/admin/pedidos')
+    return data.map(toPedidoView)
+}
+
+export async function buscarPedidoAdmin(id: string): Promise<Pedido> {
+    const { data } = await api.get<PedidoResponse>(`/admin/pedidos/${id}`)
+    return toPedidoView(data)
+}
+
 export interface CriarPedidoInput {
     codigoRastreamento: string
     descricao: string

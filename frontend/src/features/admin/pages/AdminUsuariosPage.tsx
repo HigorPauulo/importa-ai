@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { PageHeader } from '@/components/layout/PageHeader'
+import { PageHeader, BellButton } from '@/components/layout/PageHeader'
 import { Card } from '@/components/ui/Card'
 import { IconSearch } from '@/components/layout/icons'
 import { iniciais } from '@/lib/usuario'
@@ -38,13 +38,90 @@ function AdminUsuariosPage() {
         .filter((u) => perfil === 'TODOS' || u.perfil === perfil)
         .filter((u) => status === 'TODOS' || (status === 'ATIVO' ? u.ativo : !u.ativo))
 
+    const aoPerfil = (u: UsuarioAdmin) =>
+        mudarPerfil({ id: u.id, perfil: u.perfil === 'ADMINISTRADOR' ? 'CLIENTE' : 'ADMINISTRADOR' })
+    const aoStatus = (u: UsuarioAdmin) => mudarStatus({ id: u.id, ativo: !u.ativo })
+
     return (
         <>
-            <PageHeader titulo="Gestão de usuários" subtitulo="Gerencie perfis, status e acessos" />
+            <PageHeader titulo="Gestão de usuários" subtitulo="Gerencie perfis, status e acessos" acao={<BellButton estatico />} />
 
-            <Card className="overflow-hidden">
-                <div className="flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="relative w-full lg:w-[340px]">
+            <div className="lg:hidden">
+                <div className="relative mb-4">
+                    <IconSearch className="pointer-events-none absolute left-[14px] top-1/2 h-4 w-4 -translate-y-1/2 text-secondary" />
+                    <input
+                        value={busca}
+                        onChange={(e) => setBusca(e.target.value)}
+                        placeholder="Buscar por nome ou e-mail"
+                        className="h-11 w-full rounded-[8px] border border-gray-200 bg-white pl-[38px] pr-3 text-sm text-ink placeholder:text-secondary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                </div>
+
+                <div className="mb-5 flex gap-2">
+                    <select
+                        value={perfil}
+                        onChange={(e) => setPerfil(e.target.value)}
+                        className="flex-1 rounded-[8px] bg-white px-3 py-2 text-[13px] font-semibold text-secondary shadow-[0px_1px_2px_rgba(0,0,0,0.08)] focus:outline-none"
+                    >
+                        <option value="TODOS">Perfil: Todos</option>
+                        <option value="CLIENTE">Cliente</option>
+                        <option value="ADMINISTRADOR">Administrador</option>
+                    </select>
+                    <select
+                        value={status}
+                        onChange={(e) => setStatus(e.target.value)}
+                        className="flex-1 rounded-[8px] bg-white px-3 py-2 text-[13px] font-semibold text-secondary shadow-[0px_1px_2px_rgba(0,0,0,0.08)] focus:outline-none"
+                    >
+                        <option value="TODOS">Status: Todos</option>
+                        <option value="ATIVO">Ativo</option>
+                        <option value="INATIVO">Inativo</option>
+                    </select>
+                </div>
+
+                <div className="space-y-3">
+                    {filtrados.map((usuario) => {
+                        const ehAdmin = usuario.perfil === 'ADMINISTRADOR'
+                        return (
+                            <div key={usuario.id} className="rounded-[8px] bg-white p-4 shadow-[0px_1px_2px_rgba(0,0,0,0.08)]">
+                                <div className="flex items-center gap-3">
+                                    <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-primary-light text-xs font-bold text-primary-dark">
+                                        {iniciais(usuario.nome)}
+                                    </span>
+                                    <div className="min-w-0">
+                                        <p className="truncate text-[15px] font-semibold text-primary-dark">{usuario.nome}</p>
+                                        <p className="truncate text-[13px] text-secondary">{usuario.email}</p>
+                                    </div>
+                                </div>
+
+                                <div className="mt-3 flex gap-2">
+                                    <span className={`inline-flex rounded-full px-[10px] py-1 text-[11px] font-bold ${ehAdmin ? 'bg-primary-light text-primary-dark' : 'bg-background text-secondary'}`}>
+                                        {ehAdmin ? 'Admin' : 'Cliente'}
+                                    </span>
+                                    <span className={`inline-flex rounded-full px-[10px] py-1 text-[11px] font-bold ${usuario.ativo ? 'bg-success-bg text-success-dark' : 'bg-background text-secondary'}`}>
+                                        {usuario.ativo ? 'Ativo' : 'Inativo'}
+                                    </span>
+                                </div>
+
+                                <div className="mt-3 grid grid-cols-3 gap-2">
+                                    <button type="button" onClick={() => aoPerfil(usuario)} className="rounded-[8px] bg-primary-light py-2 text-[12px] font-medium text-primary-dark hover:opacity-80">
+                                        {ehAdmin ? 'Rebaixar' : 'Promover'}
+                                    </button>
+                                    <button type="button" onClick={() => aoStatus(usuario)} className={`rounded-[8px] py-2 text-[12px] font-medium hover:opacity-80 ${usuario.ativo ? 'bg-error-bg text-error' : 'bg-success-bg text-success-dark'}`}>
+                                        {usuario.ativo ? 'Desativar' : 'Ativar'}
+                                    </button>
+                                    <button type="button" className="rounded-[8px] bg-background py-2 text-[12px] font-medium text-secondary hover:opacity-80">
+                                        Redefinir
+                                    </button>
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+            </div>
+
+            <Card className="hidden overflow-hidden lg:block">
+                <div className="flex items-center justify-between gap-4 p-5">
+                    <div className="relative w-[340px]">
                         <IconSearch className="pointer-events-none absolute left-[14px] top-1/2 h-4 w-4 -translate-y-1/2 text-secondary" />
                         <input
                             value={busca}
@@ -54,31 +131,18 @@ function AdminUsuariosPage() {
                         />
                     </div>
                     <div className="flex gap-[10px]">
-                        <select
-                            value={perfil}
-                            onChange={(e) => setPerfil(e.target.value)}
-                            className="flex-1 rounded-[8px] bg-background px-[14px] py-[9px] text-[13px] font-semibold text-secondary focus:outline-none lg:flex-none"
-                        >
+                        <select value={perfil} onChange={(e) => setPerfil(e.target.value)} className="rounded-[8px] bg-background px-[14px] py-[9px] text-[13px] font-semibold text-secondary focus:outline-none">
                             <option value="TODOS">Perfil: Todos</option>
                             <option value="CLIENTE">Cliente</option>
                             <option value="ADMINISTRADOR">Administrador</option>
                         </select>
-                        <select
-                            value={status}
-                            onChange={(e) => setStatus(e.target.value)}
-                            className="flex-1 rounded-[8px] bg-background px-[14px] py-[9px] text-[13px] font-semibold text-secondary focus:outline-none lg:flex-none"
-                        >
+                        <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-[8px] bg-background px-[14px] py-[9px] text-[13px] font-semibold text-secondary focus:outline-none">
                             <option value="TODOS">Status: Todos</option>
                             <option value="ATIVO">Ativo</option>
                             <option value="INATIVO">Inativo</option>
                         </select>
                     </div>
                 </div>
-
-                {isLoading && <p className="p-6 text-secondary">Carregando usuários...</p>}
-                {!isLoading && filtrados.length === 0 && (
-                    <p className="p-6 text-center text-secondary">Nenhum usuário encontrado.</p>
-                )}
 
                 {filtrados.length > 0 && (
                     <div className="overflow-x-auto">
@@ -97,8 +161,8 @@ function AdminUsuariosPage() {
                                     <LinhaUsuario
                                         key={usuario.id}
                                         usuario={usuario}
-                                        onPerfil={() => mudarPerfil({ id: usuario.id, perfil: usuario.perfil === 'ADMINISTRADOR' ? 'CLIENTE' : 'ADMINISTRADOR' })}
-                                        onStatus={() => mudarStatus({ id: usuario.id, ativo: !usuario.ativo })}
+                                        onPerfil={() => aoPerfil(usuario)}
+                                        onStatus={() => aoStatus(usuario)}
                                     />
                                 ))}
                             </tbody>
@@ -106,6 +170,13 @@ function AdminUsuariosPage() {
                     </div>
                 )}
             </Card>
+
+            {isLoading && <p className="mt-4 text-secondary">Carregando usuários...</p>}
+            {!isLoading && filtrados.length === 0 && (
+                <p className="mt-4 rounded-[8px] bg-white p-6 text-center text-secondary shadow-[0px_1px_2px_rgba(0,0,0,0.08)] lg:bg-transparent lg:shadow-none">
+                    Nenhum usuário encontrado.
+                </p>
+            )}
         </>
     )
 }
@@ -135,24 +206,13 @@ function LinhaUsuario({ usuario, onPerfil, onStatus }: { usuario: UsuarioAdmin; 
             </td>
             <td className="px-5 py-[14px]">
                 <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        onClick={onPerfil}
-                        className="rounded-[8px] bg-primary-light px-3 py-1.5 text-[12px] text-primary-dark hover:opacity-80"
-                    >
+                    <button type="button" onClick={onPerfil} className="rounded-[8px] bg-primary-light px-3 py-1.5 text-[12px] text-primary-dark hover:opacity-80">
                         {ehAdmin ? 'Rebaixar' : 'Promover'}
                     </button>
-                    <button
-                        type="button"
-                        onClick={onStatus}
-                        className={`rounded-[8px] px-3 py-1.5 text-[12px] hover:opacity-80 ${usuario.ativo ? 'bg-error-bg text-error' : 'bg-success-bg text-success-dark'}`}
-                    >
+                    <button type="button" onClick={onStatus} className={`rounded-[8px] px-3 py-1.5 text-[12px] hover:opacity-80 ${usuario.ativo ? 'bg-error-bg text-error' : 'bg-success-bg text-success-dark'}`}>
                         {usuario.ativo ? 'Desativar' : 'Ativar'}
                     </button>
-                    <button
-                        type="button"
-                        className="rounded-[8px] bg-background px-3 py-1.5 text-[12px] text-secondary hover:opacity-80"
-                    >
+                    <button type="button" className="rounded-[8px] bg-background px-3 py-1.5 text-[12px] text-secondary hover:opacity-80">
                         Redefinir
                     </button>
                 </div>

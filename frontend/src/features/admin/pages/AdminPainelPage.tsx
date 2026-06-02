@@ -1,34 +1,35 @@
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { PageHeader, BellButton } from '@/components/layout/PageHeader'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { HeaderActions } from '@/components/layout/HeaderActions'
 import { KpiCard } from '@/components/ui/KpiCard'
 import { Card } from '@/components/ui/Card'
 import CardPedido from '@/features/pedidos/components/CardPedido'
 import { EvolucaoChart } from '@/features/admin/components/EvolucaoChart'
 import { buscarDashboard } from '@/services/dashboard'
-import { listarPedidos } from '@/services/pedidos'
+import { listarTodosPedidos } from '@/services/pedidos'
 
 function AdminPainelPage() {
     const { data: dash, isLoading, isError } = useQuery({ queryKey: ['admin', 'dashboard'], queryFn: buscarDashboard })
-    const { data: pedidos = [] } = useQuery({ queryKey: ['pedidos'], queryFn: listarPedidos })
+    const { data: pedidos = [] } = useQuery({ queryKey: ['admin', 'pedidos'], queryFn: listarTodosPedidos })
 
     const emTransito = dash?.porStatus.find((s) => s.status === 'ENVIADO')?.quantidade ?? 0
     const recentes = pedidos.slice(0, 4)
 
     return (
         <>
-            <PageHeader titulo="Painel administrativo" subtitulo="Visão geral do fluxo de pacotes." acao={<BellButton estatico />} />
+            <PageHeader titulo="Painel administrativo" subtitulo="Visão geral do fluxo de pacotes." acao={<HeaderActions estatico />} />
 
             {isLoading && <p className="text-secondary">Carregando indicadores...</p>}
             {isError && <p className="text-error">Não foi possível carregar o painel.</p>}
 
             {dash && (
                 <>
-                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
                         <KpiCard titulo="Pedidos ativos" valor={dash.totalAtivos} />
                         <KpiCard titulo="Em trânsito" valor={emTransito} />
                         <KpiCard titulo="Taxa pendente" valor={dash.taxaPendente} tom="warning" />
-                        <KpiCard titulo="Entregues no mês" valor={dash.entreguesNoMes} tom="success" />
+                        <KpiCard titulo="Entregues no mês" valor={dash.entreguesNoMes} />
                     </div>
 
                     <Card className="mt-6 p-6">

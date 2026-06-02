@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/context/ToastContext'
-import { listarPedidos } from '@/services/pedidos'
+import { listarTodosPedidos } from '@/services/pedidos'
 import type { Pedido } from '@/types/pedidos'
 
 function gerarCsv(pedidos: Pedido[]): string {
@@ -36,7 +36,7 @@ function AdminExportarPage() {
     const [cliente, setCliente] = useState('')
     const [formato, setFormato] = useState<'CSV' | 'XLSX'>('CSV')
 
-    const { data: pedidos = [] } = useQuery({ queryKey: ['pedidos'], queryFn: listarPedidos })
+    const { data: pedidos = [] } = useQuery({ queryKey: ['admin', 'pedidos'], queryFn: listarTodosPedidos })
 
     const gerar = () => {
         const termo = cliente.trim().toLowerCase()
