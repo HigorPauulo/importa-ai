@@ -58,7 +58,7 @@ public class SecurityConfig {
     CorsConfigurationSource corsConfigurationSource(
             @Value("${importaai.cors.allowed-origins:http://localhost:5173}") List<String> origensPermitidas) {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(origensPermitidas);
+        config.setAllowedOriginPatterns(origensPermitidas);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Location"));

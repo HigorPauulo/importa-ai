@@ -1,0 +1,80 @@
+name: importaai
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-importaai}
+      MYSQL_USER: ${IMPORTAAI_DB_USERNAME}
+      MYSQL_PASSWORD: ${IMPORTAAI_DB_PASSWORD}
+      TZ: America/Sao_Paulo
+    volumes:
+      - importaai_mysql_data:/var/lib/mysql
+    networks: [importaai-net]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${IMPORTAAI_DB_USERNAME}", "-p${IMPORTAAI_DB_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${IMPORTAAI_RABBITMQ_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${IMPORTAAI_RABBITMQ_PASSWORD}
+      TZ: America/Sao_Paulo
+    volumes:
+      - importaai_rabbitmq_data:/var/lib/rabbitmq
+    networks: [importaai-net]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      TZ: America/Sao_Paulo
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-importaai}?useSSL=false&serverTimezone=America/Sao_Paulo&allowPublicKeyRetrieval=true"
+      IMPORTAAI_DB_USERNAME: ${IMPORTAAI_DB_USERNAME}
+      IMPORTAAI_DB_PASSWORD: ${IMPORTAAI_DB_PASSWORD}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      IMPORTAAI_RABBITMQ_USERNAME: ${IMPORTAAI_RABBITMQ_USERNAME}
+      IMPORTAAI_RABBITMQ_PASSWORD: ${IMPORTAAI_RABBITMQ_PASSWORD}
+      IMPORTAAI_JWT_SECRET: ${IMPORTAAI_JWT_SECRET}
+      SPRING_APPLICATION_JSON: '{"importaai.cors.allowed-origins":"${TUNNEL_ORIGIN}"}'
+    networks: [importaai-net]
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks: [importaai-net]
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate --url http://frontend:80
+    depends_on:
+      - frontend
+    networks: [importaai-net]
+
+networks:
+  importaai-net:
+
+volumes:
+  importaai_mysql_data:
+  importaai_rabbitmq_data:
