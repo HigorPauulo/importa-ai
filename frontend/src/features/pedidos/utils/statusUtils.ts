@@ -23,6 +23,8 @@ export function getStatusLabel(status: StatusPedido) {
             return 'Enviado'
         case 'ENTREGUE':
             return 'Entregue'
+        case 'DEVOLVIDO':
+            return 'Devolvido'
         case 'CANCELADO':
             return 'Cancelado'
     }
