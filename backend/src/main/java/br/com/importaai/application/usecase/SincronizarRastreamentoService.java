@@ -42,6 +42,16 @@ public class SincronizarRastreamentoService implements SincronizarRastreamentoUs
         return atualizados;
     }
 
+    @Override
+    public void sincronizarPedido(Long pedidoId) {
+        pedidoRepository.buscarPorId(pedidoId).ifPresent(pedido -> {
+            StatusPedido status = pedido.getStatus();
+            if (status != StatusPedido.ENTREGUE && status != StatusPedido.DEVOLVIDO) {
+                sincronizar(pedido);
+            }
+        });
+    }
+
     private boolean sincronizar(Pedido pedido) {
         ResultadoRastreio resultado =
                 correiosPort.consultar(pedido.getCodigoRastreamento(), pedido.getCriadoEm());

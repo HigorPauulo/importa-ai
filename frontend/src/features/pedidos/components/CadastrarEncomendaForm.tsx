@@ -25,6 +25,7 @@ function CadastrarEncomendaForm() {
             // invalida o cache da lista pra ela refazer o fetch já com o novo pedido
             queryClient.invalidateQueries({ queryKey: ['pedidos'] })
             navigate('/pedidos')
+            setTimeout(() => queryClient.invalidateQueries({ queryKey: ['pedidos'] }), 2500)
         },
     })
 

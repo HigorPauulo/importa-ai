@@ -1,5 +1,6 @@
 package br.com.importaai.infrastructure.adapter.in.messaging;
 
+import br.com.importaai.domain.port.in.SincronizarRastreamentoUseCase;
 import br.com.importaai.domain.port.out.EventPublisher;
 import br.com.importaai.infrastructure.adapter.out.messaging.Envelope;
 import br.com.importaai.infrastructure.adapter.out.messaging.NotificacaoEvento;
@@ -30,13 +31,16 @@ public class PedidoCriadoConsumer {
     private final EventoProcessadoJpaRepository eventoRepo;
     private final EventPublisher eventPublisher;
     private final ObjectMapper objectMapper;
+    private final SincronizarRastreamentoUseCase sincronizarRastreamento;
 
     public PedidoCriadoConsumer(EventoProcessadoJpaRepository eventoRepo,
                                 EventPublisher eventPublisher,
-                                ObjectMapper objectMapper) {
+                                ObjectMapper objectMapper,
+                                SincronizarRastreamentoUseCase sincronizarRastreamento) {
         this.eventoRepo = eventoRepo;
         this.eventPublisher = eventPublisher;
         this.objectMapper = objectMapper;
+        this.sincronizarRastreamento = sincronizarRastreamento;
     }
 
     @RabbitListener(queues = RabbitMQConfig.Q_PEDIDO_CRIADO)
@@ -63,6 +67,13 @@ public class PedidoCriadoConsumer {
                     new NotificacaoEvento(pedido.usuarioId(), pedido.id(), MENSAGEM_PEDIDO_CRIADO));
 
             log.info("pedido.criado processado — messageId={} eventId={}", messageId, envelope.eventId());
+
+            try {
+                sincronizarRastreamento.sincronizarPedido(pedido.id());
+            } catch (Exception e) {
+                log.warn("rastreio inicial do pedido {} falhou, sera retomado no proximo sync: {}",
+                        pedido.id(), e.getMessage());
+            }
 
             channel.basicAck(deliveryTag, false);
 
