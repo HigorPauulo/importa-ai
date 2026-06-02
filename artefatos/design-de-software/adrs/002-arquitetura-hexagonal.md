@@ -33,4 +33,4 @@ Adotar **Arquitetura Hexagonal** (*Ports & Adapters*) com três camadas:
 ## Referências
 
 - [ADR-004](004-adapters-correios.md) — Adapters intercambiáveis para integração com Correios
-- [Design Patterns Escolhidos](../design-patterns-escolhidos.md) — Repository, Adapter, Decorator
+- [Design Patterns](../design-patterns.md) — Repository, Adapter, Circuit Breaker

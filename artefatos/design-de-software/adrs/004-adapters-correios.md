@@ -47,4 +47,4 @@ Os dados reais expuseram um caso que o modelo de etapas (caminho feliz `NA_CHINA
 - ERS — RF12 (etapas nacionais), RF15 (sincronização automática), Apêndice A (derivação de status)
 - [ADR-002](002-arquitetura-hexagonal.md) — Arquitetura Hexagonal (*ports & adapters*)
 - [ADR-003](003-status-derivado-da-etapa.md) — Status derivado da etapa (RN01)
-- [Design Patterns Escolhidos](../design-patterns-escolhidos.md) — Adapter, Decorator
+- [Design Patterns](../design-patterns.md) — Adapter, Circuit Breaker

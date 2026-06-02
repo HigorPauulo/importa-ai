@@ -293,7 +293,7 @@ Se a publicação falha (timeout no publisher confirm, falha de conexão), o err
 
 - [ERS](../design-de-software/ERS.md) — RN03, RN04, RN05, RNF02, RNF05, RNF11, Apêndice A
 - [ADRs](../design-de-software/adrs/) — ADR-001 (broker), ADR-002 (hexagonal), ADR-003 (status derivado)
-- [Design Patterns Escolhidos](../design-de-software/design-patterns-escolhidos.md)
+- [Design Patterns](../design-de-software/design-patterns.md)
 - AMQP 0-9-1 Reference — https://www.rabbitmq.com/amqp-0-9-1-reference.html
 - RabbitMQ Confirms and Returns — https://www.rabbitmq.com/confirms.html
 - RabbitMQ Dead Letter Exchanges — https://www.rabbitmq.com/dlx.html

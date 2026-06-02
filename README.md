@@ -140,7 +140,7 @@ UI em `http://localhost:5173`.
 |-----------|-----------|
 | [ERS](artefatos/design-de-software/ERS.md) | Especificação completa de requisitos (RF, RNF, RN, casos de uso) |
 | [Arquitetura de Mensageria](artefatos/mensageria-e-streams/arquitetura-mensageria.md) | Topologia, fluxos, DLQ, idempotência, observabilidade |
-| [Design Patterns Escolhidos](artefatos/design-de-software/design-patterns-escolhidos.md) | Lista de patterns adotados e descartados |
+| [Design Patterns](artefatos/design-de-software/design-patterns.md) | Patterns adotados (com trechos de código) e descartados |
 | [ADRs](artefatos/design-de-software/adrs/) | Registros de decisões arquiteturais (6 ADRs) |
 | [Plano de Testes](artefatos/qualidade-de-software/plano-de-testes.md) | Casos de teste TC01–TC32 + metas de cobertura |
 | [Guia de Estilos](artefatos/modelagem-de-interfaces/guia-de-estilos.md) | Tokens visuais, componentes-chave, acessibilidade |
