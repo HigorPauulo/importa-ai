@@ -23,7 +23,7 @@ function CotacaoPage() {
 
                     <section className="mt-6">
                         <h2 className="mb-3 text-[20px] font-semibold leading-[28px] text-ink">Outras moedas</h2>
-                        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                        <div className="grid max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
                             {outras.map((moeda) => (
                                 <CardMoeda key={moeda.sigla} moeda={moeda} />
                             ))}
