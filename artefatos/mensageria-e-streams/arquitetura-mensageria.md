@@ -59,11 +59,11 @@ Em resumo: RabbitMQ foi escolhido pela maturidade do AMQP, suporte nativo a ACK 
 | Nome | Recebe routing key | Consumer |
 |------|--------------------|----------|
 | `q.pedido.criado` | `pedido.criado` | `PedidoCriadoConsumer` |
-| `q.pedido.atualizado` | `pedido.atualizado` | _sem consumer nesta versão (v2)_ |
-| `q.rastreamento.atualizado` | `rastreamento.atualizado` | _sem consumer nesta versão (v2)_ |
+| `q.pedido.atualizado` | `pedido.atualizado` | `RastreamentoConsumer` |
+| `q.rastreamento.atualizado` | `rastreamento.atualizado` | `RastreamentoConsumer` |
 | `q.notificacao.usuario` | `notificacao.usuario` | `NotificacaoConsumer` |
 
-> **Estado de implementação:** nesta versão existem dois consumers — `PedidoCriadoConsumer` e `NotificacaoConsumer`. As filas `q.pedido.atualizado` e `q.rastreamento.atualizado` são declaradas (a topologia já prevê o fanout), mas os eventos `pedido.atualizado` (cancelamento) e `rastreamento.atualizado` (etapa/sync) são publicados **sem consumer** — a etapa/atualização já é persistida de forma síncrona no use case. A consequência é que a **notificação de mudança de status (RF16) não é emitida nesta versão** (só a de criação, via `PedidoCriadoConsumer`); ligar um `RastreamentoConsumer` que converta esses eventos em `notificacao.usuario` é dívida v2.
+> **Consumers:** três — `PedidoCriadoConsumer` (criação → notificação de registro), `RastreamentoConsumer` (mudança de etapa/status e cancelamento → notificação de mudança de status, **RF16**) e `NotificacaoConsumer` (persiste + entrega via STOMP, RN09). A etapa/atualização é persistida de forma **síncrona** no use case; o `RastreamentoConsumer` apenas converte o evento em `notificacao.usuario` (não re-persiste a etapa).
 
 Cada fila principal tem uma DLQ correspondente (`*.dlq`), declarada via argumentos `x-dead-letter-exchange = importaai.events.dlq` e `x-dead-letter-routing-key = <routing-key-original>.dlq`.
 
@@ -233,8 +233,8 @@ Job diário: remover registros com `processado_em < NOW() - INTERVAL 30 DAY`. Ap
 9. Dispara a leitura inicial de rastreio do pedido (best-effort): consulta a fonte de
    rastreamento ativa e **persiste as etapas de forma síncrona** no use case, evitando que
    o pedido fique sem etapas até o sync agendado (§8.3). O `rastreamento.atualizado`
-   publicado não tem consumer nesta versão (§3.2). Falha na fonte externa é apenas logada
-   e NÃO derruba a mensagem — a sincronização periódica retoma.
+   publicado é consumido pelo `RastreamentoConsumer` → `notificacao.usuario` (§8.2). Falha
+   na fonte externa é apenas logada e NÃO derruba a mensagem — o sync periódico retoma.
 10. ACK.
 11. NotificacaoConsumer consome → persiste a notificação (RN09 — FIFO de 50 na camada de aplicação) → envia STOMP → ACK.
 ```
@@ -251,15 +251,15 @@ Job diário: remover registros com `processado_em < NOW() - INTERVAL 30 DAY`. Ap
    **persiste a etapa de forma síncrona** — o status é derivado da última etapa (RN01).
 3. Publica "rastreamento.atualizado" e retorna HTTP 202.
 
-== v2 ==
-4. Não há consumer de "rastreamento.atualizado" nesta versão — o evento fica disponível
-   para um futuro RastreamentoConsumer que o converta em "notificacao.usuario" (RF16).
-   Nesta versão a notificação de mudança de status NÃO é emitida (ver §3.2).
+== ASSÍNCRONO ==
+4. RastreamentoConsumer consome → INSERT-first → publica "notificacao.usuario" com a
+   mensagem do novo status derivado (RF16).
+5. NotificacaoConsumer consome → persiste (RN09) → envia STOMP (§8.4).
 ```
 
 ### 8.3 Sincronização Correios (RF15)
 
-Scheduler em intervalo configurável (padrão **20 min**) consulta a fonte de rastreamento (adapter ativo — 17track em produção) para pedidos ativos (status não terminal). Aplica as novas etapas de forma **síncrona** e publica `rastreamento.atualizado` (sem consumer nesta versão — §3.2/§8.2). A primeira leitura de um pedido recém-criado também é disparada pelo `PedidoCriadoConsumer` (§8.1, passo 9).
+Scheduler em intervalo configurável (padrão **20 min**) consulta a fonte de rastreamento (adapter ativo — 17track em produção) para pedidos ativos (status não terminal). Aplica as novas etapas de forma **síncrona** e publica `rastreamento.atualizado`, consumido pelo `RastreamentoConsumer` → `notificacao.usuario` (§8.2). A primeira leitura de um pedido recém-criado também é disparada pelo `PedidoCriadoConsumer` (§8.1, passo 9).
 
 ### 8.4 Notificação ao usuário (UC03)
 

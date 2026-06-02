@@ -28,7 +28,7 @@ A Arquitetura Hexagonal foi escolhida porque:
 | Pattern | Onde | Problema que resolve |
 |---------|------|----------------------|
 | **Publish-Subscribe (via RabbitMQ)** | Exchange `importaai.events` + filas por routing key | Desacopla o produtor (controllers) dos consumers (persistência, notificação). Permite adicionar novos consumers sem tocar quem publica. |
-| **Saga Coreografada** | Fluxo "criar pedido": `PedidoCriadoConsumer` → `NotificacaoConsumer` | Cada consumer reage a um evento e publica o próximo, sem orquestrador central. Adequado quando há poucos passos e baixa complexidade transacional. |
+| **Saga Coreografada** | `PedidoCriadoConsumer` (criação) e `RastreamentoConsumer` (mudança de status, RF16) → `NotificacaoConsumer` | Cada consumer reage a um evento e publica o próximo, sem orquestrador central. Adequado quando há poucos passos e baixa complexidade transacional. |
 | **Idempotent Consumer** | Tabela `evento_processado` com UNIQUE em `(exchange, routing_key, message_id)` | Garante que reprocessamento de mensagem (retry, redelivery) não gere efeitos duplicados. Implementação INSERT-first: tenta inserir; se UNIQUE dispara, descarta. |
 | **Dead Letter Queue (DLQ)** | `*.dlq` para cada fila principal | Mensagem que falha (`basicNack(requeue=false)`) sai **imediatamente** do fluxo principal para a DLQ (sem retry automático nesta versão), permitindo investigação sem bloquear processamento. |
 | **Cache-Aside** | Cotação de câmbio (`ConsultarCotacaoService`): lê cache → se miss/expired, chama API → atualiza cache | Reduz chamadas externas e provê fallback (RN07). |
