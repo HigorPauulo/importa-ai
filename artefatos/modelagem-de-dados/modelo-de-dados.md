@@ -122,7 +122,7 @@ Esquema MySQL 8.x. Convenção: `snake_case` para nomes; `id BIGINT AUTO_INCREME
 | `valor_declarado` | DECIMAL(15,2) NOT NULL | Valor na moeda de origem. |
 | `moeda` | CHAR(3) NOT NULL | `CNY` / `USD` / `EUR`. |
 | `cancelado` | BOOLEAN NOT NULL DEFAULT FALSE | Flag usada na derivação de `StatusPedido` (RN01). |
-| `status_cache` | ENUM('PROCESSANDO','ENVIADO','ENTREGUE','CANCELADO') NOT NULL DEFAULT 'PROCESSANDO' | **Cache derivado** (RN01, [ADR-003](../design-de-software/adrs/003-status-derivado-da-etapa.md)). Atualizado por *listener* após cada inserção de etapa. **Nunca é fonte de verdade.** Pode ser reconstruído da tabela `etapa_rastreamento` a qualquer momento. |
+| `status_cache` | ENUM('PROCESSANDO','ENVIADO','ENTREGUE','DEVOLVIDO','CANCELADO') NOT NULL DEFAULT 'PROCESSANDO' | **Cache derivado** (RN01, [ADR-003](../design-de-software/adrs/003-status-derivado-da-etapa.md)). Atualizado por *listener* após cada inserção de etapa. **Nunca é fonte de verdade.** Pode ser reconstruído da tabela `etapa_rastreamento` a qualquer momento. |
 | `estimado_entrega` | DATE NULL | Data estimada (opcional). |
 | `criado_em` | TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP | — |
 | `atualizado_em` | TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | — |
@@ -140,7 +140,7 @@ Entidade dentro do agregado `Pedido`. **Append-only por `criado_em`** (RF13, ADR
 |--------|------|-----------|
 | `id` | BIGINT AUTO_INCREMENT (PK) | — |
 | `pedido_id` | BIGINT NOT NULL | FK → `pedido(id)`. |
-| `tipo` | ENUM('NA_CHINA','AEROPORTO_ORIGEM','EM_TRANSITO','AEROPORTO_DESTINO','NO_BRASIL','TAXA','CD_BRASIL','SAIDA_ENTREGA','ENTREGUE') NOT NULL | Sequência cronológica esperada (RF12). |
+| `tipo` | ENUM('NA_CHINA','AEROPORTO_ORIGEM','EM_TRANSITO','AEROPORTO_DESTINO','NO_BRASIL','TAXA','CD_BRASIL','SAIDA_ENTREGA','ENTREGUE','DEVOLVIDO') NOT NULL | Sequência cronológica esperada (RF12). `DEVOLVIDO` é o estado terminal de exceção (pacote barrado/devolvido pela alfândega). |
 | `localizacao` | VARCHAR(255) NULL | — |
 | `descricao` | VARCHAR(500) NULL | — |
 | `criado_em` | TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) | *Timestamp* do evento (precisão de milissegundos). |

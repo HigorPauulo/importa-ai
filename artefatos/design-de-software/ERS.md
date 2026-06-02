@@ -268,11 +268,13 @@ A função `derivarStatus(ultimaEtapa, cancelado): StatusPedido` é normativa:
 | `CD_BRASIL` | `false` | `ENVIADO` |
 | `SAIDA_ENTREGA` | `false` | `ENVIADO` |
 | `ENTREGUE` | `false` | `ENTREGUE` |
+| `DEVOLVIDO` | `false` | `DEVOLVIDO` |
 | (qualquer) | `true` | `CANCELADO` |
 
 **Implicações:**
 - Não existe endpoint `PATCH /api/pedidos/{id}/status`. A única forma de promover o status é registrando uma nova etapa via `POST /api/pedidos/{id}/etapas` (RF13).
 - Para fins de query (dashboard, filtros), o backend pode manter uma coluna `status_cache` em `pedido`, **atualizada por listener interno após cada inserção de etapa**. Essa coluna é cache derivado, nunca fonte de verdade.
+- `ENTREGUE` e `DEVOLVIDO` são estados **terminais**: o agregado rejeita novas etapas após qualquer um deles. `DEVOLVIDO` representa o pacote barrado/devolvido pela autoridade aduaneira (ex.: "Importação não autorizada", "Devolução determinada pela autoridade competente"), capturado da fonte de rastreamento.
 
 ### Apêndice B — Referências de design
 
