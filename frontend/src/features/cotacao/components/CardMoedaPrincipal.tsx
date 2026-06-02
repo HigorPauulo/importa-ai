@@ -6,14 +6,20 @@ interface CardMoedaPrincipalProps {
 
 function CardMoedaPrincipal({ moeda }: CardMoedaPrincipalProps) {
     return (
-        <div className="bg-primary shadow-md rounded-[5px] p-5 relative text-white">
-            <span className="absolute top-5 right-5 text-[.8rem] font-medium px-2 py-1 rounded-full shadow-md">{moeda.sigla}</span>
-            <h3 className="text-base mb-2">{moeda.nome}</h3>
-            <p className="text-3xl lg:text-4xl font-extrabold">
+        <div className="max-w-xl rounded-[10px] bg-primary p-6 shadow-[0px_1px_2px_rgba(0,0,0,0.08)]">
+            <div className="flex items-center justify-between">
+                <h2 className="text-[16px] font-semibold leading-[24px] text-white">{moeda.nome}</h2>
+                <span className="rounded-md bg-white/20 px-2.5 py-1 text-xs font-bold text-white">
+                    {moeda.sigla}/BRL
+                </span>
+            </div>
+
+            <p className="mt-3 text-[28px] font-bold leading-[36px] text-white">
                 {moeda.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </p>
-            <p className="text-sm flex items-center mt-6">
-                <span className="w-3 h-3 bg-success rounded-full inline-block mr-2"></span>
+
+            <p className="mt-4 flex items-center gap-2 text-[13px] text-white/85">
+                <span className="h-2 w-2 rounded-full bg-success" />
                 Sincronizado via API (há {moeda.atualizacao})
             </p>
         </div>

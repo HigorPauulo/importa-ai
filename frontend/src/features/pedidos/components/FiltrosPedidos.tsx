@@ -1,39 +1,33 @@
-import type { StatusPedido } from "@/types/pedidos"
-
-interface FiltrosPedidosProps {
-    filtroAtivo: StatusPedido | "TODOS";
-    onFiltroChange: (novo: StatusPedido | "TODOS") => void;
+export interface FiltroOpcao {
+    label: string
+    valor: string
 }
 
-const filtros: { label: string; valor: StatusPedido | "TODOS" }[] = [
-    { label: "Todos", valor: "TODOS" },
-    { label: "Processando", valor: "PROCESSANDO" },
-    { label: "Enviado", valor: "ENVIADO" },
-    { label: "Entregue", valor: "ENTREGUE" },
-    { label: "Cancelado", valor: "CANCELADO" },
-];
+interface FiltrosPedidosProps {
+    opcoes: FiltroOpcao[]
+    ativo: string
+    onChange: (valor: string) => void
+}
 
-function FiltrosPedidos({ filtroAtivo, onFiltroChange }: FiltrosPedidosProps) {
+function FiltrosPedidos({ opcoes, ativo, onChange }: FiltrosPedidosProps) {
     return (
-        <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-hide pb-2">
-            {filtros.map((filtro) => (
+        <div className="scrollbar-hide mb-6 flex gap-2 overflow-x-auto pb-1">
+            {opcoes.map((opcao) => (
                 <button
-                    key={filtro.valor}
+                    key={opcao.valor}
                     type="button"
-                    className={`px-4 py-2 rounded-[25px] border font-semibold text-sm shadow-md
-                        ${
-                            filtroAtivo === filtro.valor
-                                ? "bg-primary text-white border-primary shadow"
-                                : "bg-white text-secondary border-gray-300 hover:bg-gray-50"
-                        }
-                    `}
-                    onClick={() => onFiltroChange(filtro.valor)}
+                    onClick={() => onChange(opcao.valor)}
+                    className={`shrink-0 rounded-full px-4 py-2 text-[13px] font-medium leading-[18px] transition-colors ${
+                        ativo === opcao.valor
+                            ? 'bg-primary text-white'
+                            : 'border border-gray-200 bg-white text-secondary hover:bg-gray-50'
+                    }`}
                 >
-                    {filtro.label}
+                    {opcao.label}
                 </button>
             ))}
         </div>
-    );
+    )
 }
 
 export default FiltrosPedidos

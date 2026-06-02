@@ -22,11 +22,11 @@ interface PedidoResponse {
 }
 
 function formatarData(iso: string): string {
-    return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+    return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'America/Sao_Paulo' })
 }
 
 function formatarHora(iso: string): string {
-    return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })
 }
 
 // Anti-corrupção: traduz o contrato do backend pro modelo que a UI consome.
@@ -36,6 +36,7 @@ function toPedidoView(dto: PedidoResponse): Pedido {
 
     return {
         id: dto.id,
+        usuarioId: dto.usuarioId,
         codigo: dto.codigoRastreamento,
         status: dto.status,
         etapa: ultima?.tipo,
@@ -75,4 +76,18 @@ export async function criarPedido(input: CriarPedidoInput): Promise<Pedido> {
 export async function buscarPedido(id: string): Promise<Pedido> {
     const { data } = await api.get<PedidoResponse>(`/pedidos/${id}`)
     return toPedidoView(data)
+}
+
+export interface InserirEtapaInput {
+    tipo: TipoEtapa
+    descricao: string
+    localizacao?: string
+}
+
+export async function inserirEtapa(id: number, input: InserirEtapaInput): Promise<void> {
+    await api.post(`/pedidos/${id}/etapas`, input)
+}
+
+export async function cancelarPedido(id: number): Promise<void> {
+    await api.delete(`/pedidos/${id}`)
 }

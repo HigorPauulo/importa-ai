@@ -10,6 +10,7 @@ export type TipoEtapa =
   | 'EM_TRANSITO'
   | 'AEROPORTO_DESTINO'
   | 'NO_BRASIL'
+  | 'TAXA'
   | 'CD_BRASIL'
   | 'SAIDA_ENTREGA'
   | 'ENTREGUE'
@@ -25,6 +26,7 @@ export type Moeda = 'BRL' | 'USD' | 'CNY' | 'EUR'
 
   export interface Pedido {
     id: number
+    usuarioId?: number
     codigo: string
     status: StatusPedido
     etapa?: TipoEtapa

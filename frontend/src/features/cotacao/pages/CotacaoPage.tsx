@@ -1,65 +1,37 @@
-import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import Footer from '@/components/Footer'
-import backIcon from '@/assets/icon-back.svg'
+import { PageHeader } from '@/components/layout/PageHeader'
 import CardMoeda from '@/features/cotacao/components/CardMoeda'
 import CardMoedaPrincipal from '@/features/cotacao/components/CardMoedaPrincipal'
 import { buscarCotacoes } from '@/services/cotacao'
 
 function CotacaoPage() {
-    const { data: moedas, isLoading, isError } = useQuery({
-        queryKey: ['cotacoes'],
-        queryFn: buscarCotacoes,
-    })
+    const { data: moedas, isLoading, isError } = useQuery({ queryKey: ['cotacoes'], queryFn: buscarCotacoes })
 
     const principal = moedas?.find((m) => m.sigla === 'USD')
     const outras = moedas?.filter((m) => m.sigla !== 'USD') ?? []
 
     return (
-        <div className="min-h-dvh bg-background flex flex-col px-5">
-            <header className="w-full max-w-3xl mx-auto flex items-center justify-between my-8 pt-5">
-                <Link to="/dashboard">
-                    <div className="w-10 lg:w-13 h-10 lg:h-13 bg-white shadow-md rounded-[5px] flex items-center justify-center">
-                        <figure>
-                            <img src={backIcon} alt="Voltar" className="h-5 lg:h-7" />
-                        </figure>
-                    </div>
-                </Link>
-            </header>
+        <>
+            <PageHeader titulo="Cotação de câmbio" subtitulo="Valores atualizados para conversão em BRL." />
 
-            <main className="flex-1 flex justify-center">
-                <div className="w-full max-w-3xl">
-                    <header className="mb-6">
-                        <h2 className="text-2xl font-bold mb-2">Cotação de câmbio</h2>
-                        <p className="text-secondary">Valores atualizados para conversão em BRL.</p>
-                    </header>
+            {isLoading && <p className="text-secondary">Carregando cotações...</p>}
+            {isError && <p className="text-error">Não foi possível carregar as cotações.</p>}
 
-                    {isLoading && <p className="text-center text-secondary">Carregando cotações...</p>}
-                    {isError && <p className="text-center text-error">Não foi possível carregar as cotações.</p>}
+            {!isLoading && !isError && (
+                <>
+                    {principal && <CardMoedaPrincipal moeda={principal} />}
 
-                    {!isLoading && !isError && (
-                        <>
-                            {principal && <CardMoedaPrincipal moeda={principal} />}
-
-                            <div className="mt-10">
-                                <h3 className="text-lg lg:text-xl font-semibold mb-2">Outras moedas</h3>
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-2">
-                                    {outras.map((moeda) => (
-                                        <CardMoeda key={moeda.sigla} moeda={moeda} />
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="mt-10 bg-primary-light p-5 rounded-[5px]">
-                                <p className="text-sm"><span className="font-bold">Atenção:</span> Estes valores são para referência baseada em APIs de câmbio comercial e podem variar de acordo com o IOF e taxas do seu cartão.</p>
-                            </div>
-                        </>
-                    )}
-                </div>
-            </main>
-
-            <Footer />
-        </div>
+                    <section className="mt-6">
+                        <h2 className="mb-3 text-[20px] font-semibold leading-[28px] text-ink">Outras moedas</h2>
+                        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                            {outras.map((moeda) => (
+                                <CardMoeda key={moeda.sigla} moeda={moeda} />
+                            ))}
+                        </div>
+                    </section>
+                </>
+            )}
+        </>
     )
 }
 

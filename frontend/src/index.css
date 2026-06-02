@@ -8,21 +8,24 @@
     /* Esquema de Cores — Importa Aí */
 
     /* Primárias */
-    --color-primary: #0D6EFD;        
-    --color-primary-dark: #0A3B8C;    
-    --color-primary-light: #CFE2FF;   
-    --color-secondary: #6C757D;     
-    --color-background: #F3F4F6;    
+    --color-primary: #0D6EFD;
+    --color-primary-dark: #0A3B8C;
+    --color-primary-light: #CFE2FF;
+    --color-secondary: #6C757D;
+    --color-background: #F3F4F6;
+
+    --color-ink: #1A1A1A;
+    --color-muted: #4B5563;
 
     /* Sucesso, Aviso, Erro, Info */
-    --color-success: #22C55E;        
+    --color-success: #22C55E;
     --color-success-bg: #D1FAE5;
     --color-success-dark: #065F46;
 
-    --color-warning: #F59E42;       
+    --color-warning: #F59E42;
     --color-warning-bg: #FEF3C7;
 
-    --color-error: #DC2626;           
+    --color-error: #DC2626;
     --color-error-bg: #FFE6E6;
 
     /* Status do Pedido */
@@ -54,6 +57,10 @@
     --color-etapa-no-brasil-bg: var(--color-success-bg);
     --color-etapa-no-brasil-text: var(--color-success-dark);
 
+    /* TAXA deriva status ENVIADO, mas exige ação do usuário (pagamento) → tom de aviso */
+    --color-etapa-taxa-bg: var(--color-warning-bg);
+    --color-etapa-taxa-text: var(--color-warning);
+
     --color-etapa-cd-brasil-bg: var(--color-success-bg);
     --color-etapa-cd-brasil-text: var(--color-success-dark);
 
@@ -65,8 +72,18 @@
 
 }
 
+body {
+    background-color: var(--color-background);
+    color: var(--color-ink);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
 /* Entrada do toast de notificação (NotificacaoContext → ToastContext) */
 @keyframes toast-in {
     from { opacity: 0; transform: translateX(1rem); }
     to   { opacity: 1; transform: translateX(0); }
 }
+
+.scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }

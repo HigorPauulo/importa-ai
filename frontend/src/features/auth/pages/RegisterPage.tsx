@@ -1,20 +1,14 @@
 import RegisterForm from '@/features/auth/components/RegisterForm'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
+import { AuthLayout } from '@/components/layout/AuthLayout'
 
 function RegisterPage() {
     return (
-        <div className="min-h-dvh bg-background flex flex-col px-5">
-            <Header />
-
-            <main className="flex-1 flex items-center justify-center">
-                <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-                    <RegisterForm />
-                </div>
-            </main>
-            
-            <Footer />
-        </div>
+        <AuthLayout
+            titulo="Crie sua conta"
+            subtitulo="Junte-se ao Importa Aí e acompanhe todas as suas importações em um só lugar."
+        >
+            <RegisterForm />
+        </AuthLayout>
     )
 }
 

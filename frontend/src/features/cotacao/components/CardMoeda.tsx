@@ -6,20 +6,19 @@ interface CardMoedaProps {
 
 function CardMoeda({ moeda }: CardMoedaProps) {
     return (
-        <div className="bg-white flex items-center justify-between shadow-md rounded-[5px] p-5">
-            <div className="flex items-center gap-2">
-                <div>
-                    <span className="text-xl lg:text-2xl font-light px-2 py-1">{moeda.sigla.slice(0, 2)}</span>
-                </div>
-                <div>
-                    <h3 className="text-xl lg:text-2xl font-bold">{moeda.nome}</h3>
-                    <p className="text-base lg:text-lg text-secondary">{moeda.sigla} / BRL</p>
-                </div>
+        <div className="flex items-center gap-4 rounded-[10px] bg-white p-5 shadow-[0px_1px_2px_rgba(0,0,0,0.08)]">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-[13px] font-bold text-white">
+                {moeda.sigla.slice(0, 2)}
             </div>
 
-            <div>
-                <p className="text-xl lg:text-2xl font-bold">{moeda.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+            <div className="flex-1">
+                <p className="text-[15px] font-semibold leading-[22px] text-ink">{moeda.nome}</p>
+                <p className="text-[12px] leading-[16px] text-secondary">{moeda.sigla} / BRL</p>
             </div>
+
+            <p className="text-[16px] font-bold leading-[24px] text-primary">
+                {moeda.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            </p>
         </div>
     )
 }

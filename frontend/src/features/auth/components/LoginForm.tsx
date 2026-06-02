@@ -16,7 +16,7 @@ function LoginForm() {
         setErroLogin(null)
         try {
             const perfil = await login(data.email, data.senha)
-            navigate(perfil === 'ADMINISTRADOR' ? '/admin/dashboard' : '/dashboard')
+            navigate(perfil === 'ADMINISTRADOR' ? '/admin' : '/dashboard')
         } catch {
             setErroLogin('Email ou senha inválidos.')
         }
@@ -24,17 +24,24 @@ function LoginForm() {
 
     return (
         <div>
-            <h2 className="text-2xl font-bold mb-6 text-center">Acessar Conta</h2>
+            <h2 className="text-[28px] font-bold leading-[36px] text-ink">Acessar Conta</h2>
+            <p className="mt-1 text-[15px] leading-[22px] text-secondary">Bem-vindo de volta! Entre com suas credenciais.</p>
 
-            <form onSubmit={handleSubmit(onSubmit)}>
-                <Input label="Email" name="email" type="email" error={errors.email?.message}
+            <form onSubmit={handleSubmit(onSubmit)} className="mt-5 space-y-5">
+                <Input label="E-mail" type="email" placeholder="seuemail@exemplo.com" error={errors.email?.message}
                        {...register('email', { required: 'Email é obrigatório' })} />
 
-                <Input label="Senha" name="senha" type="password" error={errors.senha?.message}
+                <Input label="Senha" type="password" placeholder="••••••••••" error={errors.senha?.message}
                        {...register('senha', { required: 'Senha é obrigatória' })} />
 
+                <div className="flex justify-end">
+                    <button type="button" className="text-[13px] font-semibold text-primary hover:underline">
+                        Esqueceu sua senha?
+                    </button>
+                </div>
+
                 {erroLogin && (
-                    <div role="alert" className="bg-error-bg border border-error rounded-md p-3 mb-4">
+                    <div role="alert" className="rounded-[5px] border border-error bg-error-bg p-3">
                         <p className="text-sm text-error">{erroLogin}</p>
                     </div>
                 )}
@@ -42,7 +49,9 @@ function LoginForm() {
                 <Button type="submit" fullWidth loading={isSubmitting}>Entrar</Button>
             </form>
 
-            <p className="text-center text-sm mt-8">Não tem uma conta?<Link to="/register" className="text-primary">Cadastre-se</Link></p>
+            <p className="mt-5 text-[13px] text-secondary">
+                Não tem uma conta? <Link to="/register" className="font-semibold text-primary hover:underline">Cadastre-se</Link>
+            </p>
         </div>
     )
 }

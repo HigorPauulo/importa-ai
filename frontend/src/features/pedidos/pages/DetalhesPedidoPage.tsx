@@ -1,12 +1,16 @@
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { buscarPedido } from '@/services/pedidos'
-import Footer from '@/components/Footer'
-import backIcon from '@/assets/icon-back.svg'
-import starIcon from '@/assets/icon-star.svg'
+import { buscarCotacao } from '@/services/cotacao'
+import { useToast } from '@/context/ToastContext'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { Button } from '@/components/ui/Button'
+import { PedidoResumoCard } from '@/features/pedidos/components/PedidoResumoCard'
+import { Timeline } from '@/features/pedidos/components/Timeline'
 
 function DetalhesPedidoPage() {
     const { id } = useParams()
+    const { showToast } = useToast()
 
     const { data: pedido, isLoading, isError } = useQuery({
         queryKey: ['pedido', id],
@@ -14,120 +18,52 @@ function DetalhesPedidoPage() {
         enabled: !!id,
     })
 
+    const moeda = pedido?.moeda
+    const { data: cotacao } = useQuery({
+        queryKey: ['cotacao', moeda],
+        queryFn: () => buscarCotacao(moeda!),
+        enabled: !!moeda && moeda !== 'BRL',
+    })
+
+    const valorBrl =
+        pedido?.valorEstimado != null && cotacao
+            ? (pedido.valorEstimado * cotacao.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+            : undefined
+
+    const compartilhar = async () => {
+        try {
+            await navigator.clipboard.writeText(window.location.href)
+            showToast('Link de rastreio copiado para a área de transferência.')
+        } catch {
+            showToast('Não foi possível copiar o link.')
+        }
+    }
+
     return (
-        <div className="min-h-dvh bg-background flex flex-col px-5">
-            <header className="w-full max-w-3xl mx-auto flex items-center justify-between my-8 pt-5">
-                <Link to="/pedidos">
-                    <div className="w-10 lg:w-13 h-10 lg:h-13 bg-white shadow-md rounded-[5px] flex items-center justify-center">
-                        <figure>
-                            <img src={backIcon} alt="Voltar" className="h-5 lg:h-7" />
-                        </figure>
-                    </div>
-                </Link>
-            </header>
+        <>
+            <Link to="/pedidos" className="mb-2 inline-block text-sm text-secondary hover:text-primary">
+                ← Voltar para encomendas
+            </Link>
+            <PageHeader titulo="Detalhes do pedido" />
 
-            <main className="flex-1 flex justify-center">
-                <div className="w-full max-w-3xl">
-                    {isLoading && <p className="text-center text-secondary mt-10">Carregando detalhes...</p>}
-                    {(isError || (!isLoading && !pedido)) && (
-                        <p className="text-center text-secondary mt-10">Pedido não encontrado.</p>
-                    )}
+            {isLoading && <p className="text-secondary">Carregando detalhes...</p>}
+            {(isError || (!isLoading && !pedido)) && <p className="text-secondary">Pedido não encontrado.</p>}
 
-                    {pedido && (
-                    <>
-                    <header className="mb-6">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-2xl font-bold">Detalhes do pedido</h2>
-                        </div>
-                    </header>
+            {pedido && (
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,400px)_1fr]">
+                    <PedidoResumoCard pedido={pedido} valorBrl={valorBrl}>
+                        <Button variant="primary" fullWidth onClick={compartilhar}>
+                            Compartilhar Rastreio
+                        </Button>
+                    </PedidoResumoCard>
 
-                    <div className="mt-10">
-                        <div className="bg-white flex flex-col gap-4 justify-between shadow-md rounded-[5px] p-5">
-                            <header className="flex items-center gap-4">
-                                <figure>
-                                    <img src={starIcon} alt="Star" className="h-10 lg:h-16" />
-                                </figure>
-
-                                <div>
-                                    <h3 className="text-lg lg:text-xl font-semibold mb-1">{pedido.produto}</h3>
-                                    <span className="text-base text-secondary">{pedido.codigo}</span>
-                                </div>
-                            </header>
-
-                            <div className="flex items-center justify-between mt-5 border-t border-primary-light pt-4">
-                                <div className="text-center">
-                                    <span className="text-sm text-secondary uppercase">Origem</span>
-                                    <p className="text-base font-bold">{pedido.origem}</p>
-                                </div>
-
-                                <div className="text-center">
-                                    <span className="text-sm text-secondary uppercase">Valor estimado</span>
-                                    <p className="text-base font-bold">{pedido.valorEstimado?.toLocaleString('pt-BR', { style: 'currency', currency: pedido.moeda ?? 'BRL' })}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="mt-10">
-                            <h3 className="text-lg lg:text-xl font-semibold mb-4">Histórico de Rastreio</h3>
-
-                            <div className="relative pl-6">
-                                {/* Linha azul na esquerda */}
-                                <div className="absolute left-2.5 top-0.7 h-full w-0.5 bg-primary-light rounded z-0" style={{ minHeight: '100%' }} />
-
-                                <ul className="flex flex-col gap-8 relative z-10">
-                                    {pedido.historico?.map((etapa, idx) => {
-                                        const isFirst = idx === 0;
-
-                                        return (
-                                            <li
-                                                key={etapa.data + etapa.hora + etapa.descricao + etapa.local}
-                                                className="relative"
-                                            >
-                                                {/* Círculo de etapa */}
-                                                <span
-                                                    className={
-                                                        "absolute -left-5.5 top-0.5 w-4 h-4 rounded-full border-2 " +
-                                                        (isFirst
-                                                            ? "bg-primary border-white"
-                                                            : "bg-secondary border-white")
-                                                    }
-                                                />
-
-                                                {/* Card e conteúdo */}
-                                                <div
-                                                    className={
-                                                        isFirst
-                                                            ? "bg-white flex flex-col gap-1 shadow-md rounded-[5px] p-5 ml-2"
-                                                            : "ml-2"
-                                                    }
-                                                >
-                                                    <div className={
-                                                        "text-sm " +
-                                                        (isFirst
-                                                            ? "text-primary text-base"
-                                                            : "text-secondary text-sm")
-                                                    }>
-                                                        <span className="font-bold">{etapa.data} - {etapa.hora}</span>
-                                                    </div>
-                                                    <p className={"text-base font-bold" + (isFirst ? "" : " text-secondary")}>
-                                                        {etapa.descricao}
-                                                    </p>
-                                                    <p className="text-base text-secondary">{etapa.local}</p>
-                                                </div>
-                                            </li>
-                                        );
-                                    })}
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    </>
-                    )}
+                    <section className="rounded-[10px] bg-white p-6 shadow-[0px_1px_2px_rgba(0,0,0,0.08)]">
+                        <h2 className="mb-4 text-[18px] font-semibold leading-[26px] text-ink">Histórico de Rastreio</h2>
+                        <Timeline historico={pedido.historico} />
+                    </section>
                 </div>
-            </main>
-
-            <Footer />
-        </div>
+            )}
+        </>
     )
 }
 

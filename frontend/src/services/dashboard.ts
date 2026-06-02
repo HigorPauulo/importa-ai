@@ -7,12 +7,18 @@ export interface StatusKpi {
     percentual: number
 }
 
+export interface PontoEvolucao {
+    dia: string
+    total: number
+}
+
 export interface Dashboard {
     totalAtivos: number
     taxaPendente: number
     entreguesNoMes: number
     total: number
     porStatus: StatusKpi[]
+    evolucao: PontoEvolucao[]
 }
 
 export async function buscarDashboard(): Promise<Dashboard> {

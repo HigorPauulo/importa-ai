@@ -1,12 +1,19 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, type ReactNode } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/context/ToastContext'
 import { criarClienteStomp } from '@/services/stomp'
+import { listarNotificacoes, marcarTodasComoLidas } from '@/services/notificacoes'
 import type { Notificacao } from '@/types/notificacao'
+
+const QUERY_KEY = ['notificacoes'] as const
 
 interface NotificacaoContextType {
     notificacoes: Notificacao[]
     naoLidas: number
+    carregando: boolean
+    erro: boolean
+    marcarTodasComoLidas: () => void
 }
 
 const NotificacaoContext = createContext<NotificacaoContextType | undefined>(undefined)
@@ -14,32 +21,65 @@ const NotificacaoContext = createContext<NotificacaoContextType | undefined>(und
 export function NotificacaoProvider({ children }: { children: ReactNode }) {
     const { isAuthenticated } = useAuth()
     const { showToast } = useToast()
-    const [notificacoes, setNotificacoes] = useState<Notificacao[]>([])
+    const queryClient = useQueryClient()
 
+    // Histórico persistido é a fonte de verdade; só busca com sessão ativa.
+    const { data: notificacoes = [], isLoading, isError } = useQuery({
+        queryKey: QUERY_KEY,
+        queryFn: listarNotificacoes,
+        enabled: isAuthenticated,
+    })
+
+    // O WebSocket empurra as notificações novas pro MESMO cache do React Query,
+    // mantendo lista e badge do sino em sincronia (uma única fonte de verdade).
     useEffect(() => {
-        // só conecta o WebSocket quando há usuário logado
         if (!isAuthenticated) {
-            setNotificacoes([])
+            queryClient.removeQueries({ queryKey: QUERY_KEY })
             return
         }
 
         const client = criarClienteStomp((nova) => {
-            // mais recente no topo
-            setNotificacoes((anteriores) => [nova, ...anteriores])
+            queryClient.setQueryData<Notificacao[]>(QUERY_KEY, (anteriores = []) => {
+                // idempotência no front: ignora reentrega do mesmo id (espelha RN04)
+                if (anteriores.some((n) => n.id === nova.id)) return anteriores
+                return [nova, ...anteriores]
+            })
             showToast(nova.mensagem)
         })
         client.activate()
 
-        // ao deslogar/desmontar, encerra a conexão STOMP
         return () => {
             void client.deactivate()
         }
-    }, [isAuthenticated, showToast])
+    }, [isAuthenticated, showToast, queryClient])
+
+    // Marca todas como lidas de forma otimista — a UI reage na hora; rollback se falhar.
+    const { mutate: marcarLidas } = useMutation({
+        mutationFn: marcarTodasComoLidas,
+        onMutate: () => {
+            const anteriores = queryClient.getQueryData<Notificacao[]>(QUERY_KEY)
+            queryClient.setQueryData<Notificacao[]>(QUERY_KEY, (atual = []) =>
+                atual.map((n) => (n.lida ? n : { ...n, lida: true })),
+            )
+            return { anteriores }
+        },
+        onError: (_erro, _vars, contexto) => {
+            if (contexto?.anteriores) queryClient.setQueryData(QUERY_KEY, contexto.anteriores)
+        },
+    })
 
     const naoLidas = notificacoes.filter((n) => !n.lida).length
 
     return (
-        <NotificacaoContext.Provider value={{ notificacoes, naoLidas }}>
+        <NotificacaoContext.Provider
+            value={{
+                notificacoes,
+                naoLidas,
+                carregando: isLoading,
+                erro: isError,
+                marcarTodasComoLidas: marcarLidas,
+            }}
+        >
             {children}
         </NotificacaoContext.Provider>
     )

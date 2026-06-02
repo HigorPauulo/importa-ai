@@ -13,7 +13,7 @@ interface CotacaoResponse {
 
 // Nome e país são apresentação — o backend só devolve o código da moeda.
 const META: Record<string, { nome: string; pais: string }> = {
-    USD: { nome: 'Dólar Americano', pais: 'Estados Unidos' },
+    USD: { nome: 'Dólar Comercial', pais: 'Estados Unidos' },
     EUR: { nome: 'Euro', pais: 'União Europeia' },
     CNY: { nome: 'Yuan Chinês', pais: 'China' },
 }
@@ -48,4 +48,19 @@ export async function buscarCotacoes(): Promise<Moeda[]> {
     return resultados
         .filter((r): r is PromiseFulfilledResult<Moeda> => r.status === 'fulfilled')
         .map((r) => r.value)
+}
+
+export interface CotacaoManualInput {
+    moedaOrigem: TipoMoeda
+    taxa: number
+    validoAte?: string
+}
+
+export async function definirCotacaoManual(input: CotacaoManualInput): Promise<void> {
+    await api.post('/admin/cotacoes', {
+        moedaOrigem: input.moedaOrigem,
+        moedaDestino: 'BRL',
+        taxa: input.taxa,
+        validoAte: input.validoAte ?? null,
+    })
 }
