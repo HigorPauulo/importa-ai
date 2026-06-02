@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { IconChevronLeft } from '@/components/layout/icons'
+import { HeaderActions } from '@/components/layout/HeaderActions'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/context/ToastContext'
@@ -35,7 +36,10 @@ function AdminDetalhePedidoPage() {
                 <Link to="/admin/pedidos" aria-label="Voltar" className="-ml-1 text-secondary hover:text-ink">
                     <IconChevronLeft className="h-7 w-7" />
                 </Link>
-                <h1 className="text-[22px] font-bold leading-[30px] text-ink lg:text-[28px] lg:leading-[36px]">Detalhes do pedido</h1>
+                <h1 className="flex-1 text-[22px] font-bold leading-[30px] text-ink lg:text-[28px] lg:leading-[36px]">Detalhes do pedido</h1>
+                <div className="lg:hidden">
+                    <HeaderActions />
+                </div>
             </div>
 
             {isLoading && <p className="text-secondary">Carregando detalhes...</p>}

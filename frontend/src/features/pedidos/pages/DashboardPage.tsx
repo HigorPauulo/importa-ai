@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { PageHeader } from '@/components/layout/PageHeader'
-import { HeaderActions } from '@/components/layout/HeaderActions'
+import { PageHeader, BellButton } from '@/components/layout/PageHeader'
 import { KpiCard } from '@/components/ui/KpiCard'
 import CardPedido from '@/features/pedidos/components/CardPedido'
 import { listarPedidos } from '@/services/pedidos'
@@ -32,7 +31,7 @@ function DashboardPage() {
 
     return (
         <>
-            <PageHeader titulo={`Olá, ${nome}`} subtitulo="Acompanhe suas encomendas e cotações." acao={<HeaderActions />} />
+            <PageHeader titulo={`Olá, ${nome}`} subtitulo="Acompanhe suas encomendas e cotações." acao={<BellButton />} />
 
             <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
                 <KpiCard titulo="Encomendas ativas" valor={ativas} />

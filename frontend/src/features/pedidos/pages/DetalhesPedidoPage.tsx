@@ -4,6 +4,7 @@ import { buscarPedido } from '@/services/pedidos'
 import { buscarCotacao } from '@/services/cotacao'
 import { useToast } from '@/context/ToastContext'
 import { IconChevronLeft } from '@/components/layout/icons'
+import { HeaderActions } from '@/components/layout/HeaderActions'
 import { Button } from '@/components/ui/Button'
 import { PedidoResumoCard } from '@/features/pedidos/components/PedidoResumoCard'
 import { Timeline } from '@/features/pedidos/components/Timeline'
@@ -46,7 +47,10 @@ function DetalhesPedidoPage() {
                 <Link to="/pedidos" aria-label="Voltar" className="-ml-1 text-secondary hover:text-ink">
                     <IconChevronLeft className="h-7 w-7" />
                 </Link>
-                <h1 className="text-[22px] font-bold leading-[30px] text-ink lg:text-[28px] lg:leading-[36px]">Detalhes do pedido</h1>
+                <h1 className="flex-1 text-[22px] font-bold leading-[30px] text-ink lg:text-[28px] lg:leading-[36px]">Detalhes do pedido</h1>
+                <div className="lg:hidden">
+                    <HeaderActions />
+                </div>
             </div>
 
             {isLoading && <p className="text-secondary">Carregando detalhes...</p>}

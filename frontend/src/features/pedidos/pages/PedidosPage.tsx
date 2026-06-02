@@ -32,6 +32,13 @@ function PedidosPage() {
 
             <FiltrosPedidos opcoes={opcoes} ativo={filtro} onChange={(v) => setFiltro(v as FiltroPedido)} />
 
+            <Link
+                to="/cadastrar-encomendas"
+                className="mb-4 flex h-11 w-full items-center justify-center rounded-[8px] bg-primary text-[14px] font-medium text-white transition-colors hover:bg-primary-dark lg:hidden"
+            >
+                + Nova encomenda
+            </Link>
+
             {isLoading && <p className="text-secondary">Carregando encomendas...</p>}
             {isError && <p className="text-error">Não foi possível carregar suas encomendas.</p>}
             {!isLoading && !isError && filtrados.length === 0 && (

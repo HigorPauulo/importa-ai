@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { PageHeader } from '@/components/layout/PageHeader'
-import { HeaderActions } from '@/components/layout/HeaderActions'
+import { PageHeader, BellButton } from '@/components/layout/PageHeader'
 import { KpiCard } from '@/components/ui/KpiCard'
 import { Card } from '@/components/ui/Card'
 import CardPedido from '@/features/pedidos/components/CardPedido'
@@ -18,7 +17,7 @@ function AdminPainelPage() {
 
     return (
         <>
-            <PageHeader titulo="Painel administrativo" subtitulo="Visão geral do fluxo de pacotes." acao={<HeaderActions estatico />} />
+            <PageHeader titulo="Painel administrativo" subtitulo="Visão geral do fluxo de pacotes." acao={<BellButton estatico />} />
 
             {isLoading && <p className="text-secondary">Carregando indicadores...</p>}
             {isError && <p className="text-error">Não foi possível carregar o painel.</p>}

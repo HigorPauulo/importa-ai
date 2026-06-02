@@ -32,6 +32,17 @@ function NotificacoesPage() {
             />
 
             <div className="max-w-3xl">
+                {naoLidas > 0 && (
+                    <div className="mb-3 flex justify-end lg:hidden">
+                        <button
+                            type="button"
+                            onClick={() => marcarTodasComoLidas()}
+                            className="text-[13px] font-semibold text-primary hover:underline"
+                        >
+                            Marcar todas como lidas
+                        </button>
+                    </div>
+                )}
                 {carregando && <p className="text-secondary">Carregando notificações...</p>}
                 {erro && <p className="text-error">Não foi possível carregar as notificações.</p>}
 

@@ -1,21 +1,22 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { BellButton } from './PageHeader'
+import { BellButton } from './BellButton'
 import { useAuth } from '@/context/AuthContext'
 import { nomeExibicao, iniciais } from '@/lib/usuario'
 import { buscarMeuPerfil } from '@/services/perfil'
 import { EditarPerfilModal } from '@/features/perfil/components/EditarPerfilModal'
 
-export function HeaderActions({ estatico = false }: { estatico?: boolean }) {
+export function HeaderActions({ estatico }: { estatico?: boolean }) {
     const { email, perfil } = useAuth()
     const { data: meuPerfil } = useQuery({ queryKey: ['me'], queryFn: buscarMeuPerfil })
     const [editando, setEditando] = useState(false)
 
     const nome = meuPerfil?.nome ?? nomeExibicao(email, perfil)
+    const semLink = estatico ?? perfil === 'ADMINISTRADOR'
 
     return (
         <div className="flex items-center gap-3">
-            <BellButton estatico={estatico} />
+            <BellButton estatico={semLink} />
             <button
                 type="button"
                 onClick={() => setEditando(true)}
