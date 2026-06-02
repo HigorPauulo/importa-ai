@@ -2,6 +2,7 @@ export type StatusPedido =
   | 'PROCESSANDO'
   | 'ENVIADO'
   | 'ENTREGUE'
+  | 'DEVOLVIDO'
   | 'CANCELADO'
 
 export type TipoEtapa =
@@ -14,6 +15,7 @@ export type TipoEtapa =
   | 'CD_BRASIL'
   | 'SAIDA_ENTREGA'
   | 'ENTREGUE'
+  | 'DEVOLVIDO'
 
 export type Moeda = 'BRL' | 'USD' | 'CNY' | 'EUR'
 

@@ -6,6 +6,7 @@ public enum StatusPedido {
     PROCESSANDO,
     ENVIADO,
     ENTREGUE,
+    DEVOLVIDO,
     CANCELADO;
 
     public static StatusPedido derivar(Optional<TipoEtapa> ultimaEtapa, boolean cancelado) {
@@ -18,6 +19,7 @@ public enum StatusPedido {
         return switch (ultimaEtapa.get()) {
             case NA_CHINA -> PROCESSANDO;
             case ENTREGUE -> ENTREGUE;
+            case DEVOLVIDO -> DEVOLVIDO;
             case AEROPORTO_ORIGEM, EM_TRANSITO, AEROPORTO_DESTINO,
                  NO_BRASIL, TAXA, CD_BRASIL, SAIDA_ENTREGA -> ENVIADO;
         };

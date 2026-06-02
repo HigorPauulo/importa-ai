@@ -76,4 +76,30 @@ public class PedidoTest {
                 .isThrownBy(() -> pedido.adicionarEtapa(nova));
     }
 
+    @Test
+    @DisplayName("etapa DEVOLVIDO deriva status DEVOLVIDO")
+    void adicionarEtapaDevolvido_statusDevolvido() {
+        Pedido pedido = new Pedido(1L, "BR123456789", "Computador", T0);
+        pedido.adicionarEtapa(new EtapaRastreamento(
+                TipoEtapa.NO_BRASIL, T1, "Valinhos / SP", null));
+        pedido.adicionarEtapa(new EtapaRastreamento(
+                TipoEtapa.DEVOLVIDO, T2, "Valinhos / SP", "Devolução determinada pela autoridade competente"));
+
+        assertThat(pedido.getStatus()).isEqualTo(StatusPedido.DEVOLVIDO);
+    }
+
+    @Test
+    @DisplayName("rejeita adicionar etapa apos DEVOLVIDO (terminal)")
+    void rejeitaEtapaAposDevolvido() {
+        Pedido pedido = new Pedido(1L, "BR123456789", "Computador", T0);
+        pedido.adicionarEtapa(new EtapaRastreamento(
+                TipoEtapa.DEVOLVIDO, T1, "Valinhos / SP", null));
+
+        EtapaRastreamento nova = new EtapaRastreamento(
+                TipoEtapa.ENTREGUE, T2, "Goiania, BR", null);
+
+        assertThatExceptionOfType(PedidoImutavelException.class)
+                .isThrownBy(() -> pedido.adicionarEtapa(nova));
+    }
+
 }

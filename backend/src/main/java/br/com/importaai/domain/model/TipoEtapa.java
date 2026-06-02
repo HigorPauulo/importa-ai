@@ -9,5 +9,6 @@ public enum TipoEtapa {
     TAXA,
     CD_BRASIL,
     SAIDA_ENTREGA,
-    ENTREGUE
+    ENTREGUE,
+    DEVOLVIDO
 }

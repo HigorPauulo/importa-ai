@@ -31,9 +31,8 @@ public class SincronizarRastreamentoService implements SincronizarRastreamentoUs
     public int executar() {
         int atualizados = 0;
         for (Pedido pedido : pedidoRepository.listarNaoCancelados()) {
-            // so o pedido entregue e terminal; qualquer outro ativo deve ser
-            // consultado para que a fonte de rastreamento alimente as etapas.
-            if (pedido.getStatus() == StatusPedido.ENTREGUE) {
+            StatusPedido status = pedido.getStatus();
+            if (status == StatusPedido.ENTREGUE || status == StatusPedido.DEVOLVIDO) {
                 continue;
             }
             if (sincronizar(pedido)) {

@@ -22,7 +22,8 @@ public class StatusPedidoTest {
             "TAXA,               false, ENVIADO",
             "CD_BRASIL,          false, ENVIADO",
             "SAIDA_ENTREGA,      false, ENVIADO",
-            "ENTREGUE,           false, ENTREGUE"
+            "ENTREGUE,           false, ENTREGUE",
+            "DEVOLVIDO,          false, DEVOLVIDO"
     })
     @DisplayName("derivar segue a tabela normativa do Apêndice A — caminho não cancelado")
     void derivar_segueTabelaApendiceA(TipoEtapa ultimaEtapa, boolean cancelado, StatusPedido esperado) {

@@ -41,6 +41,9 @@
     --color-status-cancelado-bg: var(--color-error-bg);
     --color-status-cancelado-text: var(--color-error);
 
+    --color-status-devolvido-bg: var(--color-error-bg);
+    --color-status-devolvido-text: var(--color-error);
+
     /* Etapas de Rastreamento */
     --color-etapa-na-china-bg: var(--color-primary-light);
     --color-etapa-na-china-text: var(--color-primary-dark);
@@ -69,6 +72,9 @@
 
     --color-etapa-entregue-bg: var(--color-success-bg);
     --color-etapa-entregue-text: var(--color-success-dark);
+
+    --color-etapa-devolvido-bg: var(--color-error-bg);
+    --color-etapa-devolvido-text: var(--color-error);
 
 }
 

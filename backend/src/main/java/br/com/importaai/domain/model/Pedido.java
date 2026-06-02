@@ -116,7 +116,9 @@ public class Pedido {
     public void adicionarEtapa(EtapaRastreamento etapa) {
         Objects.requireNonNull(etapa, "etapa nao pode ser nula");
         StatusPedido statusAtual = getStatus();
-        if (statusAtual == StatusPedido.ENTREGUE || statusAtual == StatusPedido.CANCELADO) {
+        if (statusAtual == StatusPedido.ENTREGUE
+                || statusAtual == StatusPedido.DEVOLVIDO
+                || statusAtual == StatusPedido.CANCELADO) {
             throw new PedidoImutavelException(
                     "pedido com status " + statusAtual + " nao aceita novas etapas"
             );

@@ -8,6 +8,8 @@ export function getStatusColor(status: StatusPedido) {
             return 'bg-status-enviado-bg text-status-enviado-text'
         case 'ENTREGUE':
             return 'bg-status-entregue-bg text-status-entregue-text'
+        case 'DEVOLVIDO':
+            return 'bg-status-devolvido-bg text-status-devolvido-text'
         case 'CANCELADO':
             return 'bg-status-cancelado-bg text-status-cancelado-text'
     }
@@ -46,6 +48,8 @@ export function getEtapaColor(etapa: TipoEtapa | undefined) {
             return 'bg-etapa-saida-entrega-bg text-etapa-saida-entrega-text border border-etapa-saida-entrega-bg'
         case 'ENTREGUE':
             return 'bg-etapa-entregue-bg text-etapa-entregue-text border border-etapa-entregue-bg'
+        case 'DEVOLVIDO':
+            return 'bg-etapa-devolvido-bg text-etapa-devolvido-text border border-etapa-devolvido-bg'
         default:
             return 'bg-neutral-50 text-neutral-700 border border-neutral-200'
     }
@@ -71,6 +75,8 @@ export function getEtapaLabel(etapa: TipoEtapa | undefined) {
             return 'Saída Entrega'
         case 'ENTREGUE':
             return 'Entregue'
+        case 'DEVOLVIDO':
+            return 'Devolvido'
         default:
             return 'Não definido'
     }
