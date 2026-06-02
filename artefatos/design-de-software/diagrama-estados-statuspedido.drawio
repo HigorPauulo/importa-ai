@@ -91,6 +91,12 @@
         <mxCell id="4SEnNtbIRwwod61QUUVM-44" parent="1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fontColor=#000000;darkOpacity=0.05;fillColor=#FFF9B2;strokeColor=none;fillStyle=solid;direction=west;gradientDirection=north;gradientColor=#FFF2A1;shadow=1;size=20;autosizeText=1;fontSize=14;align=left;fillOpacity=100;spacingLeft=20;" value="&lt;font style=&quot;color: rgb(65, 65, 65);&quot;&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;Etapas que disparam T2:&lt;/span&gt;&lt;br style=&quot;font-size: 10px;&quot;&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;• AEROPORTO_ORIGEM&lt;/span&gt;&lt;br style=&quot;font-size: 10px;&quot;&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;• EM_TRANSITO&lt;/span&gt;&lt;br style=&quot;font-size: 10px;&quot;&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;• AEROPORTO_DESTINO&lt;/span&gt;&lt;br style=&quot;font-size: 10px;&quot;&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;• NO_BRASIL&lt;/span&gt;&lt;br style=&quot;font-size: 10px;&quot;&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;• TAXA&lt;/span&gt;&lt;br style=&quot;font-size: 10px;&quot;&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;• CD_BRASIL&lt;/span&gt;&lt;br style=&quot;font-size: 10px;&quot;&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;• SAIDA_ENTREGA&lt;/span&gt;&lt;/font&gt;" vertex="1">
           <mxGeometry height="160" width="180" x="130" y="390" as="geometry" />
         </mxCell>
+        <mxCell id="4SEnNtbIRwwod61QUUVM-50" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontSize=12;fontStyle=1;" value="DEVOLVIDO" vertex="1">
+          <mxGeometry height="50" width="110" x="850" y="420" as="geometry" />
+        </mxCell>
+        <mxCell id="4SEnNtbIRwwod61QUUVM-51" edge="1" parent="1" source="4SEnNtbIRwwod61QUUVM-5" target="4SEnNtbIRwwod61QUUVM-50" style="html=1;verticalAlign=bottom;endArrow=classic;curved=0;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" value="T6: adicionarEtapa(DEVOLVIDO)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
