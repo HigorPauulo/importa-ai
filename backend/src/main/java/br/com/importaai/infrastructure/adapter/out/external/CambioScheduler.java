@@ -42,7 +42,6 @@ public class CambioScheduler {
                 continue;
             }
             CambioPort.TaxaCambio tx = taxa.get();
-            // cotadoEm = horario da API; atualizadoEm = agora (momento do sync)
             cotacaoRepository.salvar(
                     Cotacao.automatica(origem, Moeda.BRL, tx.taxa(), tx.cotadoEm(), Instant.now()));
             log.debug("cotacao {} -> BRL atualizada: {}", origem, tx.taxa());

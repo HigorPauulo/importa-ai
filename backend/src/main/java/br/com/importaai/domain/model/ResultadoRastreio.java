@@ -2,8 +2,6 @@ package br.com.importaai.domain.model;
 
 import java.util.List;
 
-// Resultado de uma consulta de rastreamento: distingue "achou", "transportadora nao
-// conhece o codigo" e "fonte fora do ar" — cada um leva a uma reacao diferente no sync.
 public record ResultadoRastreio(Situacao situacao, List<EtapaRastreamento> etapas) {
 
     public enum Situacao { OK, NAO_LOCALIZADO, FONTE_INDISPONIVEL }

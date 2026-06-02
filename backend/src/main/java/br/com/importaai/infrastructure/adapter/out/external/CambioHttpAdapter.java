@@ -47,8 +47,6 @@ public class CambioHttpAdapter implements CambioPort {
         }
     }
 
-    // A AwesomeAPI envia "timestamp" em epoch seconds (UTC) = quando o mercado cotou.
-    // Sem esse campo, cai pra agora para nao quebrar a cotacao.
     private Instant lerCotadoEm(JsonNode cotacao) {
         JsonNode timestamp = cotacao.get("timestamp");
         if (timestamp != null && timestamp.asText().matches("\\d+")) {

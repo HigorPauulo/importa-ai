@@ -50,7 +50,7 @@ public class SincronizarRastreamentoService implements SincronizarRastreamentoUs
         boolean mudou = switch (resultado.situacao()) {
             case NAO_LOCALIZADO -> marcarNaoLocalizado(pedido);
             case OK -> aplicarEtapas(pedido, resultado.etapas());
-            case FONTE_INDISPONIVEL -> false; // transitorio: nao altera o pedido
+            case FONTE_INDISPONIVEL -> false;
         };
 
         if (mudou) {
@@ -70,7 +70,6 @@ public class SincronizarRastreamentoService implements SincronizarRastreamentoUs
 
     private boolean aplicarEtapas(Pedido pedido, List<EtapaRastreamento> etapas) {
         boolean mudou = false;
-        // a transportadora achou o objeto: derruba uma marca de "nao localizado" anterior
         if (pedido.isRastreioNaoLocalizado()) {
             pedido.limparRastreioNaoLocalizado();
             mudou = true;

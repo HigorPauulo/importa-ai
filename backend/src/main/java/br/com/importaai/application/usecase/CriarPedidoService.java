@@ -12,8 +12,6 @@ import java.util.regex.Pattern;
 
 public class CriarPedidoService implements CriarPedidoUseCase {
 
-    // Validacao LEVE: codigos internacionais (China Post/Cainiao/marketplace) nao seguem
-    // o padrao UPV "AA999999999BR", entao so exigimos 8-40 caracteres alfanumericos.
     private static final Pattern CODIGO_VALIDO = Pattern.compile("[A-Z0-9]{8,40}");
 
     private final PedidoRepository pedidoRepository;
@@ -43,7 +41,6 @@ public class CriarPedidoService implements CriarPedidoUseCase {
         return salvo;
     }
 
-    // Remove espacos, normaliza caixa alta e rejeita o que e obviamente invalido.
     private static String normalizarCodigo(String bruto) {
         String codigo = bruto == null ? "" : bruto.replaceAll("\\s+", "").toUpperCase();
         if (!CODIGO_VALIDO.matcher(codigo).matches()) {

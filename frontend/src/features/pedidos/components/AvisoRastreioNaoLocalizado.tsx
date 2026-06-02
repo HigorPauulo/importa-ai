@@ -1,4 +1,3 @@
-// Aviso exibido quando a transportadora não reconhece o código (flag vinda do backend).
 export function AvisoRastreioNaoLocalizado() {
     return (
         <div className="flex items-start gap-3 rounded-[8px] border-l-4 border-warning bg-warning-bg p-4">

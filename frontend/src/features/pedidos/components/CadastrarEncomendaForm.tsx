@@ -44,7 +44,6 @@ function CadastrarEncomendaForm() {
                    error={errors.trackingCode?.message}
                    {...register('trackingCode', {
                        required: 'Código de rastreio é obrigatório',
-                       // normaliza antes de validar/enviar: sem espaços, caixa alta (espelha o backend)
                        setValueAs: (v: string) => (v ?? '').replace(/\s+/g, '').toUpperCase(),
                        validate: (v: string) =>
                            /^[A-Z0-9]{8,40}$/.test(v) || 'Use 8 a 40 letras ou números, sem símbolos',

@@ -44,7 +44,6 @@ public final class PedidoEntityMapper {
                 etapas,
                 e.isCancelado()
         );
-        // flag fora do construtor: aplica apos reconstruir o agregado
         if (e.isRastreioNaoLocalizado()) {
             pedido.marcarRastreioNaoLocalizado();
         }

@@ -37,7 +37,6 @@ public class ConsultarCotacaoService implements ConsultarCotacaoUseCase {
         Optional<CambioPort.TaxaCambio> taxaApi = cambioPort.consultarTaxa(input.moedaOrigem(), input.moedaDestino());
         if (taxaApi.isPresent()) {
             CambioPort.TaxaCambio taxa = taxaApi.get();
-            // cotadoEm vem da API; atualizadoEm = agora (controla o TTL do cache-aside)
             Cotacao fresca = cotacaoRepository.salvar(Cotacao.automatica(
                     input.moedaOrigem(), input.moedaDestino(), taxa.taxa(), taxa.cotadoEm(), agora));
             return Optional.of(new Output(fresca, false));

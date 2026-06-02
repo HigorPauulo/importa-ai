@@ -8,8 +8,8 @@ interface CotacaoResponse {
     taxa: number
     manual: boolean
     desatualizada: boolean
-    atualizadoEm: string // quando o backend sincronizou (controla o cache)
-    cotadoEm: string // quando a API cotou de fato — base do "há X min"
+    atualizadoEm: string
+    cotadoEm: string
 }
 
 // Nome e país são apresentação — o backend só devolve o código da moeda.
@@ -19,7 +19,6 @@ const META: Record<string, { nome: string; pais: string }> = {
     CNY: { nome: 'Yuan Chinês', pais: 'China' },
 }
 
-// Tempo decorrido desde o instante em que a API cotou (cotadoEm vem em UTC, ISO-8601).
 function tempoDesde(iso: string): string {
     const min = Math.round((Date.now() - new Date(iso).getTime()) / 60000)
     if (min <= 0) return 'agora mesmo'

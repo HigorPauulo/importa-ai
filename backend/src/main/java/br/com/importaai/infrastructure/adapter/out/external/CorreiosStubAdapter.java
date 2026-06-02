@@ -41,7 +41,6 @@ public class CorreiosStubAdapter implements RastreamentoCorreiosPort {
                         marco.tipo(), momento, marco.localizacao(), marco.descricao()));
             }
         }
-        // o stub sempre "encontra" o objeto (simulacao de demonstracao China->Brasil)
         return ResultadoRastreio.ok(etapas);
     }
 }
