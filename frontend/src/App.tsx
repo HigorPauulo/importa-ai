@@ -5,6 +5,8 @@ import { navCliente, navAdmin, bottomNavCliente, bottomNavAdmin } from '@/compon
 
 import LoginPage from '@/features/auth/pages/LoginPage'
 import RegisterPage from '@/features/auth/pages/RegisterPage'
+import TermosDeUsoPage from '@/features/legal/pages/TermosDeUsoPage'
+import PoliticaPrivacidadePage from '@/features/legal/pages/PoliticaPrivacidadePage'
 
 import DashboardPage from '@/features/pedidos/pages/DashboardPage'
 import PedidosPage from '@/features/pedidos/pages/PedidosPage'
@@ -27,6 +29,8 @@ function App() {
                 <Route path="/" element={<Navigate to="/login" replace />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
+                <Route path="/termos-de-uso" element={<TermosDeUsoPage />} />
+                <Route path="/politica-de-privacidade" element={<PoliticaPrivacidadePage />} />
 
                 <Route element={<PrivateRoute><AppLayout nav={navCliente} bottomNav={bottomNavCliente} /></PrivateRoute>}>
                     <Route path="/dashboard" element={<DashboardPage />} />
