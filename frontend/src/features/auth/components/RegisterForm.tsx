@@ -41,16 +41,16 @@ function RegisterForm() {
             <h2 className="text-[28px] font-bold leading-[36px] text-ink">Criar Conta</h2>
 
             <form onSubmit={handleSubmit(onSubmit)} className="mt-5 space-y-4">
-                <Input label="Nome completo" type="text" placeholder="Diogo Oliveira" error={errors.name?.message}
+                <Input label="Nome completo" type="text" placeholder="Seu nome completo" error={errors.name?.message}
                        {...register('name', { required: 'Nome é obrigatório' })} />
 
-                <Input label="E-mail" type="email" placeholder="seuemail@exemplo.com" error={errors.email?.message}
+                <Input label="E-mail" type="email" placeholder="Seu e-mail" error={errors.email?.message}
                        {...register('email', { required: 'Email é obrigatório', pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Digite um email válido' } })} />
 
-                <Input label="Senha" type="password" placeholder="••••••••••" hint="Mínimo de 8 caracteres" error={errors.password?.message}
+                <Input label="Senha" type="password" placeholder="Sua senha" hint="Mínimo de 8 caracteres" error={errors.password?.message}
                        {...register('password', { required: 'Senha é obrigatória', minLength: { value: 8, message: 'A senha deve ter no mínimo 8 caracteres' } })} />
 
-                <Input label="Confirmar Senha" type="password" placeholder="••••••••••" error={errors.confirmPassword?.message}
+                <Input label="Confirmar Senha" type="password" placeholder="Confirme sua senha" error={errors.confirmPassword?.message}
                        {...register('confirmPassword', { required: 'Confirmar Senha é obrigatório', validate: (value) => value === getValues('password') || 'As senhas não correspondem' })} />
 
                 <div>

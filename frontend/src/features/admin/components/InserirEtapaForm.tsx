@@ -57,7 +57,7 @@ export function InserirEtapaForm({ pedidoId }: { pedidoId: number }) {
                     ))}
                 </Select>
 
-                <Input label="Localização (opcional)" placeholder="Ex: Curitiba / PR"
+                <Input label="Localização (opcional)" placeholder="Cidade / UF"
                        {...register('localizacao')} />
 
                 <Input label="Data e hora (opcional)" type="datetime-local"

@@ -28,10 +28,10 @@ function LoginForm() {
             <p className="mt-1 text-[15px] leading-[22px] text-secondary">Bem-vindo de volta! Entre com suas credenciais.</p>
 
             <form onSubmit={handleSubmit(onSubmit)} className="mt-5 space-y-5">
-                <Input label="E-mail" type="email" placeholder="seuemail@exemplo.com" error={errors.email?.message}
+                <Input label="E-mail" type="email" placeholder="Seu e-mail" error={errors.email?.message}
                        {...register('email', { required: 'Email é obrigatório' })} />
 
-                <Input label="Senha" type="password" placeholder="••••••••••" error={errors.senha?.message}
+                <Input label="Senha" type="password" placeholder="Sua senha" error={errors.senha?.message}
                        {...register('senha', { required: 'Senha é obrigatória' })} />
 
                 <div className="flex justify-end">
