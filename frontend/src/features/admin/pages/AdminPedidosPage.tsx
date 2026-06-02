@@ -15,6 +15,7 @@ const TABS: { label: string; valor: FiltroPedido }[] = [
     { label: 'Em Trânsito', valor: 'EM_TRANSITO' },
     { label: 'Taxados', valor: 'TAXADOS' },
     { label: 'Entregues', valor: 'ENTREGUES' },
+    { label: 'Devolvidos', valor: 'DEVOLVIDOS' },
 ]
 
 function AdminPedidosPage() {
