@@ -41,6 +41,9 @@ public class PedidoEntity {
     @Column(nullable = false)
     private boolean cancelado;
 
+    @Column(name = "rastreio_nao_localizado", nullable = false)
+    private boolean rastreioNaoLocalizado;
+
     @Column(name = "criado_em", nullable = false, updatable = false)
     private Instant criadoEm;
 

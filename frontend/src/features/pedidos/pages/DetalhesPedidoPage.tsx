@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { PedidoResumoCard } from '@/features/pedidos/components/PedidoResumoCard'
 import { Timeline } from '@/features/pedidos/components/Timeline'
+import { AvisoRastreioNaoLocalizado } from '@/features/pedidos/components/AvisoRastreioNaoLocalizado'
 
 function DetalhesPedidoPage() {
     const { id } = useParams()
@@ -48,6 +49,12 @@ function DetalhesPedidoPage() {
 
             {isLoading && <p className="text-secondary">Carregando detalhes...</p>}
             {(isError || (!isLoading && !pedido)) && <p className="text-secondary">Pedido não encontrado.</p>}
+
+            {pedido?.rastreioNaoLocalizado && (
+                <div className="mb-6">
+                    <AvisoRastreioNaoLocalizado />
+                </div>
+            )}
 
             {pedido && (
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,400px)_1fr]">

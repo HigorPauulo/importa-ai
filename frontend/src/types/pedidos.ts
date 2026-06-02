@@ -36,5 +36,6 @@ export type Moeda = 'BRL' | 'USD' | 'CNY' | 'EUR'
     origem?: string
     valorEstimado?: number
     moeda?: Moeda
+    rastreioNaoLocalizado?: boolean
     historico?: EtapaHistorico[]
   }

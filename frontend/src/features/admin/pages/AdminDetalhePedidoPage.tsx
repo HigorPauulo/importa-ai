@@ -6,6 +6,7 @@ import { useToast } from '@/context/ToastContext'
 import { buscarPedido, cancelarPedido } from '@/services/pedidos'
 import { PedidoResumoCard } from '@/features/pedidos/components/PedidoResumoCard'
 import { Timeline } from '@/features/pedidos/components/Timeline'
+import { AvisoRastreioNaoLocalizado } from '@/features/pedidos/components/AvisoRastreioNaoLocalizado'
 import { InserirEtapaForm } from '@/features/admin/components/InserirEtapaForm'
 
 function AdminDetalhePedidoPage() {
@@ -42,6 +43,8 @@ function AdminDetalhePedidoPage() {
 
             {pedido && (
                 <div className="flex flex-col gap-6">
+                    {pedido.rastreioNaoLocalizado && <AvisoRastreioNaoLocalizado />}
+
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[420px_1fr]">
                         <div className="flex flex-col gap-5">
                             <PedidoResumoCard pedido={pedido}>

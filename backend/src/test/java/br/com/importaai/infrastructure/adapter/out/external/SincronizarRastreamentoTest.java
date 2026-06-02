@@ -3,6 +3,7 @@ package br.com.importaai.infrastructure.adapter.out.external;
 import br.com.importaai.domain.model.EtapaRastreamento;
 import br.com.importaai.domain.model.Pedido;
 import br.com.importaai.domain.model.PerfilUsuario;
+import br.com.importaai.domain.model.ResultadoRastreio;
 import br.com.importaai.domain.model.TipoEtapa;
 import br.com.importaai.domain.port.in.SincronizarRastreamentoUseCase;
 import br.com.importaai.domain.port.out.PedidoRepository;
@@ -78,8 +79,8 @@ class SincronizarRastreamentoTest extends MessagingIntegrationTest {
                 new EtapaRastreamento(TipoEtapa.ENTREGUE, base, "BR", null)), false);
         pedidoRepository.salvar(entregue);
 
-        when(correiosPort.consultar(eq("BR-ATIVO"), any())).thenReturn(List.of(
-                new EtapaRastreamento(TipoEtapa.AEROPORTO_ORIGEM, base.plusSeconds(3600), "Aeroporto", "nova")));
+        when(correiosPort.consultar(eq("BR-ATIVO"), any())).thenReturn(ResultadoRastreio.ok(List.of(
+                new EtapaRastreamento(TipoEtapa.AEROPORTO_ORIGEM, base.plusSeconds(3600), "Aeroporto", "nova"))));
 
         int atualizados = sincronizar.executar();
 
@@ -90,5 +91,22 @@ class SincronizarRastreamentoTest extends MessagingIntegrationTest {
         Pedido recarregado = pedidoRepository.buscarPorId(idAtivo).orElseThrow();
         assertThat(recarregado.temEtapaDoTipo(TipoEtapa.AEROPORTO_ORIGEM)).isTrue();
         assertThat(recarregado.getEtapas()).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("codigo nao localizado pela transportadora liga a flag e nao adiciona etapas")
+    void naoLocalizadoMarcaPedido() {
+        Pedido ativo = new Pedido(null, usuarioId, "BR-SUMIU", "sumiu", base, List.of(
+                new EtapaRastreamento(TipoEtapa.NA_CHINA, base, "CN", null)), false);
+        Long id = pedidoRepository.salvar(ativo).getId();
+
+        when(correiosPort.consultar(eq("BR-SUMIU"), any())).thenReturn(ResultadoRastreio.naoLocalizado());
+
+        int atualizados = sincronizar.executar();
+
+        assertThat(atualizados).isEqualTo(1);
+        Pedido recarregado = pedidoRepository.buscarPorId(id).orElseThrow();
+        assertThat(recarregado.isRastreioNaoLocalizado()).isTrue();
+        assertThat(recarregado.getEtapas()).hasSize(1); // nao adiciona etapas
     }
 }

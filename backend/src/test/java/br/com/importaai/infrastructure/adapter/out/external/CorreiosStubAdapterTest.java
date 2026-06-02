@@ -16,7 +16,7 @@ class CorreiosStubAdapterTest {
     private final CorreiosStubAdapter adapter = new CorreiosStubAdapter();
 
     private TipoEtapa ultimoTipo(Instant criadoEm) {
-        List<EtapaRastreamento> etapas = adapter.consultar("BR123", criadoEm);
+        List<EtapaRastreamento> etapas = adapter.consultar("BR123", criadoEm).etapas();
         return etapas.get(etapas.size() - 1).tipo();
     }
 
@@ -24,7 +24,7 @@ class CorreiosStubAdapterTest {
     @DisplayName("TC29: pedido com 1h de idade retorna apenas NA_CHINA")
     void tc29_umaHoraRetornaNaChina() {
         Instant criadoEm = Instant.now().minus(Duration.ofHours(1));
-        List<EtapaRastreamento> etapas = adapter.consultar("BR123", criadoEm);
+        List<EtapaRastreamento> etapas = adapter.consultar("BR123", criadoEm).etapas();
 
         assertThat(etapas).hasSize(1);
         assertThat(etapas.get(0).tipo()).isEqualTo(TipoEtapa.NA_CHINA);
@@ -41,7 +41,7 @@ class CorreiosStubAdapterTest {
     @DisplayName("TC29: etapas sao progressivas e acumulativas conforme a idade")
     void tc29_etapasAcumulamComOTempo() {
         Instant criadoEm = Instant.now().minus(Duration.ofHours(120));
-        List<EtapaRastreamento> etapas = adapter.consultar("BR123", criadoEm);
+        List<EtapaRastreamento> etapas = adapter.consultar("BR123", criadoEm).etapas();
 
         // 0h NA_CHINA, 24h AEROPORTO_ORIGEM, 48h EM_TRANSITO, 96h AEROPORTO_DESTINO, 120h NO_BRASIL
         assertThat(etapas).hasSize(5);
@@ -53,7 +53,7 @@ class CorreiosStubAdapterTest {
     @DisplayName("TC29: pedido com 300h de idade chega ao ENTREGUE (ciclo completo)")
     void tc29_cicloCompletoChegaEntregue() {
         Instant criadoEm = Instant.now().minus(Duration.ofHours(300));
-        List<EtapaRastreamento> etapas = adapter.consultar("BR123", criadoEm);
+        List<EtapaRastreamento> etapas = adapter.consultar("BR123", criadoEm).etapas();
 
         assertThat(etapas).hasSize(8);
         assertThat(ultimoTipo(criadoEm)).isEqualTo(TipoEtapa.ENTREGUE);

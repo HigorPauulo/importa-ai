@@ -28,6 +28,10 @@ public class Pedido {
 
     private final List<EtapaRastreamento> etapas;
     private boolean cancelado;
+    // Sinaliza que a transportadora nao conhece este codigo (RF13/rastreamento).
+    // Mutavel e fora do construtor de proposito: e estado derivado da sincronizacao,
+    // nao um dado de criacao do pedido.
+    private boolean rastreioNaoLocalizado;
 
     // Criação de pedido NOVO com valor declarado e moeda.
     public Pedido(Long usuarioId, String codigoRastreamento, String descricao,
@@ -134,6 +138,18 @@ public class Pedido {
 
     public void cancelar() {
         this.cancelado = true;
+    }
+
+    public boolean isRastreioNaoLocalizado() {
+        return rastreioNaoLocalizado;
+    }
+
+    public void marcarRastreioNaoLocalizado() {
+        this.rastreioNaoLocalizado = true;
+    }
+
+    public void limparRastreioNaoLocalizado() {
+        this.rastreioNaoLocalizado = false;
     }
 
     public Optional<EtapaRastreamento> ultimaEtapa() {

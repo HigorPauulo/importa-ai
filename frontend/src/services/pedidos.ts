@@ -17,6 +17,7 @@ interface PedidoResponse {
     moeda: Moeda
     status: StatusPedido
     cancelado: boolean
+    rastreioNaoLocalizado: boolean
     criadoEm: string
     etapas: EtapaResponse[]
 }
@@ -46,6 +47,7 @@ function toPedidoView(dto: PedidoResponse): Pedido {
         origem: dto.etapas.at(0)?.localizacao,   // primeira etapa = origem
         valorEstimado: dto.valorDeclarado,
         moeda: dto.moeda,
+        rastreioNaoLocalizado: dto.rastreioNaoLocalizado,
         historico: [...dto.etapas].reverse().map((e) => ({
             data: formatarData(e.criadoEm),
             hora: formatarHora(e.criadoEm),

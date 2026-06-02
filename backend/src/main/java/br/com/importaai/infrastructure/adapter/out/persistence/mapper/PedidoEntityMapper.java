@@ -19,6 +19,7 @@ public final class PedidoEntityMapper {
         e.setValorDeclarado(domain.getValorDeclarado());
         e.setMoeda(domain.getMoeda());
         e.setCancelado(domain.isCancelado());
+        e.setRastreioNaoLocalizado(domain.isRastreioNaoLocalizado());
         e.setCriadoEm(domain.getCriadoEm());
 
         for (EtapaRastreamento et : domain.getEtapas()) {
@@ -32,7 +33,7 @@ public final class PedidoEntityMapper {
                 .map(EtapaRastreamentoEntityMapper::toDomain)
                 .toList();
 
-        return new Pedido(
+        Pedido pedido = new Pedido(
                 e.getId(),
                 e.getUsuarioId(),
                 e.getCodigoRastreamento(),
@@ -43,5 +44,10 @@ public final class PedidoEntityMapper {
                 etapas,
                 e.isCancelado()
         );
+        // flag fora do construtor: aplica apos reconstruir o agregado
+        if (e.isRastreioNaoLocalizado()) {
+            pedido.marcarRastreioNaoLocalizado();
+        }
+        return pedido;
     }
 }

@@ -25,6 +25,7 @@ public final class PedidoResponseMapper {
                 pedido.getMoeda(),
                 pedido.getStatus(),
                 pedido.isCancelado(),
+                pedido.isRastreioNaoLocalizado(),
                 pedido.getCriadoEm(),
                 etapas
         );

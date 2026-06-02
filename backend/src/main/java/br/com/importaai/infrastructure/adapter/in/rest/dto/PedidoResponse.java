@@ -16,6 +16,7 @@ public record PedidoResponse(
         Moeda moeda,
         StatusPedido status,
         boolean cancelado,
+        boolean rastreioNaoLocalizado,
         Instant criadoEm,
         List<EtapaResponse> etapas
 ) {}

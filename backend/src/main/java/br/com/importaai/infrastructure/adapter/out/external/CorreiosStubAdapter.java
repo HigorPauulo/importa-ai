@@ -1,6 +1,7 @@
 package br.com.importaai.infrastructure.adapter.out.external;
 
 import br.com.importaai.domain.model.EtapaRastreamento;
+import br.com.importaai.domain.model.ResultadoRastreio;
 import br.com.importaai.domain.model.TipoEtapa;
 import br.com.importaai.domain.port.out.RastreamentoCorreiosPort;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -29,7 +30,7 @@ public class CorreiosStubAdapter implements RastreamentoCorreiosPort {
     );
 
     @Override
-    public List<EtapaRastreamento> consultar(String codigoRastreamento, Instant pedidoCriadoEm) {
+    public ResultadoRastreio consultar(String codigoRastreamento, Instant pedidoCriadoEm) {
         long horas = Duration.between(pedidoCriadoEm, Instant.now()).toHours();
 
         List<EtapaRastreamento> etapas = new ArrayList<>();
@@ -40,6 +41,7 @@ public class CorreiosStubAdapter implements RastreamentoCorreiosPort {
                         marco.tipo(), momento, marco.localizacao(), marco.descricao()));
             }
         }
-        return etapas;
+        // o stub sempre "encontra" o objeto (simulacao de demonstracao China->Brasil)
+        return ResultadoRastreio.ok(etapas);
     }
 }
