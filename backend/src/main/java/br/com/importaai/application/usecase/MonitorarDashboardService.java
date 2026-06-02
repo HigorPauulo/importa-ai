@@ -7,10 +7,12 @@ import br.com.importaai.domain.port.in.MonitorarDashboardUseCase;
 import br.com.importaai.domain.port.out.PedidoRepository;
 
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class MonitorarDashboardService implements MonitorarDashboardUseCase {
 
@@ -49,6 +51,17 @@ public class MonitorarDashboardService implements MonitorarDashboardUseCase {
                         .orElse(false))
                 .count();
 
-        return new Resumo(totalAtivos, taxaPendente, entreguesNoMes, porStatus, todos.size());
+        // Série dos últimos 30 dias: pedidos criados por dia (zero nos dias sem pedido).
+        LocalDate hoje = LocalDate.now(clock);
+        Map<LocalDate, Long> criadosPorDia = todos.stream()
+                .collect(Collectors.groupingBy(
+                        p -> p.getCriadoEm().atZone(clock.getZone()).toLocalDate(),
+                        Collectors.counting()));
+        List<PontoEvolucao> evolucao = IntStream.rangeClosed(0, 29)
+                .mapToObj(i -> hoje.minusDays(29 - i))
+                .map(dia -> new PontoEvolucao(dia, criadosPorDia.getOrDefault(dia, 0L)))
+                .toList();
+
+        return new Resumo(totalAtivos, taxaPendente, entreguesNoMes, porStatus, todos.size(), evolucao);
     }
 }
