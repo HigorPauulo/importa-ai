@@ -11,5 +11,7 @@ public interface PedidoJpaRepository extends JpaRepository<PedidoEntity, Long> {
 
     List<PedidoEntity> findAllByUsuarioIdOrderByCriadoEmDesc(Long usuarioId);
 
+    List<PedidoEntity> findAllByOrderByCriadoEmDesc();
+
     List<PedidoEntity> findByCanceladoFalse();
 }

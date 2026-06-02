@@ -7,6 +7,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { filtrarPorSituacao, type FiltroPedido } from '@/features/pedidos/utils/filtros'
 import { IconSearch } from '@/components/layout/icons'
 import { listarTodosPedidos } from '@/services/pedidos'
+import { listarUsuarios } from '@/services/admin'
 import type { Pedido } from '@/types/pedidos'
 
 const TABS: { label: string; valor: FiltroPedido }[] = [
@@ -16,15 +17,16 @@ const TABS: { label: string; valor: FiltroPedido }[] = [
     { label: 'Entregues', valor: 'ENTREGUES' },
 ]
 
-function nomeCliente(pedido: Pedido): string {
-    return pedido.usuarioId != null ? `Cliente #${pedido.usuarioId}` : '—'
-}
-
 function AdminPedidosPage() {
     const [busca, setBusca] = useState('')
     const [filtro, setFiltro] = useState<FiltroPedido>('TODOS')
 
     const { data: pedidos, isLoading, isError } = useQuery({ queryKey: ['admin', 'pedidos'], queryFn: listarTodosPedidos })
+    const { data: usuarios } = useQuery({ queryKey: ['admin', 'usuarios'], queryFn: listarUsuarios })
+
+    const nomePorId = new Map((usuarios ?? []).map((u) => [u.id, u.nome]))
+    const nomeCliente = (pedido: Pedido): string =>
+        pedido.usuarioId != null ? (nomePorId.get(pedido.usuarioId) ?? `Cliente #${pedido.usuarioId}`) : '—'
 
     const lista = pedidos ?? []
     const termo = busca.trim().toLowerCase()

@@ -76,7 +76,7 @@ public class PedidoRepositoryJpaAdapter implements PedidoRepository {
     @Override
     @Transactional(readOnly = true)
     public List<Pedido> listarTodos() {
-        return jpaRepository.findAll()
+        return jpaRepository.findAllByOrderByCriadoEmDesc()
                 .stream()
                 .map(PedidoEntityMapper::toDomain)
                 .toList();
