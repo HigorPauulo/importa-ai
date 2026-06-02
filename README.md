@@ -1,197 +1,207 @@
 # Importa Aí
 
-Sistema web full-stack de gestão e rastreamento de encomendas internacionais, com foco no corredor logístico China–Brasil. Permite cadastrar pedidos, acompanhar etapas em tempo real (do despacho na China à entrega no Brasil), receber notificações via WebSocket e visualizar valores convertidos pela cotação de câmbio.
+![Java](https://img.shields.io/badge/Java-21-orange)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5-6DB33F)
+![React](https://img.shields.io/badge/React-19-61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6)
+![MySQL](https://img.shields.io/badge/MySQL-8-4479A1)
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-3.13-FF6600)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
 
-> **Status:** sistema completo e em execução — backend, frontend, mensageria RabbitMQ, rastreamento real (17track), notificações e dashboard admin implantados em container. Projeto Integrador IV — ADS 4º Período — PUC Goiás 2026/1.
+Sistema web full-stack de **gestão e rastreamento de encomendas internacionais**, com foco no corredor logístico **China–Brasil**. O usuário cadastra pedidos por código de rastreamento e acompanha cada etapa em tempo real — do despacho na China à entrega (ou devolução) no Brasil — com notificações via WebSocket e valores convertidos pela cotação de câmbio.
+
+O backend segue **Arquitetura Hexagonal** com domínio em Java puro (sem framework), mensageria assíncrona (RabbitMQ) e fontes de rastreamento plugáveis por configuração. O frontend é uma SPA React que consome a API REST e um canal STOMP/WebSocket.
+
+> **Status:** sistema completo e em execução — backend, frontend, mensageria, rastreamento real (17track), notificações em tempo real e dashboard administrativo, implantados em container.
 
 ---
 
 ## Sumário
 
+- [Funcionalidades](#funcionalidades)
 - [Stack tecnológica](#stack-tecnológica)
-- [Estrutura do repositório](#estrutura-do-repositório)
 - [Arquitetura](#arquitetura)
-- [Princípios técnicos](#princípios-técnicos)
+- [Estrutura do repositório](#estrutura-do-repositório)
 - [Como rodar localmente](#como-rodar-localmente)
+- [Variáveis de ambiente](#variáveis-de-ambiente)
+- [Testes](#testes)
+- [API REST](#api-rest)
+- [Mensageria](#mensageria)
+- [Deploy](#deploy)
 - [Documentação](#documentação)
-- [Roadmap acadêmico](#roadmap-acadêmico)
-- [Disciplinas integradas](#disciplinas-integradas)
 - [Convenções de commit](#convenções-de-commit)
 - [Equipe](#equipe)
 
 ---
 
+## Funcionalidades
+
+- **Gestão de pedidos** — cadastro por código de rastreamento, listagem com filtros (em trânsito, taxados, entregues, devolvidos), detalhe com linha do tempo e valor convertido.
+- **Rastreamento multiestágio** — etapas internacionais (China → aeroportos → trânsito) e nacionais (Brasil → taxa → CD → saída → entrega), além do estado de exceção **devolvido** (barrado na alfândega).
+- **Status derivado** — o status do pedido é função pura da última etapa (não há transição manual); ver [ADR-003](artefatos/design-de-software/adrs/003-status-derivado-da-etapa.md).
+- **Notificações em tempo real** — push via STOMP/WebSocket na criação e a cada mudança de status, com histórico (FIFO de 50 por usuário — RN09).
+- **Cotação de câmbio** — conversão CNY/USD/EUR → BRL com cache + fallback (RN07) e override manual pelo admin.
+- **Dashboard administrativo** — KPIs (ativos, em trânsito, taxa pendente, entregues no mês), gráfico de evolução e gestão de usuários.
+- **Autenticação e autorização** — JWT (access 1h + refresh 7d), bloqueio após 5 falhas, RBAC (Cliente / Administrador).
+
 ## Stack tecnológica
 
 | Camada | Tecnologia |
 |--------|-----------|
-| **Backend** | Java 21 (LTS) + Spring Boot 3.5.x |
-| **Frontend** | React 19 + TypeScript 6 + Vite 8 + Tailwind CSS 4.x |
-| **Estado de servidor** | TanStack Query v5 (cache + invalidação) |
-| **Formulários** | React Hook Form v7 |
-| **Roteamento** | React Router v7 |
-| **HTTP client** | Axios (com interceptor JWT) |
+| **Backend** | Java 21 (LTS) · Spring Boot 3.5 (web, security, data-jpa, amqp, websocket, validation, actuator) |
+| **Resiliência** | Resilience4j (circuit breaker) |
+| **Auth** | JWT (jjwt) · BCrypt |
+| **Banco** | MySQL 8 · Flyway (migrations versionadas) |
 | **Mensageria** | RabbitMQ 3.13 (AMQP) |
-| **Banco de dados** | MySQL 8.x |
-| **Tempo real** | STOMP sobre WebSocket (SockJS como fallback) |
-| **Autenticação** | JWT (access 1h + refresh 7d) |
-| **Containerização** | Docker + Docker Compose |
-| **Testes** | JUnit 5 + Mockito + Testcontainers (back) |
-| **Cobertura** | JaCoCo — alvo: ≥ 80 % no `domain/` |
+| **Tempo real** | STOMP sobre WebSocket (SockJS fallback) |
+| **Frontend** | React 19 · TypeScript 6 · Vite 8 · Tailwind CSS 4 |
+| **Estado de servidor** | TanStack Query v5 |
+| **Formulários / rotas / HTTP** | React Hook Form v7 · React Router v7 · Axios |
+| **Testes** | JUnit 5 · Mockito · AssertJ · Testcontainers (MySQL + RabbitMQ) · WireMock |
+| **Infra** | Docker + Docker Compose |
 
----
+## Arquitetura
+
+- **Hexagonal (Ports & Adapters)** no backend — núcleo de domínio em Java puro, isolado de qualquer framework. Ver [ADR-002](artefatos/design-de-software/adrs/002-arquitetura-hexagonal.md).
+- **Mensageria assíncrona** — escrita persiste, publica evento e responde **HTTP 202**; efeitos colaterais rodam nos consumers (RN03). ACK manual, Publisher Confirms, idempotência por INSERT-first e DLQ. Ver [ADR-001](artefatos/design-de-software/adrs/001-broker-rabbitmq.md) e a [Arquitetura de Mensageria](artefatos/mensageria-e-streams/arquitetura-mensageria.md).
+- **Status derivado** — `StatusPedido` é função pura da última etapa + flag `cancelado`, calculado *on-the-fly* (sem coluna de cache nesta versão). Ver [ADR-003](artefatos/design-de-software/adrs/003-status-derivado-da-etapa.md).
+- **Rastreamento plugável** — quatro adapters intercambiáveis (`stub`, `http` CWS, `cache-only`, `17track`) para a porta `RastreamentoCorreiosPort`, selecionados por `correios.adapter`. Em produção, o agregador **17track** (cobre Correios + trecho chinês). Ver [ADR-004](artefatos/design-de-software/adrs/004-adapters-correios.md).
+- **CORS único** para REST e WebSocket, configurável por ambiente. Ver [ADR-006](artefatos/design-de-software/adrs/006-politica-cors.md).
+- **Criptografia de PII (planejada)** — AES-256-GCM + HMAC para busca; ainda não implementada (dívida v2). Ver [ADR-005](artefatos/design-de-software/adrs/005-criptografia-em-repouso.md).
+
+Diagramas **C4** (Contexto, Container, Componentes) e DER em [`artefatos/design-de-software/diagramas-C4/`](artefatos/design-de-software/diagramas-C4/) e [`artefatos/modelagem-de-dados/`](artefatos/modelagem-de-dados/).
+
+```
+REST / WebSocket / Scheduler        (adapters de entrada)
+            │
+            ▼
+   application/usecase   ──►   domain/  (Java puro: model, ports, exceptions)
+            │
+            ▼
+ JPA · RabbitMQ · STOMP · APIs externas   (adapters de saída)
+```
 
 ## Estrutura do repositório
 
 ```
 importa-ai/
-├── artefatos/                       Documentação técnica do projeto
-│   ├── design-de-software/          ERS, design patterns, diagramas C4, 6 ADRs
-│   ├── mensageria-e-streams/        Topologia AMQP, idempotência, DLQ
-│   ├── modelagem-de-dados/          Esquema relacional + DER (drawio)
-│   ├── modelagem-de-interfaces/     Guia de estilos e tokens visuais
-│   └── qualidade-de-software/       Plano de testes (TC01–TC33)
-├── backend/                         API + consumidores RabbitMQ (Java/Spring)
-│   └── src/main/java/br/com/importaai/
-│       ├── domain/                  Núcleo puro — entidades, ports, exceções
-│       ├── application/             Casos de uso (orquestração)
-│       └── infrastructure/          Adapters (REST, JPA, AMQP, WebSocket)
-├── frontend/                        Interface React + TypeScript + Vite
-└── infra/                           Docker Compose (MySQL + RabbitMQ)
+├── artefatos/            Documentação técnica (ERS, ADRs, C4, DER, mensageria, plano de testes, guia de estilos)
+├── backend/              API + consumidores RabbitMQ (Java 21 / Spring Boot) — ver backend/README.md
+├── frontend/             SPA React + TypeScript + Vite — ver frontend/README.md
+└── infra/                Docker Compose de desenvolvimento (MySQL + RabbitMQ)
 ```
 
----
-
-## Arquitetura
-
-- **Padrão:** Arquitetura Hexagonal (*Ports & Adapters*) no backend — núcleo de domínio em Java puro, isolado de qualquer framework de infraestrutura. Ver [ADR-002](artefatos/design-de-software/adrs/002-arquitetura-hexagonal.md).
-- **Mensageria:** RabbitMQ via AMQP com ACK manual, Publisher Confirms, idempotência via INSERT-first e Dead Letter Queues. Ver [Arquitetura de Mensageria](artefatos/mensageria-e-streams/arquitetura-mensageria.md) e [ADR-001](artefatos/design-de-software/adrs/001-broker-rabbitmq.md).
-- **Status do pedido:** derivado da última etapa registrada (RN01) — não há endpoint `PATCH /pedidos/{id}/status`. Ver [ADR-003](artefatos/design-de-software/adrs/003-status-derivado-da-etapa.md).
-- **Rastreamento:** quatro adapters intercambiáveis (`stub`, `http` CWS, `cache-only`, `17track`) para a porta `RastreamentoCorreiosPort`, selecionados por configuração. Em produção usa-se o agregador **17track** (cobre Correios + trecho chinês). Ver [ADR-004](artefatos/design-de-software/adrs/004-adapters-correios.md).
-- **Criptografia de PII (planejada):** decisão registrada (AES-256-GCM + HMAC-SHA256 para busca), **ainda não implementada nesta versão** — nome/e-mail em texto claro, dívida v2. Ver [ADR-005](artefatos/design-de-software/adrs/005-criptografia-em-repouso.md).
-- **Notificações:** STOMP sobre WebSocket no canal privado `/user/{userId}/queue/notificacoes`, com histórico persistido (FIFO de 50 — RN09).
-- **Diagramas C4:** Contexto, Container e Componentes do backend em [`artefatos/design-de-software/diagramas-C4/`](artefatos/design-de-software/diagramas-C4/).
-
----
-
-## Princípios técnicos
-
-Quatro invariantes guiam todo o backend:
-
-1. **HTTP 202 nas escritas** — toda operação de escrita persiste o registro, publica o evento no broker e responde 202; os efeitos colaterais (notificações, integrações) são processados de forma assíncrona pelos consumers (RN03, RNF02).
-2. **Status derivado, nunca armazenado como verdade** — `StatusPedido` é função pura da última etapa + flag `cancelado`, calculado on-the-fly (sem coluna `status_cache` nesta versão; o cache de query é dívida v2 — RN01 / ADR-003).
-3. **Idempotência por design** — cada mensagem AMQP tem `message_id` único; o consumer tenta `INSERT` na tabela `evento_processado` antes do trabalho de negócio. UNIQUE constraint protege contra redelivery (RN04).
-4. **Domínio sem Spring** — o pacote `domain/` é Java puro. Qualquer import de `org.springframework.*` ali significa que a arquitetura quebrou.
-
----
+O backend é organizado em `domain/` (núcleo), `application/usecase/` (casos de uso) e `infrastructure/adapter/{in,out}` (REST, persistência JPA, mensageria, WebSocket, integrações).
 
 ## Como rodar localmente
 
-> As instruções abaixo sobem o ambiente de desenvolvimento local completo (infra + backend + frontend). Para o deploy em servidor, ver `DEPLOY.md`.
-
-### Pré-requisitos
-
-- Docker e Docker Compose
-- Java 21 (o `mvnw` incluso dispensa Maven do sistema)
-- Node 18+ e npm
-
-### Subir infraestrutura
+**Pré-requisitos:** Docker + Docker Compose, Java 21 (o `mvnw` dispensa Maven do sistema), Node 20+.
 
 ```bash
-cd infra
-docker compose up -d
+# 1. Infraestrutura (MySQL + RabbitMQ)
+cd infra && docker compose up -d
+
+# 2. Backend  → http://localhost:8080
+cd ../backend && ./mvnw spring-boot:run
+
+# 3. Frontend → http://localhost:5173 (proxy /api e /ws → :8080)
+cd ../frontend && npm install && npm run dev
 ```
 
-Serviços que sobem:
+**Acessos da infra local:** MySQL `localhost:3306` (`importaai`/`importaai123`/db `importaai`) · RabbitMQ Management `http://localhost:15672` (`importaai`/`importaai123`).
 
-- **MySQL** em `localhost:3306` — usuário `importaai`, senha `importaai123`, banco `importaai`
-- **RabbitMQ** em `localhost:5672`; painel Management em `http://localhost:15672` — usuário `importaai`, senha `importaai123`
+**Healthcheck:** `GET http://localhost:8080/actuator/health`.
 
-### Rodar o backend
+**Login:** um administrador é semeado na primeira subida (migration `V7`). Use a credencial definida no seed e troque-a antes de qualquer uso real.
+
+Detalhes por módulo: [`backend/README.md`](backend/README.md) · [`frontend/README.md`](frontend/README.md).
+
+## Variáveis de ambiente
+
+Em desenvolvimento, os defaults do `application.properties` cobrem tudo. Em produção, sobrescreva por ambiente (nunca commitar segredos):
+
+| Variável | Função |
+|----------|--------|
+| `IMPORTAAI_DB_USERNAME` / `IMPORTAAI_DB_PASSWORD` | Credenciais MySQL |
+| `IMPORTAAI_RABBITMQ_USERNAME` / `IMPORTAAI_RABBITMQ_PASSWORD` | Credenciais RabbitMQ |
+| `IMPORTAAI_JWT_SECRET` | Segredo de assinatura do JWT (64+ chars) |
+| `CORREIOS_ADAPTER` | Fonte de rastreamento: `stub` (default) · `http` · `cache-only` · `17track` |
+| `IMPORTAAI_TRACK17_TOKEN` | Token da API 17track (quando `CORREIOS_ADAPTER=17track`) |
+| `importaai.cors.allowed-origins` | Origens liberadas (REST + WebSocket) |
+
+Intervalos de sincronização: rastreamento a cada **20 min** (`correios.sync.interval`), câmbio a cada **30 min** (`cambio.sync.interval`) — ambos configuráveis.
+
+## Testes
 
 ```bash
-cd backend
-./mvnw spring-boot:run
+cd backend && ./mvnw test      # 114 testes (unitários + integração com Testcontainers)
+cd frontend && npx tsc --noEmit # type-check
 ```
 
-API em `http://localhost:8080`.
+A suíte cobre domínio (derivação de status RN01, invariantes do agregado), mensageria (idempotência, DLQ, WebSocket ≤ 2 s), autenticação, cotação e rastreamento. Cobertura do `domain/` via JaCoCo (alvo ≥ 80%). Plano completo em [Plano de Testes](artefatos/qualidade-de-software/plano-de-testes.md).
 
-### Rodar o frontend
+## API REST
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+| Método | Rota | Perfil | Descrição |
+|--------|------|--------|-----------|
+| POST | `/api/auth/register` · `/login` · `/refresh` · `/logout` | Público | Cadastro, login (JWT+refresh), renovação e revogação |
+| GET / POST | `/api/pedidos` | Cliente | Listar / criar pedido (criar → **202**) |
+| GET | `/api/pedidos/{id}` | Cliente (dono) | Detalhe + linha do tempo |
+| POST | `/api/pedidos/{id}/etapas` | Admin | Inserir etapa manual (RF13) |
+| DELETE | `/api/pedidos/{id}` | Admin | Cancelar pedido |
+| GET | `/api/admin/pedidos` · `/{id}` | Admin | Todos os pedidos do sistema |
+| GET | `/api/admin/dashboard` | Admin | KPIs |
+| GET / PATCH | `/api/admin/usuarios` · `/{id}/perfil` · `/{id}/status` | Admin | Gestão de usuários |
+| GET / PATCH | `/api/notificacoes` · `/lidas` | Cliente | Histórico e marcar como lidas |
+| GET | `/api/cotacoes/{moeda}` | Autenticado | Cotação (cache + fallback) |
+| POST | `/api/admin/cotacoes` | Admin | Cotação manual |
+| GET / PATCH | `/api/me` | Autenticado | Perfil próprio |
 
-UI em `http://localhost:5173`.
+## Mensageria
 
-### Healthcheck
+Exchange `importaai.events` (direct, durable) + 4 filas principais e 4 DLQs:
 
-- Backend: `GET http://localhost:8080/actuator/health`
-- RabbitMQ: painel Management
-- MySQL: `docker compose exec mysql mysqladmin ping`
+| Routing key | Fila | Consumer |
+|-------------|------|----------|
+| `pedido.criado` | `q.pedido.criado` | `PedidoCriadoConsumer` → notificação de registro + leitura inicial de rastreio |
+| `rastreamento.atualizado` | `q.rastreamento.atualizado` | `RastreamentoConsumer` → notificação de mudança de status (RF16) |
+| `pedido.atualizado` | `q.pedido.atualizado` | `RastreamentoConsumer` |
+| `notificacao.usuario` | `q.notificacao.usuario` | `NotificacaoConsumer` → persiste (RN09) + STOMP |
 
----
+Idempotência por INSERT-first em `evento_processado` (UNIQUE); falha de processamento → `basicNack(requeue=false)` → DLQ imediata. Detalhes na [Arquitetura de Mensageria](artefatos/mensageria-e-streams/arquitetura-mensageria.md).
+
+## Deploy
+
+Stack containerizada (`docker-compose.prod.yml`): MySQL + RabbitMQ + backend + frontend (nginx) + túnel. O frontend serve o SPA e faz proxy de `/api` e `/ws` no mesmo domínio (same-origin). Passo a passo em `DEPLOY.md` (não versionado).
 
 ## Documentação
 
 | Documento | Propósito |
 |-----------|-----------|
-| [ERS](artefatos/design-de-software/ERS.md) | Especificação completa de requisitos (RF, RNF, RN, casos de uso) |
-| [Arquitetura de Mensageria](artefatos/mensageria-e-streams/arquitetura-mensageria.md) | Topologia, fluxos, DLQ, idempotência, observabilidade |
+| [ERS](artefatos/design-de-software/ERS.md) | Requisitos (RF, RNF, RN, casos de uso) |
+| [ADRs](artefatos/design-de-software/adrs/) | 6 registros de decisão arquitetural |
 | [Design Patterns](artefatos/design-de-software/design-patterns.md) | Patterns adotados (com trechos de código) e descartados |
-| [ADRs](artefatos/design-de-software/adrs/) | Registros de decisões arquiteturais (6 ADRs) |
-| [Plano de Testes](artefatos/qualidade-de-software/plano-de-testes.md) | Casos de teste TC01–TC32 + metas de cobertura |
-| [Guia de Estilos](artefatos/modelagem-de-interfaces/guia-de-estilos.md) | Tokens visuais, componentes-chave, acessibilidade |
-| [Diagramas C4](artefatos/design-de-software/diagramas-C4/) | Contexto, Container, Componentes (drawio) |
-| [Modelo de Dados](artefatos/modelagem-de-dados/modelo-de-dados.md) | Esquema relacional MySQL — entidades de negócio e tabelas de suporte |
-| [DER](artefatos/modelagem-de-dados/der.drawio) | Diagrama Entidade-Relacionamento (Crow's Foot) das 5 entidades de negócio |
-
----
-
-## Roadmap acadêmico
-
-| Marco | Data | Status |
-|-------|------|--------|
-| N1 — Apresentação | 15/04/2026 | **Aprovada** (Figma + diagramas C4 + plano de testes) |
-| **N2 — Entrega de código** | **22/05/2026** | **Concluída** — sistema completo + testes |
-| Apresentação final | 03/06/2026 | Sistema deployado e em execução |
-
----
-
-## Disciplinas integradas
-
-- Design de Software
-- Modelagem de Interfaces (UI)
-- Desenvolvimento de Software Web
-- Mensageria e Streams
-- Qualidade de Software
-
----
+| [Arquitetura de Mensageria](artefatos/mensageria-e-streams/arquitetura-mensageria.md) | Topologia, fluxos, idempotência, DLQ |
+| [Modelo de Dados](artefatos/modelagem-de-dados/modelo-de-dados.md) | Esquema relacional + DER |
+| [Plano de Testes](artefatos/qualidade-de-software/plano-de-testes.md) | TC01–TC33 + metas de cobertura |
+| [Guia de Estilos](artefatos/modelagem-de-interfaces/guia-de-estilos.md) | Tokens visuais e componentes |
+| [Diagramas C4](artefatos/design-de-software/diagramas-C4/) | Contexto, Container, Componentes |
 
 ## Convenções de commit
 
-Este projeto segue [Conventional Commits](https://www.conventionalcommits.org/pt-br/v1.0.0/) em português:
+[Conventional Commits](https://www.conventionalcommits.org/pt-br/v1.0.0/) em PT-BR, imperativo, primeira linha ≤ 72 caracteres, sem ponto final.
 
 | Tipo | Uso |
 |------|-----|
-| `feat` | Nova funcionalidade |
-| `fix` | Correção de bug |
-| `docs` | Documentação apenas |
-| `test` | Adição ou correção de testes |
-| `refactor` | Refatoração sem mudança de comportamento |
-| `style` | Formatação / visual, sem mudança de lógica |
-| `chore` | Configuração, dependências, infraestrutura |
-
-A primeira linha não passa de 72 caracteres, em PT-BR, no imperativo, e sem ponto final.
-
----
+| `feat` / `fix` | Funcionalidade / correção |
+| `docs` / `test` | Documentação / testes |
+| `refactor` / `style` / `chore` | Refatoração / formatação / infra |
 
 ## Equipe
 
-- Higor Paulo Costa — modelagem, frontend, backend, produto e arquitetura
-- Diogo Oliveira Almeida — modelagem, frontend, produto e arquitetura
-- Alex Sander Aprigio Martins — produto e arquitetura
-- Gustavo Veroneze Ribeiro — produto e arquitetura
+Projeto Integrador IV — ADS, PUC Goiás.
 
+- **Higor Paulo Costa** — modelagem, frontend, backend, produto e arquitetura
+- **Diogo Oliveira Almeida** — modelagem, frontend, produto e arquitetura
+- **Alex Sander Aprigio Martins** — produto e arquitetura
+- **Gustavo Veroneze Ribeiro** — produto e arquitetura
