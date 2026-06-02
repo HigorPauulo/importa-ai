@@ -32,6 +32,9 @@ public class UsuarioEntity {
     @Column(nullable = false, length = 20)
     private PerfilUsuario perfil;
 
+    @Column(nullable = false)
+    private boolean ativo = true;
+
     @Column(name = "criado_em", nullable = false, updatable = false)
     private Instant criadoEm;
 }

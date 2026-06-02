@@ -46,6 +46,12 @@ import br.com.importaai.domain.port.in.DefinirCotacaoManualUseCase;
 import br.com.importaai.application.usecase.MonitorarDashboardService;
 import br.com.importaai.domain.port.in.MonitorarDashboardUseCase;
 
+import br.com.importaai.application.usecase.GerenciarUsuariosService;
+import br.com.importaai.domain.port.in.GerenciarUsuariosUseCase;
+
+import br.com.importaai.application.usecase.EditarPerfilService;
+import br.com.importaai.domain.port.in.EditarPerfilUseCase;
+
 import java.time.Clock;
 
 
@@ -140,5 +146,18 @@ public class UseCaseBeanConfig {
     public MonitorarDashboardUseCase monitorarDashboardUseCase(
             PedidoRepository pedidoRepository) {
         return new MonitorarDashboardService(pedidoRepository, Clock.systemDefaultZone());
+    }
+
+    @Bean
+    public GerenciarUsuariosUseCase gerenciarUsuariosUseCase(
+            UsuarioRepository usuarioRepository) {
+        return new GerenciarUsuariosService(usuarioRepository);
+    }
+
+    @Bean
+    public EditarPerfilUseCase editarPerfilUseCase(
+            UsuarioRepository usuarioRepository,
+            PasswordHasher passwordHasher) {
+        return new EditarPerfilService(usuarioRepository, passwordHasher);
     }
 }

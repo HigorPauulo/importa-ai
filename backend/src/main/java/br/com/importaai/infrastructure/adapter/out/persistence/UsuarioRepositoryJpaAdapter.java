@@ -5,8 +5,10 @@ import br.com.importaai.domain.port.out.UsuarioRepository;
 import br.com.importaai.infrastructure.adapter.out.persistence.entity.UsuarioEntity;
 import br.com.importaai.infrastructure.adapter.out.persistence.mapper.UsuarioEntityMapper;
 import br.com.importaai.infrastructure.adapter.out.persistence.repository.UsuarioJpaRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -33,5 +35,12 @@ public class UsuarioRepositoryJpaAdapter implements UsuarioRepository {
     @Override
     public Optional<Usuario> buscarPorEmail(String email) {
         return jpaRepository.findByEmail(email).map(UsuarioEntityMapper::toDomain);
+    }
+
+    @Override
+    public List<Usuario> listarTodos() {
+        return jpaRepository.findAll(Sort.by(Sort.Direction.ASC, "id")).stream()
+                .map(UsuarioEntityMapper::toDomain)
+                .toList();
     }
 }

@@ -14,6 +14,7 @@ public final class UsuarioEntityMapper {
         e.setEmail(domain.getEmail());
         e.setSenhaHash(domain.getSenhaHash());
         e.setPerfil(domain.getPerfil());
+        e.setAtivo(domain.isAtivo());
         e.setCriadoEm(domain.getCriadoEm());
         return e;
     }
@@ -25,6 +26,7 @@ public final class UsuarioEntityMapper {
                 e.getEmail(),
                 e.getSenhaHash(),
                 e.getPerfil(),
+                e.isAtivo(),
                 e.getCriadoEm()
         );
     }

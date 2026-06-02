@@ -5,6 +5,7 @@ import br.com.importaai.domain.exception.CodigoRastreamentoDuplicadoException;
 import br.com.importaai.domain.exception.EtapaRetroativaException;
 import br.com.importaai.domain.exception.PedidoImutavelException;
 import br.com.importaai.domain.exception.PedidoNaoEncontradoException;
+import br.com.importaai.domain.exception.UsuarioNaoEncontradoException;
 import br.com.importaai.infrastructure.adapter.in.rest.dto.ErroResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,11 @@ public class RestExceptionHandler {
     @ExceptionHandler(PedidoNaoEncontradoException.class)
     public ResponseEntity<ErroResponse> handlePedidoNaoEncontrado(PedidoNaoEncontradoException ex) {
         return build(HttpStatus.NOT_FOUND, "PEDIDO_NAO_ENCONTRADO", ex.getMessage());
+    }
+
+    @ExceptionHandler(UsuarioNaoEncontradoException.class)
+    public ResponseEntity<ErroResponse> handleUsuarioNaoEncontrado(UsuarioNaoEncontradoException ex) {
+        return build(HttpStatus.NOT_FOUND, "USUARIO_NAO_ENCONTRADO", ex.getMessage());
     }
 
     // ===== 403 — autenticado mas sem permissao no recurso =====

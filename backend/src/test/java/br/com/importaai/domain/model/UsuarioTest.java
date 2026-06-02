@@ -43,11 +43,13 @@ public class UsuarioTest {
                 "higor@example.com",
                 "hash-da-senha-aqui",
                 PerfilUsuario.ADMINISTRADOR,
+                true,
                 CRIADO_EM
         );
 
         assertThat(usuario.getId()).isEqualTo(42L);
         assertThat(usuario.getPerfil()).isEqualTo(PerfilUsuario.ADMINISTRADOR);
+        assertThat(usuario.isAtivo()).isTrue();
     }
 
     @ParameterizedTest(name = "nome invalido: \"{0}\"")
